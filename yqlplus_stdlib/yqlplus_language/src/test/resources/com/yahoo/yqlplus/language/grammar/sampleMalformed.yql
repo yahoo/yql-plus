@@ -1,4 +1,0 @@
-PROGRAM (@id string);
-
-select * from test
-where id = @id output as test
