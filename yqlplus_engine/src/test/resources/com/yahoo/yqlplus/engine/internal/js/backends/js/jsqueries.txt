@@ -1,0 +1,56 @@
+SELECT * FROM toytest.fancy OUTPUT AS foo;
+{"foo" : [{"id":"a","name":"Bob"},{"id":"b","name":"Joe"},{"id":"c","name":"Smith"}]}
+
+SELECT * FROM toytest.fancy LIMIT 1 OUTPUT AS foo;
+{"foo" : [{"id":"a","name":"Bob"}]}
+
+SELECT * FROM toytest.fancy LIMIT 1 OFFSET 2 OUTPUT AS foo;
+{"foo" : [{"id":"c","name":"Smith"}]}
+
+SELECT * FROM toytest.fancy OFFSET 1 OUTPUT AS foo;
+{"foo" : [{"id":"b","name":"Joe"},{"id":"c","name":"Smith"}]}
+
+SELECT * FROM toytest.fancy f JOIN toytest.split('a', 'id') s ON f.id = s.id OUTPUT AS bar;
+{"bar" : [{"id":"a","name":"Bob"}]}
+
+SELECT id FROM toytest.fancy OUTPUT AS baz;
+{"baz" : [{"id":"a"},{"id":"b"},{"id":"c"}]}
+
+SELECT * FROM toytest.split('a,b', 'id') OUTPUT AS foo;
+{"foo" : [{"id":"a"},{"id":"b"}]}
+
+PROGRAM (@arg string = 'a,b'); SELECT * FROM toytest.split(@arg, 'id') OUTPUT AS foo;
+{"foo" : [{"id":"a"},{"id":"b"}]}
+
+PROGRAM (@arg string = 'a,b'); SELECT @arg arg OUTPUT AS foo;
+{"foo" : [{"arg" : "a,b"}]}
+
+PROGRAM (@arg map<string> = {'a' : 'b'}); SELECT @arg.a OUTPUT AS foo;
+{"foo" : [{"a" : "b"}]}
+
+PROGRAM (@arg map<string> = {'a' : 'b'}); SELECT @arg OUTPUT AS foo;
+{"foo" : [{"arg" : {"a" : "b"}}]}
+
+PROGRAM (@arg string = 'a'); SELECT @arg, @arg OUTPUT AS foo;
+{"foo" : [{"arg" : "a", "arg1" : "a"}]}
+
+SELECT f.id FROM toytest.fancy f JOIN toytest.split('a,b', 'id') s ON f.id = s.id OUTPUT AS quux;
+{"quux" : [{"id":"a"},{"id":"b"}]}
+
+SELECT 1 a OUTPUT AS foo;
+{"foo" : [{"a" : 1}]}
+
+SELECT {'a' : 1} o1 OUTPUT AS foo;
+{"foo" : [{"o1":{"a":1}}]}
+
+SELECT * FROM toytest.fancy OUTPUT AS foo; SELECT * FROM toytest.fancy LIMIT 1  OFFSET 1 OUTPUT AS bar;
+{"foo" : [{"id":"a","name":"Bob"},{"id":"b","name":"Joe"},{"id":"c","name":"Smith"}], "bar" : [{"id":"b","name":"Joe"}]}
+
+SELECT * FROM toytest.fancy WHERE id = 'a' | toytest.addfield('fancy', true) OUTPUT AS foo;
+{"foo" : [{"id":"a","name":"Bob","fancy":true}]}
+
+FROM toytest IMPORT addfield, fancy; SELECT * FROM fancy WHERE id = 'a' | addfield('fancy', true) OUTPUT AS foo;
+{"foo" : [{"id":"a","name":"Bob","fancy":true}]}
+
+SELECT * FROM toytest.fancy MERGE SELECT * FROM toytest.ugly(['a', 'b']) OUTPUT AS foo;
+{"foo" : [{"id":"a","name":"Bob"},{"id":"b","name":"Joe"},{"id":"c","name":"Smith"},{"id":"a","name":"a"},{"id":"b","name":"b"}]}

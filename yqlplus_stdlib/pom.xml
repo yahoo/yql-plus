@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016 Yahoo Inc.
+  ~ Licensed under the terms of the Apache version 2.0 license.
+  ~ See LICENSE file for terms.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yahoo.yqlplus</groupId>
+        <artifactId>yqlplus_engine_project</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.yahoo.yqlplus</groupId>
+    <artifactId>yqlplus_stdlib</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+            <optional>true</optional>
+            <version>4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_source_api</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_engine</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.threeten</groupId>
+            <artifactId>threetenbp</artifactId>
+            <version>0.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+            <version>6.8.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+    <build>
+        <finalName>yqlplus_stdlib</finalName>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>bintray-yahoo-maven</id>
+            <name>yahoo-maven</name>
+            <url>https://api.bintray.com/maven/yahoo/maven/yqlplus_stdlib/;publish=1</url>
+        </repository>
+    </distributionManagement>
+</project>
