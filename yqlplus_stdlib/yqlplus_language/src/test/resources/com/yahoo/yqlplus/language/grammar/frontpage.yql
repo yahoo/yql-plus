@@ -1,0 +1,17 @@
+PROGRAM (@a double = 0.121);
+
+FROM layout IMPORT layout_articles;
+
+// we'd like to avoid the usual trap of positional result sets somehow?
+
+CREATE TEMPORARY TABLE interest_vectors AS (SELECT id, name FROM user.interests);
+
+SELECT id, title, href, large_image_href
+  FROM articles
+   WHERE large_image_href IS NOT NULL OR small_image IS NOT NULL
+    ORDER BY trunc_date('day', published) DESC, pow(pow(x, categories * @interest_vector),1/@a) DESC
+   LIMIT 100 | layout_articles() OUTPUT AS foo;
+
+SELECT foo.id, bar.score
+   FROM foo
+   JOIN bar ON foo.id = bar.id OUTPUT as bar;

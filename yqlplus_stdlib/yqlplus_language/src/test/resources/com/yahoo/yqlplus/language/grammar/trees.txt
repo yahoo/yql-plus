@@ -1,0 +1,122 @@
+// The format of this file is pairs of lines (// lines are comments)
+// [unit] input
+// expected toStringTree
+// where [unit] is one of expression or program (default: program)
+expression a AND b AND c AND d OR x
+(OR (AND (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b])) (FIELDREF (PATH ID[c])) (FIELDREF (PATH ID[d]))) (FIELDREF (PATH ID[x])))
+
+expression a + b AND c + d OR x + 1 + 2 + 3
+(OR (AND (BINOP_ADD (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b]))) (BINOP_ADD (FIELDREF (PATH ID[c])) (FIELDREF (PATH ID[d])))) (BINOP_ADD (FIELDREF (PATH ID[x])) (BINOP_ADD 1 (BINOP_ADD 2 3))))
+
+expression a * b * c % d
+(BINOP_MULT (FIELDREF (PATH ID[a])) (BINOP_MULT (FIELDREF (PATH ID[b])) (BINOP_MOD (FIELDREF (PATH ID[c])) (FIELDREF (PATH ID[d])))))
+
+expression [1,2,3]
+(ARRAY_LITERAL 1 2 3)
+
+expression a IN (1, 2, 3)
+(IN (FIELDREF (PATH ID[a])) (ARRAY_LITERAL 1 2 3))
+
+expression a IN (SELECT id FROM users WHERE key = 'pants')
+(IN (FIELDREF (PATH ID[a])) (QUERY_ARRAY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[id])))] [FILTER (EQ (FIELDREF (PATH ID[key])) 'pants')] (FROM (CALL_SOURCE (PATH ID[users]))))))
+
+expression foobar.prop1
+(FIELDREF (PATH ID[foobar] ID[prop1]))
+
+expression foobar.prop1[1]
+(INDEXREF (FIELDREF (PATH ID[foobar] ID[prop1])) 1)
+
+select [{a : 1}] a, b from foobar;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ANNOTATE (MAP_LITERAL (PROPERTY a 1)) (FIELDREF (PATH ID[a]))]) (FIELD (FIELDREF (PATH ID[b])))] (FROM (CALL_SOURCE (PATH ID[foobar]))))))
+
+select a, b from foobar order by [{fancy : true}] (a + b) + 1;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b])))] [ORDERBY (ASC [ANNOTATE (MAP_LITERAL (PROPERTY fancy true)) (BINOP_ADD (BINOP_ADD (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b]))) 1)])] (FROM (CALL_SOURCE (PATH ID[foobar]))))))
+
+select a, b from foobar where c IN (1, 2, 3);
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b])))] [FILTER (IN (FIELDREF (PATH ID[c])) (ARRAY_LITERAL 1 2 3))] (FROM (CALL_SOURCE (PATH ID[foobar]))))))
+
+select a, b from foobar where a = ANY(1, 2, 3) OR c IN (1, 2, 3);
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b])))] [FILTER (OR (EQ (FIELDREF (PATH ID[a])) (CALL (PATH ID[ANY]) 1 2 3)) (IN (FIELDREF (PATH ID[c])) (ARRAY_LITERAL 1 2 3)))] (FROM (CALL_SOURCE (PATH ID[foobar]))))))
+
+select a.b AS booger, b from foobar fancy where a = ANY(1, 2, 3) OR c IN (1, 2, 3);
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ALIAS ID[booger]] (FIELDREF (PATH ID[a] ID[b]))) (FIELD (FIELDREF (PATH ID[b])))] [FILTER (OR (EQ (FIELDREF (PATH ID[a])) (CALL (PATH ID[ANY]) 1 2 3)) (IN (FIELDREF (PATH ID[c])) (ARRAY_LITERAL 1 2 3)))] (FROM (CALL_SOURCE [ALIAS ID[fancy]] (PATH ID[foobar]))))))
+
+
+// programs
+
+SELECT a, b, c FROM source;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+SELECT a x, b, c FROM source;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ALIAS ID[x]] (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+SELECT a.b.c[0] x, b, c FROM source;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ALIAS ID[x]] (INDEXREF (FIELDREF (PATH ID[a] ID[b] ID[c])) 0)) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+SELECT a.b.c[0] x, b, c FROM source JOIN pants ON pants.zipper = source.zipper;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ALIAS ID[x]] (INDEXREF (FIELDREF (PATH ID[a] ID[b] ID[c])) 0)) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source])) (JOIN (CALL_SOURCE (PATH ID[pants])) (EQ (FIELDREF (PATH ID[pants] ID[zipper])) (FIELDREF (PATH ID[source] ID[zipper]))))))))
+
+SELECT a.b.c[0] x, b, c FROM source JOIN pants ON pants.zipper = source.zipper JOIN more ON more.zipper = pants.zipper;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD [ALIAS ID[x]] (INDEXREF (FIELDREF (PATH ID[a] ID[b] ID[c])) 0)) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source])) (JOIN (CALL_SOURCE (PATH ID[pants])) (EQ (FIELDREF (PATH ID[pants] ID[zipper])) (FIELDREF (PATH ID[source] ID[zipper])))) (JOIN (CALL_SOURCE (PATH ID[more])) (EQ (FIELDREF (PATH ID[more] ID[zipper])) (FIELDREF (PATH ID[pants] ID[zipper]))))))))
+
+SELECT * FROM source WHERE a AND b AND c AND d OR x;
+(PROGRAM (STATEMENT_QUERY (SELECT [FILTER (OR (AND (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b])) (FIELDREF (PATH ID[c])) (FIELDREF (PATH ID[d]))) (FIELDREF (PATH ID[x])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+SELECT * FROM ns.source WHERE a AND b AND c AND d OR x;
+(PROGRAM (STATEMENT_QUERY (SELECT [FILTER (OR (AND (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b])) (FIELDREF (PATH ID[c])) (FIELDREF (PATH ID[d]))) (FIELDREF (PATH ID[x])))] (FROM (CALL_SOURCE (PATH ID[ns] ID[source]))))))
+
+// pagination
+SELECT a, b, c FROM source paged 10;
+(PROGRAM (STATEMENT_QUERY [PAGED 10] (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[a]))) (FIELD (FIELDREF (PATH ID[b]))) (FIELD (FIELDREF (PATH ID[c])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+next 'key' output as foo;
+(PROGRAM (NEXT 'key' ID[foo]))
+
+// pipes
+SELECT * FROM source | step1 | step2() | step3(1, 2) OUTPUT AS booger;
+(PROGRAM (STATEMENT_QUERY [OUTPUT ID[booger]] (PIPE (SELECT (FROM (CALL_SOURCE (PATH ID[source])))) (PIPELINE_STEP (PATH ID[step1])) (PIPELINE_STEP (PATH ID[step2]) NO_ARGUMENTS) (PIPELINE_STEP (PATH ID[step3]) 1 2))))
+
+IMPORT 'foo' AS foo;
+(PROGRAM (IMPORT 'foo' foo))
+
+IMPORT foo AS foo;
+(PROGRAM (IMPORT (PATH ID[foo]) foo))
+
+IMPORT foo;
+(PROGRAM (IMPORT foo))
+
+FROM foo IMPORT bar;
+(PROGRAM (IMPORT_FROM (PATH ID[foo]) bar))
+
+FROM 'foo' IMPORT bar, baz;
+(PROGRAM (IMPORT_FROM 'foo' bar baz))
+
+CREATE TEMP TABLE foo AS (SELECT * FROM bar);
+(PROGRAM (STATEMENT_SELECTVAR ID[foo] (SELECT (FROM (CALL_SOURCE (PATH ID[bar]))))))
+
+CREATE TEMPORARY TABLE foo AS (SELECT * FROM bar);
+(PROGRAM (STATEMENT_SELECTVAR ID[foo] (SELECT (FROM (CALL_SOURCE (PATH ID[bar]))))))
+
+SELECT * FROM source WHERE id IN (@foo);
+(PROGRAM (STATEMENT_QUERY (SELECT [FILTER (IN (FIELDREF (PATH ID[id])) (ARRAY_LITERAL (PARAMETER ID[foo])))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+PROGRAM (@foo array<string>); SELECT * FROM source WHERE id IN (@foo);
+(PROGRAM (ARGUMENT ID[foo] (TYPE_ARRAY TYPE_STRING)) (STATEMENT_QUERY (SELECT [FILTER (IN (FIELDREF (PATH ID[id])) (PARAMETER ID[foo]))] (FROM (CALL_SOURCE (PATH ID[source]))))))
+
+SELECT zot.foo() FROM bar;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (CALL (PATH ID[zot] ID[foo]) NO_ARGUMENTS))] (FROM (CALL_SOURCE (PATH ID[bar]))))))
+
+SELECT zot.foo FROM bar;
+(PROGRAM (STATEMENT_QUERY (SELECT [PROJECT (FIELD (FIELDREF (PATH ID[zot] ID[foo])))] (FROM (CALL_SOURCE (PATH ID[bar]))))))
+
+SELECT * FROM SOURCES *;
+(PROGRAM (STATEMENT_QUERY (SELECT ALL_SOURCE)))
+
+SELECT * FROM SOURCES a, b, c.d;
+(PROGRAM (STATEMENT_QUERY (SELECT (MULTI_SOURCE (PATH ID[a]) (PATH ID[b]) (PATH ID[c] ID[d])))))
+
+SELECT * FROM SOURCES * WHERE a = b;
+(PROGRAM (STATEMENT_QUERY (SELECT [FILTER (EQ (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[b])))] ALL_SOURCE)))
+
+SELECT * FROM SOURCES a, b, c.d WHERE a = c;
+(PROGRAM (STATEMENT_QUERY (SELECT [FILTER (EQ (FIELDREF (PATH ID[a])) (FIELDREF (PATH ID[c])))] (MULTI_SOURCE (PATH ID[a]) (PATH ID[b]) (PATH ID[c] ID[d])))))

@@ -1,0 +1,19 @@
+SELECT * FROM articles;
+SELECT * FROM flickr OUTPUT AS pants;
+SELECT * FROM flickr
+  MERGE SELECT * FROM articles OUTPUT AS junk;
+SELECT output FROM output;
+
+SELECT CAST(fancy AS integer) FROM flickr;
+
+SELECT 1 + 2;
+
+SELECT APPLY + (1, 2, 3);
+
+SELECT a AND b AND c OR d;
+SELECT APPLY AND (a, b, c OR d);
+
+SELECT ns1.ns2.func(a);
+
+SELECT * FROM ns1.ns2.func(a) a1;
+SELECT * FROM ns1.ns2.table;
