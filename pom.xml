@@ -13,8 +13,8 @@
     <artifactId>yqlplus_engine_project</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>yqlplus_engine</name>
-    <description>yqlplus_engine</description>
+    <name>yqlplus_engine_project</name>
+    <description>yqlplus_engine_project</description>
     <properties>
         <additionalparam>-Xdoclint:none</additionalparam>
         <min_jdk_version>1.8</min_jdk_version>
