@@ -10,7 +10,7 @@ cache:
 script: mvn install
 
 after_success:
-- travis/deploy.sh
+- travis/deploy_yqlplus_language.sh
 
 branches:
   only:
