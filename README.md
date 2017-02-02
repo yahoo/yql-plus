@@ -179,7 +179,6 @@ List<Record> f2 = result.getResult("d1").get().getResult();
 ```
 
 
-
 ## LICENSE
 
 Copyright 2016 Yahoo Inc.
