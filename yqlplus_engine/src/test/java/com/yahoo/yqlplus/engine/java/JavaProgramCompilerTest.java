@@ -48,6 +48,8 @@ import com.yahoo.yqlplus.engine.sources.AsyncUpdateMovieSource;
 import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
 import com.yahoo.yqlplus.engine.sources.BatchKeySource;
 import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
+import com.yahoo.yqlplus.engine.sources.StatusSource;
+import com.yahoo.yqlplus.engine.sources.BulkResponse;
 import com.yahoo.yqlplus.engine.sources.ErrorSource;
 import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
 import com.yahoo.yqlplus.engine.sources.FRSource;
@@ -3684,6 +3686,21 @@ public class JavaProgramCompilerTest {
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.UPDATE));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
+    }
+    
+    @Test
+    public void testWildcardTypeAdapt() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("BulkAddBalance", new StatusSource()));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "PROGRAM ( @payload string);" + 
+            "INSERT INTO BulkAddBalance (payload) VALUES (@payload)" +
+            "OUTPUT AS bulkAddBalanceResponse;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                    .put("payload", "payload").build(), true);
+        List<BulkResponse> responses = myResult.getResult("bulkAddBalanceResponse").get().getResult();
+        Assert.assertEquals("500", responses.get(0).getBulkResponseItems().get(0).getErrorCode());
+        Assert.assertEquals("id", responses.get(0).getBulkResponseItems().get(0).getId());
     }
     
     @Test

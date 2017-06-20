@@ -45,11 +45,13 @@ import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.TypeAdaptingWidget;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.WildcardType;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -351,7 +353,7 @@ public class ASMProgramTypeAdapter implements ProgramValueTypeAdapter {
 
     @Override
     public TypeWidget adaptInternal(java.lang.reflect.Type type) {
-        return adaptInternal(TypeLiteral.get(type));
+        return adaptInternal(TypeLiteral.get((type instanceof WildcardType)? type.getClass():type));
     }
 
     @Override
