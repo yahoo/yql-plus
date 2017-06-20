@@ -1,0 +1,9 @@
+PROGRAM(@text string);
+
+SELECT w.*
+FROM geo g
+JOIN weather w
+ON w.woeid = g.woeid
+WHERE g.text = @text AND w.high > 60
+ORDER BY w.high
+OUTPUT AS weather;
