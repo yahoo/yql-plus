@@ -145,6 +145,14 @@
         </pluginManagement>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>bintray-yahoo-maven</id>
+            <name>yahoo-maven</name>
+            <url>https://api.bintray.com/maven/yahoo/maven/yqlplus_engine_project/;publish=1</url>
+        </repository>
+    </distributionManagement>
+
     <profiles>
         <profile>
             <id>secondary</id>
