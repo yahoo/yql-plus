@@ -5,9 +5,6 @@ set -ev
 test "${TRAVIS_PULL_REQUEST}" == "false"
 test "${TRAVIS_BRANCH}" == "master"
 
-# Pushing yqlplus_engine_project
-mvn deploy --settings travis/settings.xml
-
 # Pushing yqlplus_engine
 cd yqlplus_engine
 mvn deploy --settings ../travis/settings.xml
