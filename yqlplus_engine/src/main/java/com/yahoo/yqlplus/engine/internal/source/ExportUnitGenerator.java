@@ -48,6 +48,7 @@ public class ExportUnitGenerator extends SourceApiGenerator {
     // source adapters can depend on the source & the context, but not the program
 
     public ObjectBuilder createModuleAdapter(String moduleName, Class<?> sourceClass, TypeWidget moduleType, TypeWidget contextType, BytecodeExpression sourceProvider) {
+        gambitScope.addClass(sourceClass);
         ObjectBuilder adapter = gambitScope.createObject();
         ObjectBuilder.ConstructorBuilder cb = adapter.getConstructor();
         ObjectBuilder.FieldBuilder fld = adapter.field("$module", moduleType);
