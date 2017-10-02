@@ -1,0 +1,5 @@
+PROGRAM();
+
+SELECT * FROM stocks
+ORDER BY boughtDate ASC
+OUTPUT AS portfolio;

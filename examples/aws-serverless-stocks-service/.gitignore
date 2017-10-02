@@ -1,0 +1,13 @@
+.gradle
+.DS_Store
+.classpath
+.idea/
+.project
+.settings/
+README.html
+dependency-reduced-pom.xml
+output.txt
+target/
+webservice.iml
+build/
+packaged-template.yaml
