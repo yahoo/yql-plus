@@ -14,7 +14,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.yahoo.yqlplus.api.Source;
@@ -220,8 +223,8 @@ public class JavaEngineTest {
         return result;
     }
 
-    protected Module[] createModules() {
-        return new Module[]{
+    protected com.google.inject.Module[] createModules() {
+        return new com.google.inject.Module[]{
                 new JavaTestModule.MetricModule(),
                 new SourceBindingModule(
                         "person", ToyPersonSource.class,
@@ -273,12 +276,12 @@ public class JavaEngineTest {
         }
     }
 
-    protected Map<String, JsonNode> run(String script, final Module... modules) throws Exception {
+    protected Map<String, JsonNode> run(String script, final com.google.inject.Module... modules) throws Exception {
         Injector injector = Guice.createInjector(new JavaEngineModule(),
                 new AbstractModule() {
                     @Override
                     protected void configure() {
-                        for (Module module : modules) {
+                        for (com.google.inject.Module module : modules) {
                             install(module);
                         }
                     }
