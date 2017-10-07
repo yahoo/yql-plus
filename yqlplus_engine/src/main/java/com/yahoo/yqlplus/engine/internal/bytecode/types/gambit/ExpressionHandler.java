@@ -377,17 +377,21 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
                 MethodVisitor mv = code.getMethodVisitor();
                 code.exec(out.construct(constant(args.size())));
                 for (BytecodeExpression expr : args) {
-                    Label skip = new Label();
+                    Label handleNull = new Label();
+                    Label end = new Label();
                     mv.visitInsn(Opcodes.DUP);
                     code.exec(expr);
                     final TypeWidget type = expr.getType();
-                    boolean nullable = code.cast(unified, type, skip);
+                    boolean nullable = code.cast(unified, type, handleNull);
                     mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.getInternalName(Collection.class), "add", Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getType(Object.class)), true);
-                    if (nullable) {
-                        // we're either going to POP the DUPed List OR the result of add
-                        mv.visitLabel(skip);
-                    }
                     mv.visitInsn(Opcodes.POP);
+                    if (nullable) {
+                        mv.visitJumpInsn(Opcodes.GOTO, end);
+                        mv.visitLabel(handleNull);
+                        mv.visitInsn(Opcodes.POP);
+                        mv.visitLabel(end);
+                    }
+
                 }
             }
         };
