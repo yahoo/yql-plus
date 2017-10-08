@@ -209,7 +209,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                     public void onFailure(Throwable t) {
                         result.setException(t);
                     }
-                }
+                }, MoreExecutors.directExecutor()
         );
         return new WrappedListenableFuture<>(result);
     }
@@ -243,7 +243,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                     scheduledFuture.cancel(false);
                     result.setException(t);
                 }
-            });
+            }, MoreExecutors.directExecutor());
             return new WrappedListenableFuture<>(result);
         } else {
             return new WrappedListenableFuture<>(source);

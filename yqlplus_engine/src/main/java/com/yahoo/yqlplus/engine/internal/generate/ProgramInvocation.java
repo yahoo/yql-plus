@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLType;
@@ -25,7 +26,6 @@ import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutHandler;
 import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
 
 import javax.inject.Named;
-
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -214,7 +214,9 @@ public abstract class ProgramInvocation {
 
             @Override
             public ListenableFuture<Object> forkAsync(Callable<ListenableFuture<Object>> target) {
-                return Futures.dereference(tasks.submit(target));
+                SettableFuture<Object> result = SettableFuture.create();
+                result.setFuture(tasks.submit(target));
+                return result;
             }
         };
     }

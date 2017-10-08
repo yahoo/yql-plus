@@ -38,7 +38,7 @@ public class Dynamic {
                             MethodHandles.Lookup.class, // ... when given a lookup object, ...
                             String.class, // ... the operation name, ...
                             MethodType.class // ... and the signature at the call site.
-                    ).toMethodDescriptorString());
+                    ).toMethodDescriptorString(), false);
 
     public static final Handle H_BOOTSTRAP =
             new Handle( // For dynamic linking it should delegate to...
@@ -50,7 +50,7 @@ public class Dynamic {
                             MethodHandles.Lookup.class, // ... when given a lookup object, ...
                             String.class, // ... the operation name, ...
                             MethodType.class // ... and the signature at the call site.
-                    ).toMethodDescriptorString());
+                    ).toMethodDescriptorString(), false);
 
     public static DynamicLinker createDynamicLinker(ASMClassSource parentLoader) {
         final DynamicLinkerFactory factory = new DynamicLinkerFactory();

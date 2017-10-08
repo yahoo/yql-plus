@@ -20,13 +20,7 @@ import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.compiler.ConstructorGenerator;
 import com.yahoo.yqlplus.engine.internal.compiler.MethodGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.ClosedPropertyAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.Dynamic;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.InvokeDynamicExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.NativeObjectSerializer;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
-
+import com.yahoo.yqlplus.engine.internal.plan.types.base.*;
 import org.objectweb.asm.*;
 
 import java.io.OutputStream;
@@ -36,7 +30,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -63,7 +56,7 @@ public class UnitGenerator {
             if (superInternalName != null) {
                 mvE.getLocal("this").read().generate(mvE);
                 MethodVisitor mv = mvE.getMethodVisitor();
-                mv.visitMethodInsn(INVOKESPECIAL, superInternalName, "<init>", "()V");
+                mv.visitMethodInsn(INVOKESPECIAL, superInternalName, "<init>", "()V", false);
             }
         }
     };
