@@ -98,7 +98,7 @@ public final class TimeoutHandler {
                         source.cancel(true);
                     }
                 }
-            }, MoreExecutors.sameThreadExecutor());
+            }, MoreExecutors.directExecutor());
             Futures.addCallback(source, new FutureCallback<T>() {
                 @Override
                 public void onSuccess(T out) {
