@@ -65,7 +65,7 @@ public final class TimeoutHandler {
                             remainingFuture.cancel(false);
                             result.setException(t);
                         }
-                    }));
+                    }), MoreExecutors.directExecutor());
                 } catch (TimeoutException e) {
                     next.cancel(true);
                     result.setException(e);
@@ -77,7 +77,7 @@ public final class TimeoutHandler {
                 scheduledFuture.cancel(false);
                 result.setException(t);
             }
-        }));
+        }), MoreExecutors.directExecutor());
         return scoper.scopeCallbacks(result);
     }
 
@@ -98,7 +98,7 @@ public final class TimeoutHandler {
                         source.cancel(true);
                     }
                 }
-            }, MoreExecutors.sameThreadExecutor());
+            }, MoreExecutors.directExecutor());
             Futures.addCallback(source, new FutureCallback<T>() {
                 @Override
                 public void onSuccess(T out) {
@@ -111,7 +111,7 @@ public final class TimeoutHandler {
                     scheduledFuture.cancel(false);
                     result.setException(t);
                 }
-            });
+            }, MoreExecutors.directExecutor());
             return scoper.scopeCallbacks(result);
         } else {
             return source;
