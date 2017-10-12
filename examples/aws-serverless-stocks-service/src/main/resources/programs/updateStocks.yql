@@ -1,0 +1,5 @@
+PROGRAM();
+
+CREATE TEMPORARY TABLE updated AS (SELECT * FROM stocks);
+
+SELECT * FROM updateStocks(@updated) OUTPUT AS result;
