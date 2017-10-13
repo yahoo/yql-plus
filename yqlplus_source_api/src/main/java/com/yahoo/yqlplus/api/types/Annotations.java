@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +60,7 @@ public class Annotations implements Iterable<Map.Entry<String, Object>> {
 
         @Override
         public Iterator<Map.Entry<String, Object>> iterator() {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
     };
 
