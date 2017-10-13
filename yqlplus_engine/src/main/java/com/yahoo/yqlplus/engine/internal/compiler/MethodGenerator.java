@@ -67,7 +67,7 @@ public class MethodGenerator extends FunctionGenerator {
     }
 
     public void invoke(CodeEmitter code) {
-        code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL, unit.getInternalName(), name, createMethodDescriptor());
+        code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL, unit.getInternalName(), name, createMethodDescriptor(), false);
     }
 
     public void returnValue(BytecodeExpression result) {

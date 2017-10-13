@@ -18,7 +18,6 @@ import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 import com.yahoo.yqlplus.engine.scope.WrapScope;
 
 import javax.annotation.Nullable;
-
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.concurrent.*;
@@ -210,7 +209,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                     public void onFailure(Throwable t) {
                         result.setException(t);
                     }
-                }
+                }, MoreExecutors.directExecutor()
         );
         return new WrappedListenableFuture<>(result);
     }
@@ -231,7 +230,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                         source.cancel(true);
                     }
                 }
-            }, MoreExecutors.sameThreadExecutor());
+            }, MoreExecutors.directExecutor());
             Futures.addCallback(source, new FutureCallback<T>() {
                 @Override
                 public void onSuccess(T out) {
@@ -244,7 +243,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                     scheduledFuture.cancel(false);
                     result.setException(t);
                 }
-            });
+            }, MoreExecutors.directExecutor());
             return new WrappedListenableFuture<>(result);
         } else {
             return new WrappedListenableFuture<>(source);
