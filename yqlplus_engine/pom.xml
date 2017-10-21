@@ -12,23 +12,22 @@
     <parent>
         <groupId>com.yahoo.yqlplus</groupId>
         <artifactId>yqlplus_engine_project</artifactId>
-        <version>1.0.9</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.yahoo.yqlplus</groupId>
     <artifactId>yqlplus_engine</artifactId>
-    <version>1.0.9</version>
+
     <dependencies>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_language</artifactId>
-            <version>1.0.9</version>
+            <version>${yqlplus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_source_api</artifactId>
-            <version>1.0.9</version>
+            <version>${yqlplus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.monitor</groupId>
@@ -55,38 +54,31 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>23.1-jre</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <version>2.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>4.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-multibindings</artifactId>
-            <version>4.0</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.2.3</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.2.3</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -106,7 +98,6 @@
         <dependency>
             <groupId>com.yahoo.rdl</groupId>
             <artifactId>rdl-java</artifactId>
-            <version>1.4.8</version>
         </dependency>
     </dependencies>
 
@@ -127,7 +118,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.5</version>
+                <version>4.7</version>
                 <executions>
                     <execution>
                         <goals>
