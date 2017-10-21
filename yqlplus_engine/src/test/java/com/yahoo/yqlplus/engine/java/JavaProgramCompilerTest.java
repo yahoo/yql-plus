@@ -216,7 +216,8 @@ public class JavaProgramCompilerTest {
             }
             if (entry.getGroup().equals("method")) {
                 assertEquals("scan", entry.getName());
-                assertTrue((entry.getEndMilliseconds() - entry.getStartMilliseconds()) > 5);
+                String message = "End: " + entry.getEndMilliseconds() + " Start: " + entry.getStartMilliseconds() + " is <= 5";
+                assertTrue(message, (entry.getEndMilliseconds() - entry.getStartMilliseconds()) > 490);
             }
             if ("MINE".equals(entry.getName())) {
                 return; // found it

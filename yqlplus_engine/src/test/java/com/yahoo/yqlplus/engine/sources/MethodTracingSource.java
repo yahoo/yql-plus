@@ -18,7 +18,7 @@ import com.yahoo.yqlplus.engine.java.Person;
 public class MethodTracingSource implements Source {
     @Query
     public List<Person> scan(@Trace("MINE") Tracer trace) throws InterruptedException {
-        Thread.sleep(5);
+        Thread.sleep(500);
         trace.fine("Done scanning");
         trace.end();
         return ImmutableList.of(new Person("1", "joe", 0));
