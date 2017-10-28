@@ -155,7 +155,9 @@ public class UDFsTest {
                 foundMyTracer = true;
             }
         }
-        AssertJUnit.assertTrue(found && foundMyTracer);
+        String foundMsg = "Found: " + found + "and FoundMyTracer: " + foundMyTracer;
+        //Failed for no reason at one point
+        AssertJUnit.assertTrue(foundMsg, found && foundMyTracer);
     }
 
     @Test
