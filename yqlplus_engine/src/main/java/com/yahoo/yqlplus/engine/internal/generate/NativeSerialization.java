@@ -7,9 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.yahoo.tbin.TBinEncoder;
 
 public interface NativeSerialization {
     void writeJson(JsonGenerator target, Object input);
-    void writeTBin(TBinEncoder target, Object input);
 }
