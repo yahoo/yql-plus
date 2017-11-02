@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.yahoo.tbin.TBinEncoder;
 import org.dynalang.dynalink.CallSiteDescriptor;
 import org.dynalang.dynalink.linker.GuardedInvocation;
 import org.dynalang.dynalink.linker.LinkRequest;

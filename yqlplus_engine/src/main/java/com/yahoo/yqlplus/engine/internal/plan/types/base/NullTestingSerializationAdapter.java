@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
+import com.yahoo.tbin.TBinEncoder;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
@@ -52,6 +53,14 @@ public class NullTestingSerializationAdapter implements SerializationAdapter {
                 mv.visitJumpInsn(Opcodes.GOTO, done);
                 mv.visitLabel(isNull);
                 switch(encoding) {
+                    case TBIN:
+                        code.exec(generator);
+                        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                                Type.getInternalName(TBinEncoder.class),
+                                "writeNull",
+                                Type.getMethodDescriptor(Type.VOID_TYPE),
+                                false);
+                        break;
                     case JSON:
                         code.exec(generator);
                         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,

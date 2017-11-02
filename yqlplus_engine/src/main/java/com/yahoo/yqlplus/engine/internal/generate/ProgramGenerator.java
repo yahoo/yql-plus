@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yahoo.tbin.TBinEncoder;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
@@ -67,6 +68,8 @@ public class ProgramGenerator {
         serializer.implement(NativeSerialization.class);
         // void writeJson(JsonGenerator target, Object input);
         generateSerializationMethod(serializer, "writeJson", NativeEncoding.JSON, JsonGenerator.class);
+        // void writeTBin(TBinEncoder target, Object input);
+        generateSerializationMethod(serializer, "writeTBin", NativeEncoding.TBIN, TBinEncoder.class);
         final TypeWidget serializerType = serializer.type();
         getSerializer.exit(new BaseTypeExpression(scope.adapt(NativeSerialization.class, false)) {
             @Override

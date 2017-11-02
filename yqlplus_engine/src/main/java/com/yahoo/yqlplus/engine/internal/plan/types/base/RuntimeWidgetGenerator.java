@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.ImmutableList;
+import com.yahoo.tbin.TBinEncoder;
 import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
 import com.yahoo.yqlplus.engine.internal.bytecode.IterableTypeWidget;
 import com.yahoo.yqlplus.engine.internal.bytecode.ReturnCode;
@@ -90,6 +91,14 @@ public class RuntimeWidgetGenerator extends UnitGenerator {
         BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
         BytecodeExpression generatorExpr = method.addArgument("index", environment.adaptInternal(JsonGenerator.class)).read();
         method.add(adapter.serializeJson(sourceExpr, generatorExpr));
+        method.add(new ReturnCode());
+    }
+
+    private void generateTBin(TypeWidget targetType, RuntimeAdapter adapter) {
+        MethodGenerator method = createMethod("serializeTBin");
+        BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
+        BytecodeExpression generatorExpr = method.addArgument("index", environment.adaptInternal(TBinEncoder.class)).read();
+        method.add(adapter.serializeTBin(sourceExpr, generatorExpr));
         method.add(new ReturnCode());
     }
 
