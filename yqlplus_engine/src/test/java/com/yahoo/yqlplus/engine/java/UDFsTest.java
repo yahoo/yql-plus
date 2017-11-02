@@ -148,14 +148,18 @@ public class UDFsTest {
         boolean found = false;
         boolean foundMyTracer = false;
         for (TraceEntry entry:trace.getEntries()) {
-            if (entry.getGroup().equals("PIPE") && entry.getName().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify") && entry.getDurationMilliseconds() > 0) {
+            if (entry.getGroup().equals("PIPE") && entry.getName().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify")
+                    && entry.getDurationMilliseconds() > 0) {
                 found = true;
             }
-            if (entry.getGroup().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify") && entry.getName().equals("MINE") && entry.getDurationMilliseconds() > 0) {
+            if (entry.getGroup().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify") && entry.getName().equals("MINE")
+                    && entry.getDurationMilliseconds() > 0) {
                 foundMyTracer = true;
             }
         }
-        AssertJUnit.assertTrue(found && foundMyTracer);
+        String foundMsg = "Found: " + found + " and FoundMyTracer: " + foundMyTracer;
+        //Failed for no reason at one point
+        AssertJUnit.assertTrue(foundMsg, found && foundMyTracer);
     }
 
     @Test

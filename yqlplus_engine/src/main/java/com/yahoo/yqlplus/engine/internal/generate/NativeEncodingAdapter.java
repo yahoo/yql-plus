@@ -8,7 +8,6 @@ package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.yahoo.tbin.TBinEncoder;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
@@ -37,12 +36,6 @@ public class NativeEncodingAdapter implements InvocationResultHandler {
         try {
             OutputStream target = resultHandler.createStream(name);
             switch(encoding) {
-                case TBIN: {
-                    TBinEncoder generator = new TBinEncoder(target);
-                    serializer.writeTBin(generator, value);
-                    target.close();
-                    break;
-                }
                 case JSON: {
                     JsonGenerator generator = JSON_FACTORY.createGenerator(target);
                     serializer.writeJson(generator, value);
