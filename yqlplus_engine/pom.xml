@@ -95,6 +95,10 @@
             <artifactId>asm-analysis</artifactId>
             <version>6.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.yahoo.rdl</groupId>
+            <artifactId>rdl-java</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>
