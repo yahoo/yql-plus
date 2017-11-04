@@ -12,7 +12,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
-import com.yahoo.cloud.metrics.api.*;
+import com.yahoo.cloud.metrics.api.MetricDimension;
+import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
+import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.engine.CompiledProgram;
@@ -21,23 +23,26 @@ import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.guice.JavaEngineModule;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.threeten.bp.*;
-import org.threeten.bp.temporal.TemporalAccessor;
-import org.threeten.bp.temporal.TemporalField;
-import org.threeten.bp.temporal.TemporalQuery;
-import org.threeten.bp.temporal.ValueRange;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
+import java.time.temporal.TemporalQuery;
+import java.time.temporal.ValueRange;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class DateTimeTest {
     
-    Injector injector = Guice.createInjector(new JavaEngineModule(), new MetricModule(), new StandardLibraryModule(), new MyDummyModule(), new ViewRegistryModule());
+    private Injector injector = Guice.createInjector(new JavaEngineModule(), new MetricModule(),
+            new StandardLibraryModule(), new MyDummyModule(), new ViewRegistryModule());
 
     @Test
     public void requireThatCurDateWorks() throws Exception {
@@ -123,10 +128,11 @@ public class DateTimeTest {
         Assert.assertEquals(f2.get(0).get("date").toString(), "2011-12-03T10:15:30+01:00[Europe/Paris]");
     }
 
-    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "org\\.threeten\\.bp\\.format\\.DateTimeParseException: Text \\'15:30\\+01:00\\[Europe\\/Paris\\]\\' could not be parsed at index 0")
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
+            "java.time.format.DateTimeParseException: Text \\'15:30\\+01:00\\[Europe\\/Paris\\]\\' could not be parsed at index 0")
     public void requireThatTimeCannotBeParsedAsADateTime() throws Exception {
         ProgramResult result = getProgramResult("SELECT datetime.from_datetime_string(\"15:30+01:00[Europe/Paris]\") date OUTPUT AS d1;");
-        List<Record> f2 = result.getResult("d1").get().getResult();
+        result.getResult("d1").get().getResult();
     }
 
     @Test
@@ -179,8 +185,8 @@ public class DateTimeTest {
         Assert.assertEquals(f1.get(0).get("offset2"), 16200);
     }
 
-    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "java\\.lang\\." +
-            "IllegalArgumentException: No enum constant org\\.threeten\\.bp\\.temporal\\.ChronoField\\.INVALID_FIELD")
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
+            "java.lang.IllegalArgumentException: No enum constant java.time.temporal.ChronoField.INVALID_FIELD")
     public void requireThatFieldExtractionReturnsExpectedExceptionForUnknownField() throws Exception {
         ProgramResult result = getProgramResult("SELECT " +
         "datetime.extract_field_value(datetime.from_datetime_string(\"2011-12-03T10:15:30+04:30\"), " +
@@ -206,7 +212,7 @@ public class DateTimeTest {
     }
 
     @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
-            "org\\.threeten\\.bp\\.DateTimeException: Unsupported field: MinuteOfHour")
+            "java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: MinuteOfHour")
     public void requireThatTimeValueFromDateReturnsAnException() throws Exception {
         ProgramResult result = getProgramResult("SELECT " +
              "datetime.extract_field_value(datetime.from_date_string(\"2011-12-03\"), \"MINUTE_OF_HOUR\") minute OUTPUT AS d1;");
@@ -228,8 +234,8 @@ public class DateTimeTest {
         Assert.assertEquals(f1.get(0).get("offset2"), 16200);
     }
 
-    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "org\\.threeten\\.bp\\." +
-            "DateTimeException: Unsupported field: DayOfYear")
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
+            "java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: DayOfYear")
     public void requireThatDateValueFromTimeReturnsAnException() throws Exception {
         ProgramResult result = getProgramResult("SELECT " +
         "datetime.extract_field_value(datetime.from_time_string(\"10:15:30+04:30\"), \"DAY_OF_YEAR\") day OUTPUT AS d1;");
@@ -282,8 +288,8 @@ public class DateTimeTest {
         String query = "SELECT datetime.add(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        ProgramResult result = program.run(ImmutableMap.<String, Object>of(), false);
-        List<Record> f2 = result.getResult("d1").get().getResult();
+        ProgramResult result = program.run(ImmutableMap.of(), false);
+        result.getResult("d1").get().getResult();
 
     }
 
@@ -317,9 +323,8 @@ public class DateTimeTest {
         String query = "SELECT datetime.sub(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        ProgramResult result = program.run(ImmutableMap.<String, Object>of(), false);
-
-        List<Record> f2 = result.getResult("d1").get().getResult();
+        ProgramResult result = program.run(ImmutableMap.of(), false);
+        result.getResult("d1").get().getResult();
     }
 
     @Test
@@ -362,8 +367,8 @@ public class DateTimeTest {
         Assert.assertEquals(f2.get(0).get("truncated5").toString(), "10:00");
     }
 
-    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "org.threeten.bp." +
-            "DateTimeException: Unit is too large to be used for truncation")
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
+            "java.time.temporal.UnsupportedTemporalTypeException: Unit is too large to be used for truncation")
     public void requireThatDateTimeCannotBeTruncated() throws Exception {
         ProgramResult result = getProgramResult("SELECT " +
                 "datetime.truncate_datetime(datetime.from_datetime_string(\"2013-11-03T10:15:30+04:30\"), \"MONTHS\") " +
@@ -387,19 +392,18 @@ public class DateTimeTest {
         Assert.assertEquals(f2.get(0).get("updated4").toString(), "2013-11-03T10:15:31+04:30");
     }
 
-    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp = "java\\.lang\\." +
-            "IllegalArgumentException: No enum constant org\\.threeten\\.bp\\.temporal\\.ChronoField\\.INVALID")
+    @Test(expectedExceptions = ExecutionException.class, expectedExceptionsMessageRegExp =
+            "java.lang.IllegalArgumentException: No enum constant java.time.temporal.ChronoField.INVALID")
     public void requireThatInvalidFieldsThrowException() throws Exception {
         ProgramResult result = getProgramResult("PROGRAM (@datetime String = \"2013-11-03T10:15:30+04:30\"); SELECT " +
                 "datetime.set_field(datetime.from_datetime_string(@datetime), \"INVALID\", 2014) updated1 OUTPUT AS d1;");
-        List<Record> f2 = result.getResult("d1").get().getResult();
+        result.getResult("d1").get().getResult();
     }
 
     private ProgramResult getProgramResult(String query) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        ProgramResult result = program.run(ImmutableMap.<String, Object>of(), false);
-        return result;
+        return program.run(ImmutableMap.of(), false);
     }
     
     public static class MetricModule extends AbstractModule {
@@ -407,10 +411,7 @@ public class DateTimeTest {
         protected void configure() {
             bind(TaskMetricEmitter.class).toInstance(
                     new StandardRequestEmitter(new MetricDimension(),
-                            new RequestMetricSink() {
-                                @Override
-                                public void emitRequest(RequestEvent arg0) {
-                                }
+                            arg0 -> {
                             }).start(new MetricDimension()));
         }
     }
@@ -418,12 +419,7 @@ public class DateTimeTest {
     private static class ViewRegistryModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(ViewRegistry.class).toInstance(new ViewRegistry() {
-                @Override
-                public OperatorNode<SequenceOperator> getView(List<String> name) {
-                    return null;
-                }
-            });
+            bind(ViewRegistry.class).toInstance(name -> null);
         }
     }
 
