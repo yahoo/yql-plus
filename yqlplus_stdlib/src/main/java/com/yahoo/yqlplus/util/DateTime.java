@@ -8,9 +8,24 @@ package com.yahoo.yqlplus.util;
 
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.annotations.Export;
-import org.threeten.bp.*;
-import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.temporal.*;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
+
 
 /**
  * <p>Utility class providing basic date and time manipulation.</p>
@@ -172,7 +187,7 @@ public class DateTime implements Exports {
      */
     @Export
     public LocalDate from_date_string(String date) {
-        return DateTimeFormatter.ISO_DATE.parse(date, LocalDate.class);
+        return DateTimeFormatter.ISO_DATE.parse(date, LocalDate::from);
     }
 
     /**
@@ -183,7 +198,7 @@ public class DateTime implements Exports {
      */
     @Export
     public TemporalAccessor from_time_string(String time) {
-        return DateTimeFormatter.ISO_TIME.parseBest(time, OffsetTime.class, LocalTime.class);
+        return DateTimeFormatter.ISO_TIME.parseBest(time, OffsetTime::from, LocalTime::from);
     }
 
     /**
@@ -194,7 +209,7 @@ public class DateTime implements Exports {
      */
     @Export
     public TemporalAccessor from_datetime_string(String datetime) {
-        return DateTimeFormatter.ISO_DATE_TIME.parseBest(datetime, ZonedDateTime.class, LocalDateTime.class);
+        return DateTimeFormatter.ISO_DATE_TIME.parseBest(datetime, ZonedDateTime::from, LocalDateTime::from);
     }
 
     /**
@@ -209,8 +224,8 @@ public class DateTime implements Exports {
     @Export
     public TemporalAccessor from_string(String datetime, String pattern) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-        return formatter.parseBest(datetime, ZonedDateTime.class, LocalDateTime.class, LocalDate.class,
-                OffsetTime.class, LocalTime.class);
+        return formatter.parseBest(datetime, ZonedDateTime::from, LocalDateTime::from, LocalDate::from,
+                OffsetTime::from, LocalTime::from);
     }
 
     /**
