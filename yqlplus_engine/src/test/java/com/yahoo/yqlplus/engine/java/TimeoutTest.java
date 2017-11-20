@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 public class TimeoutTest {
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutWorking() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -39,7 +39,7 @@ public class TimeoutTest {
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutFailing() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -52,7 +52,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheck() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -65,7 +65,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheckWorks() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -74,7 +74,7 @@ public class TimeoutTest {
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testProgramTimeout() throws Exception {
         // Not overriding default program timeout
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
@@ -99,7 +99,7 @@ public class TimeoutTest {
     // --- now the join version of all ---
 
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutFailingJoin() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -112,7 +112,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheckJoin() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
