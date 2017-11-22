@@ -35,14 +35,29 @@ import com.yahoo.yqlplus.engine.internal.plan.types.AssignableValue;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.IterateAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.*;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BytecodeCastExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.ListTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.MapTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.NotNullableTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.NullableTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PhysicalExprOperatorCompiler {
     public static final MetricDimension EMPTY_DIMENSION = new MetricDimension();
@@ -552,6 +567,8 @@ public class PhysicalExprOperatorCompiler {
         BytecodeExpression streamInput = evaluateExpression(program, ctxExpr, input);
         StreamSink streamPipeline = new SkipNullsSink(compileStream(program, ctxExpr, stream));
         GambitCreator.ScopeBuilder scope = this.scope.scope();
+        final BytecodeExpression timeout = getTimeout(ctxExpr, input.getLocation());
+        streamInput = scope.resolve(input.getLocation(), timeout, streamInput);
         Preconditions.checkArgument(streamInput.getType().isIterable(), "streamExecute argument must be iterable");
         GambitCreator.IterateBuilder iterateBuilder = scope.iterate(streamInput);
         streamPipeline.prepare(scope, program, ctxExpr, iterateBuilder.getItem().getType());
