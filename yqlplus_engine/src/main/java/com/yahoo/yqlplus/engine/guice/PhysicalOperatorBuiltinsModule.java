@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.streams.ConditionalsBuiltinsModule;
+import com.yahoo.yqlplus.engine.internal.plan.streams.RecordsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.streams.SequenceBuiltinsModule;
 
 public class PhysicalOperatorBuiltinsModule extends AbstractModule {
@@ -18,5 +19,6 @@ public class PhysicalOperatorBuiltinsModule extends AbstractModule {
         MapBinder<String, ModuleType> prefixModuleBindings = MapBinder.newMapBinder(binder(), String.class, ModuleType.class);
         prefixModuleBindings.addBinding("yql.sequences").to(SequenceBuiltinsModule.class);
         prefixModuleBindings.addBinding("yql.conditionals").to(ConditionalsBuiltinsModule.class);
+        prefixModuleBindings.addBinding("yql.records").to(RecordsBuiltinsModule.class);
     }
 }

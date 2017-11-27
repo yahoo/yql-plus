@@ -95,6 +95,7 @@ public interface GambitCreator extends GambitTypes {
     }
 
     RecordBuilder record();
+    RecordBuilder dynamicRecord();
 
     ScopeBuilder scope();
 

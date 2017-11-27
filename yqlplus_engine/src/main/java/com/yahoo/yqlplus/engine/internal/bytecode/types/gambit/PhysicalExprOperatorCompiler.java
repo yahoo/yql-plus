@@ -284,7 +284,12 @@ public class PhysicalExprOperatorCompiler {
             }
             case PROJECT: {
                 List<OperatorNode<PhysicalProjectOperator>> operations = expr.getArgument(0);
-                GambitCreator.RecordBuilder recordBuilder = scope.record();
+                GambitCreator.RecordBuilder recordBuilder;
+                if("map".equals(expr.getAnnotation("project:type"))) {
+                    recordBuilder = scope.dynamicRecord();
+                } else {
+                    recordBuilder = scope.record();
+                }
                 for(OperatorNode<PhysicalProjectOperator> op : operations) {
                     switch(op.getOperator()) {
                         case FIELD: {
