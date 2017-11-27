@@ -70,7 +70,7 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
 
             }
         }
-        throw new DependencyNotFoundException(location, "No module '%s' found", Joiner.on('.').join(modulePath));
+        return null;
     }
 
     private <T> SuffixMatch<T> prefixSearch(Map<String, T> map, List<String> path) {
@@ -104,6 +104,6 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
 
             }
         }
-        throw new DependencyNotFoundException(location, "Unknown source '%s'", Joiner.on('.').join(path));
+        return null;
     }
 }

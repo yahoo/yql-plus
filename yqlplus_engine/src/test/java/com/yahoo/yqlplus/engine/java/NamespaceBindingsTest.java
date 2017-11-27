@@ -79,7 +79,7 @@ public class NamespaceBindingsTest {
             program = compiler.compile("SELECT * FROM missing OUTPUT AS f1;");
             Assert.fail("Should not reach here - should have thrown a ProgramCompileException");
         } catch (ProgramCompileException e) {
-            Assert.assertEquals(e.getMessage(), "<string>:L1:14 No source 'missing' found");
+            Assert.assertEquals(e.getMessage(), "<string>:L1:14 Source 'missing' not found");
         }
     }
 }
