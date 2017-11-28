@@ -10,7 +10,12 @@ import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.internal.bytecode.ReturnCode;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.*;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.InvocableBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
 import com.yahoo.yqlplus.engine.internal.generate.CompiledResultSetInfo;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
@@ -107,6 +112,7 @@ public class TaskGenerator {
                 break;
             }
             case EVALUATE_GUARD:
+            case EXECUTE:
             case EVALUATE: {
                 OperatorNode<PhysicalExprOperator> contextExpr = op.getArgument(0);
                 OperatorNode<PhysicalExprOperator> exprTree = op.getArgument(1);
@@ -120,7 +126,11 @@ public class TaskGenerator {
                 BytecodeExpression ctx = stepInvocable.addArgument("$context", ctxExpr.getType());
                 PhysicalExprOperatorCompiler stepCompiler = new PhysicalExprOperatorCompiler(stepInvocable.block());
                 BytecodeExpression outputExpression = stepCompiler.evaluateExpression(pgm, ctx, exprTree);
-                if (outputExpression.getType().getValueCoreType() != YQLCoreType.VOID) {
+                if (op.getOperator() == PhysicalOperator.EXECUTE) {
+                    GambitCreator.Invocable inc = stepInvocable.complete(outputExpression);
+                    BytecodeExpression evaluatedExpr = runBody.invoke(exprTree.getLocation(), inc, program, ctxExpr);
+                    runBody.exec(evaluatedExpr);
+                } else if (outputExpression.getType().getValueCoreType() != YQLCoreType.VOID) {
                     BytecodeExpression expr = stepInvocable.evaluateTryCatch(op.getLocation(), outputExpression);
                     GambitCreator.Invocable inc = stepInvocable.complete(expr);
 
