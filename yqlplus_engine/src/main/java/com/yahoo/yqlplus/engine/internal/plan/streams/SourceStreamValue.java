@@ -46,7 +46,7 @@ public class SourceStreamValue extends StreamValue {
     @Override
     public Collection<OperatorValue> feed(OperatorValue stream) {
         OperatorNode<SinkOperator> sink = OperatorNode.create(SinkOperator.STREAM, OperatorNode.create(PhysicalExprOperator.VALUE, stream));
-        return ImmutableList.of(OperatorStep.create(context.getValueTypeAdapter(), source.getLocation(), PhysicalOperator.EVALUATE, context.getContextExpr(),
+        return ImmutableList.of(OperatorStep.create(context.getValueTypeAdapter(), source.getLocation(), PhysicalOperator.EXECUTE, context.getContextExpr(),
                 OperatorNode.create(PhysicalExprOperator.STREAM_EXECUTE, source, setSink(this.stream, sink))));
     }
 }

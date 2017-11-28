@@ -13,8 +13,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.cloud.metrics.api.DummyStandardRequestEmitter;
 import com.yahoo.cloud.metrics.api.MetricDimension;
@@ -28,14 +31,30 @@ import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.*;
+import com.yahoo.yqlplus.engine.guice.EngineThreadPoolModule;
+import com.yahoo.yqlplus.engine.guice.ExecutionScopeModule;
+import com.yahoo.yqlplus.engine.guice.PhysicalOperatorBuiltinsModule;
+import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
+import com.yahoo.yqlplus.engine.guice.ProgramTracerModule;
+import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
+import com.yahoo.yqlplus.engine.guice.SourceApiModule;
 import com.yahoo.yqlplus.engine.internal.bytecode.exprs.NullExpr;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.*;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.CallableInvocableBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.NativeSerialization;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.java.runtime.RelativeTicker;
 import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutTracker;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEnvironment;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.ConditionalsBuiltinsModule;
@@ -58,6 +77,7 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -262,6 +282,21 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         CompiledProgram program = compiler.compile("program.yql", query + " OUTPUT AS f1;");
         return program.run(ImmutableMap.<String,Object>of(), true).getResult("f1").get().getResult();
     }
+
+    protected CompiledProgram compileProgram(String programName, String program) throws Exception {
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        return compiler.compile(programName, program);
+    }
+
+    protected CompiledProgram compileProgramStream(String programName, InputStream stream) throws Exception {
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        return compiler.compile(programName, stream);
+    }
+
+    protected CompiledProgram compileProgramResource(String resourceName) throws Exception {
+        return compileProgramStream(resourceName, getClass().getResourceAsStream(resourceName));
+    }
+
 
     protected ByteArrayOutputStream runQueryProgramSerialized(NativeEncoding encoding, String query, Module... modules) throws Exception {
         if(modules != null && modules.length > 0) {

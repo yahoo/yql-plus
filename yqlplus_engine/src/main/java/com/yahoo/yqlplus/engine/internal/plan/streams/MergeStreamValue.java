@@ -72,7 +72,7 @@ public class MergeStreamValue extends StreamValue {
         OperatorNode<PhysicalExprOperator> complete = OperatorNode.create(PhysicalExprOperator.STREAM_COMPLETE, stream, steps);
 
         return ImmutableList.of(
-                OperatorStep.create(context.getValueTypeAdapter(), PhysicalOperator.EVALUATE, OperatorNode.create(PhysicalExprOperator.STREAM_EXECUTE, complete,
+                OperatorStep.create(context.getValueTypeAdapter(), PhysicalOperator.EXECUTE, OperatorNode.create(PhysicalExprOperator.STREAM_EXECUTE, complete,
                         setSink(this.stream, OperatorNode.create(SinkOperator.STREAM,
                                 OperatorNode.create(PhysicalExprOperator.VALUE, stream))))));
     }

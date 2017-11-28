@@ -1,0 +1,74 @@
+PROGRAM (@arg1 array<string> = [],
+         @arg2 array<int32> = [],
+         @arg3 string = '1',
+         @arg4 boolean = false);
+
+CREATE TEMP TABLE table1 as (
+    SELECT *
+    FROM table5 (@arg2)
+);
+
+CREATE TEMP TABLE table2 as (
+    SELECT value
+    FROM table1
+);
+
+CREATE TEMP TABLE table3 AS(
+SELECT *
+FROM table4(@table2)
+);
+
+SELECT league_key from table1
+OUTPUT as my_league_keys;
+
+SELECT *
+FROM table1
+OUTPUT as my_leagues_and_team_keys;
+
+SELECT * FROM table3
+OUTPUT AS matchups_by_league_key;
+
+CREATE TEMP TABLE tmptable1 AS (
+SELECT * FROM table5(@table3));
+
+CREATE TEMP TABLE tmptable5 as (
+    SELECT value FROM table2
+);
+
+SELECT * FROM tmptable1 OUTPUT as test;
+
+CREATE TEMP TABLE tmptable2 AS (
+SELECT value AS team_key FROM tmptable5
+MERGE
+SELECT team1_key AS team_key FROM tmptable1
+MERGE
+SELECT team2_key AS team_key FROM tmptable1
+);
+
+CREATE TEMP TABLE teams_tmp AS (
+SELECT *
+FROM table5
+WHERE team_key IN (SELECT team_key FROM tmptable2));
+
+CREATE TEMP TABLE matchup_slots_tmp AS
+(EVALUATE test.names_by_key(@table3));
+
+SELECT team_key, team_name, links, images
+FROM teams_tmp
+OUTPUT AS teams;
+
+// build team recaps
+SELECT team_key, recaps
+FROM table5(@teams_tmp, @table3)
+WHERE team_key IN (SELECT value AS team_key FROM tmptable5)
+OUTPUT AS team_recaps;
+
+SELECT team_key, type, text, tokenized_text, player_keys, links, deep_links
+FROM table5()
+WHERE team_key IN (SELECT value FROM tmptable5)
+OUTPUT AS alerts_by_team_keys;
+
+SELECT *
+    FROM table5({"arg1": @arg1})
+    WHERE team_key IN (SELECT team_key FROM tmptable2)
+OUTPUT AS records;
