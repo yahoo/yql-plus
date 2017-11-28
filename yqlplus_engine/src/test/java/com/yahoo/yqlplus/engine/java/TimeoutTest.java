@@ -8,18 +8,14 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.name.Names;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.sources.TimeoutSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
