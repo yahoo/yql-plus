@@ -23,6 +23,8 @@ public enum PhysicalOperator implements Operator {
 
     // context
     EVALUATE(PhysicalExprOperator.class, PhysicalExprOperator.class),
+    // execute evalutes and expression and throws away the result
+    EXECUTE(PhysicalExprOperator.class, PhysicalExprOperator.class),
     // evaluate_guard enforces the timeout on the computation
     EVALUATE_GUARD(PhysicalExprOperator.class, PhysicalExprOperator.class);
 
@@ -61,6 +63,8 @@ public enum PhysicalOperator implements Operator {
                 OperatorNode<PhysicalExprOperator> expr = op.getArgument(1);
                 return true;
             }
+            case EXECUTE:
+                return false;
             default:
                 throw new IllegalArgumentException("unknown PhysicalOperator: " + op);
         }
@@ -73,6 +77,7 @@ public enum PhysicalOperator implements Operator {
             case REQUIRED_ARGUMENT:
             case OPTIONAL_ARGUMENT:
                 return false;
+            case EXECUTE:
             case EVALUATE: {
                 OperatorNode<PhysicalExprOperator> expr = op.getArgument(1);
                 return expr.getOperator().asyncFor(expr);

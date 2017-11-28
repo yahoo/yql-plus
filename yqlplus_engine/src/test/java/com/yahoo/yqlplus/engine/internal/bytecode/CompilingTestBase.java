@@ -77,6 +77,7 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -281,6 +282,21 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         CompiledProgram program = compiler.compile("program.yql", query + " OUTPUT AS f1;");
         return program.run(ImmutableMap.<String,Object>of(), true).getResult("f1").get().getResult();
     }
+
+    protected CompiledProgram compileProgram(String programName, String program) throws Exception {
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        return compiler.compile(programName, program);
+    }
+
+    protected CompiledProgram compileProgramStream(String programName, InputStream stream) throws Exception {
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        return compiler.compile(programName, stream);
+    }
+
+    protected CompiledProgram compileProgramResource(String resourceName) throws Exception {
+        return compileProgramStream(resourceName, getClass().getResourceAsStream(resourceName));
+    }
+
 
     protected ByteArrayOutputStream runQueryProgramSerialized(NativeEncoding encoding, String query, Module... modules) throws Exception {
         if(modules != null && modules.length > 0) {
