@@ -1,0 +1,9 @@
+PROGRAM(
+@stockId string,
+@quantity int64,
+@boughtPrice double
+);
+
+CREATE TEMPORARY TABLE putTable AS (SELECT * FROM putStock(@stockId, @boughtPrice, @quantity));
+
+SELECT * FROM updateStocks WHERE stockId = @putTable[0].stockId OUTPUT AS result;

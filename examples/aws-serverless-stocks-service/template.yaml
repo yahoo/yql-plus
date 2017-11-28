@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  stocksTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "stockId"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "stockId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "stocks"
+  GetStock:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./build/libs/webservice-1.0.0-all.jar
+      Runtime: java8
+      MemorySize: 512
+      Handler: net.whatsbeef.portfolio.webservice.function.GetStock
+      Timeout: 60
+      Policies:
+      - AmazonDynamoDBReadOnlyAccess
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: "/"
+            Method: get
+  PutStock:
+    Runtime: java8
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./build/libs/webservice-1.0.0-all.jar
+      Runtime: java8
+      MemorySize: 512
+      Handler: net.whatsbeef.portfolio.webservice.function.PutStock
+      Timeout: 60
+      Policies:
+      - AmazonDynamoDBFullAccess
+      Events:
+        PutResource:
+          Type: Api
+          Properties:
+            Path: "/"
+            Method: post
+  UpdateStocks:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./build/libs/webservice-1.0.0-all.jar
+      Runtime: java8
+      MemorySize: 512
+      Handler: net.whatsbeef.portfolio.webservice.function.UpdateStocks
+      Timeout: 60
+      Policies:
+      - AmazonDynamoDBFullAccess
+      Events:
+        PutResource:
+          Type: Api
+          Properties:
+            Path: "/update"
+            Method: get

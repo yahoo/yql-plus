@@ -9,7 +9,13 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.*;
+import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.IndexAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.IterateAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.PromiseAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -166,5 +172,12 @@ public class NullableTypeWidget implements TypeWidget {
     @Override
     public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
         return new NullTestingSerializationAdapter(this, target, encoding);
+    }
+
+    @Override
+    public String toString() {
+        return "NullableType<" +
+                target +
+                '>';
     }
 }

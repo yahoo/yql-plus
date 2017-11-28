@@ -11,9 +11,12 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Namespace;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.engine.internal.source.ExportUnitGenerator;
 import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -39,7 +42,7 @@ public class NamespaceAdapter implements SourceNamespace, ModuleNamespace {
     public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
         Provider<Exports> moduleProvider = namespace.resolveModule(modulePath);
         if (moduleProvider == null) {
-            throw new DependencyNotFoundException(location, "No module '%s' found", keyFor(modulePath));
+            return null;
         }
         ExportUnitGenerator adapter = new ExportUnitGenerator(planner.getGambitScope());
         return adapter.apply(modulePath, moduleProvider);
@@ -49,7 +52,7 @@ public class NamespaceAdapter implements SourceNamespace, ModuleNamespace {
     public SourceType findSource(Location location, ContextPlanner planner, List<String> sourcePath) {
         Provider<Source> sourceProvider = namespace.resolveSource(sourcePath);
         if (sourceProvider == null) {
-            throw new DependencyNotFoundException(location, "No source '%s' found", keyFor(sourcePath));
+            return null;
         }
         SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
         return adapter.apply(sourcePath, sourceProvider);

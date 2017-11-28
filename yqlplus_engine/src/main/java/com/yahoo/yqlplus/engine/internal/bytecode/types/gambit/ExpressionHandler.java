@@ -10,14 +10,39 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.ArrayTypeWidget;
-import com.yahoo.yqlplus.engine.internal.compiler.*;
+import com.yahoo.yqlplus.engine.internal.compiler.BooleanCompareExpression;
+import com.yahoo.yqlplus.engine.internal.compiler.BytecodeArithmeticExpression;
+import com.yahoo.yqlplus.engine.internal.compiler.BytecodeNegateExpression;
+import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
+import com.yahoo.yqlplus.engine.internal.compiler.CompareExpression;
+import com.yahoo.yqlplus.engine.internal.compiler.EqualsExpression;
+import com.yahoo.yqlplus.engine.internal.compiler.LocalCodeChunk;
+import com.yahoo.yqlplus.engine.internal.compiler.LocalValue;
+import com.yahoo.yqlplus.engine.internal.compiler.MulticompareExpression;
+import com.yahoo.yqlplus.engine.internal.java.types.RecordMapWrapper;
 import com.yahoo.yqlplus.engine.internal.operations.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.internal.operations.BinaryComparison;
-import com.yahoo.yqlplus.engine.internal.plan.types.*;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.*;
+import com.yahoo.yqlplus.engine.internal.plan.types.AssignableValue;
+import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
+import com.yahoo.yqlplus.engine.internal.plan.types.IndexAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BytecodeCastExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.ListTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.MapTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.NotNullableTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.NullCheckedEvaluatedExpression;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.NullableTypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.objectweb.asm.Label;
@@ -25,7 +50,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,42 +75,11 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     public RecordBuilder record() {
-        final Map<String, BytecodeExpression> fieldSettings = Maps.newLinkedHashMap();
-        return new RecordBuilder() {
-            StructBuilder structBuilder = createStruct();
+        return new ExpressionRecordBuilder();
+    }
 
-            @Override
-            public RecordBuilder add(Location loc, String fieldName, BytecodeExpression input) {
-                fieldSettings.put(fieldName, input);
-                structBuilder.add(fieldName, input.getType());
-                return this;
-            }
-
-            @Override
-            public RecordBuilder merge(Location loc, BytecodeExpression recordType) {
-                // TODO: handle when the input is dynamic
-                TypeWidget inputType = recordType.getType();
-                if(!inputType.hasProperties()) {
-                    throw new UnsupportedOperationException("RecordBuilder.merge must take an argument with properties (e.g. a struct/record)");
-                }
-                PropertyAdapter inputProperties = inputType.getPropertyAdapter();
-                if(!inputProperties.isClosed()) {
-                    throw new UnsupportedOperationException("RecordBuilder.merge does not yet support dynamic (open) structs");
-                }
-                for(PropertyAdapter.Property property : inputProperties.getProperties()) {
-
-                    add(loc, property.name, guarded(recordType, inputProperties.property(recordType, property.name)));
-                }
-                return this;
-            }
-
-            @Override
-            public BytecodeExpression build() {
-                return structBuilder.build()
-                        .getPropertyAdapter()
-                        .construct(fieldSettings);
-            }
-        };
+    public RecordBuilder dynamicRecord() {
+        return new DynamicExpressionRecordBuilder();
     }
 
     AssignableValue evaluate(AssignableValue local, BytecodeExpression expr) {
@@ -847,6 +845,127 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             mv.visitLabel(isNull);
             mv.visitInsn(Opcodes.ACONST_NULL);
             mv.visitLabel(done);
+        }
+    }
+
+    private static final TypeWidget mapFieldWriter = new BaseTypeWidget(Type.getType(MapFieldWriter.class)) {
+        @Override
+        public YQLCoreType getValueCoreType() {
+            return YQLCoreType.OBJECT;
+        }
+
+        @Override
+        protected SerializationAdapter getJsonSerializationAdapter() {
+            throw new UnsupportedOperationException();
+        }
+    };
+    private static final TypeWidget mapType = new MapTypeWidget(Type.getType(RecordMapWrapper.class), BaseTypeAdapter.STRING, BaseTypeAdapter.ANY);
+
+
+    private class DynamicOperation {
+        final String fieldName;
+        final BytecodeExpression value;
+
+        public DynamicOperation(String fieldName, BytecodeExpression value) {
+            this.fieldName = fieldName;
+            this.value = value;
+        }
+    }
+
+    private class DynamicExpressionRecordBuilder implements RecordBuilder {
+        private final List<DynamicOperation> operationNodes = Lists.newArrayList();
+
+        @Override
+        public RecordBuilder add(Location loc, String fieldName, BytecodeExpression input) {
+            operationNodes.add(new DynamicOperation(fieldName, input));
+            return this;
+        }
+
+        @Override
+        public RecordBuilder merge(Location loc, BytecodeExpression recordType) {
+            operationNodes.add(new DynamicOperation("", recordType));
+            return this;
+        }
+
+        @Override
+        public BytecodeExpression build() {
+            return new BaseTypeExpression(mapType) {
+                @Override
+                public void generate(CodeEmitter code) {
+                    AssignableValue map = code.allocate(mapType.construct());
+                    PropertyAdapter adapter = map.getType().getPropertyAdapter();
+                    AssignableValue writer = code.allocate(mapFieldWriter.construct(new BytecodeCastExpression(new MapTypeWidget(Type.getType(Map.class), BaseTypeAdapter.STRING, BaseTypeAdapter.ANY), map)));
+                    for(DynamicOperation op : operationNodes) {
+                        if("".equals(op.fieldName)) {
+                            BytecodeExpression value = op.value;
+                            code.exec(value.getType().getPropertyAdapter().mergeIntoFieldWriter(value, writer));
+                        } else {
+                            String fieldName = op.fieldName;
+                            BytecodeExpression value = op.value;
+                            code.exec(adapter.property(map, fieldName).write(value));
+                        }
+                    }
+                    code.exec(map.read());
+                }
+            };
+        }
+    }
+
+    private class ExpressionRecordBuilder implements RecordBuilder {
+        private boolean dynamic = false;
+        private RecordBuilder dynamicBuilder = null;
+
+        private final Map<String, BytecodeExpression> fieldSettings = Maps.newLinkedHashMap();
+        private final StructBuilder staticStructBuilder = createStruct();
+
+        @Override
+        public RecordBuilder add(Location loc, String fieldName, BytecodeExpression input) {
+            if(dynamic) {
+                dynamicBuilder.add(loc, fieldName, input);
+                return this;
+            }
+            fieldSettings.put(fieldName, input);
+            staticStructBuilder.add(fieldName, input.getType());
+            return this;
+        }
+
+        @Override
+        public RecordBuilder merge(Location loc, BytecodeExpression recordType) {
+            if(dynamic) {
+                dynamicBuilder.merge(loc, recordType);
+                return this;
+            }
+            TypeWidget inputType = recordType.getType();
+            if(!inputType.hasProperties()) {
+                throw new UnsupportedOperationException("RecordBuilder.merge must take an argument with properties (e.g. a struct/record)");
+            }
+            PropertyAdapter inputProperties = inputType.getPropertyAdapter();
+            if(!inputProperties.isClosed()) {
+                // reset and convert ourselves to dynamic
+                dynamic = true;
+                dynamicBuilder = new DynamicExpressionRecordBuilder();
+                // merge all of our existing properties to the dynamic builder
+                for(Map.Entry<String, BytecodeExpression> field : fieldSettings.entrySet()) {
+                    dynamicBuilder.add(Location.NONE, field.getKey(), field.getValue());
+                }
+                dynamicBuilder.merge(loc, recordType);
+                return this;
+            }
+            for(PropertyAdapter.Property property : inputProperties.getProperties()) {
+
+                add(loc, property.name, guarded(recordType, inputProperties.property(recordType, property.name)));
+            }
+            return this;
+        }
+
+        @Override
+        public BytecodeExpression build() {
+            if(dynamic) {
+                return dynamicBuilder.build();
+            }
+            return staticStructBuilder.build()
+                    .getPropertyAdapter()
+                    .construct(fieldSettings);
         }
     }
 }

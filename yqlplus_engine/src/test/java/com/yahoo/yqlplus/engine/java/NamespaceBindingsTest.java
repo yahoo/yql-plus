@@ -12,7 +12,11 @@ import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
-import com.yahoo.yqlplus.engine.*;
+import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.ProgramResult;
+import com.yahoo.yqlplus.engine.YQLPlusCompiler;
+import com.yahoo.yqlplus.engine.YQLPlusEngine;
+import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -79,7 +83,7 @@ public class NamespaceBindingsTest {
             program = compiler.compile("SELECT * FROM missing OUTPUT AS f1;");
             Assert.fail("Should not reach here - should have thrown a ProgramCompileException");
         } catch (ProgramCompileException e) {
-            Assert.assertEquals(e.getMessage(), "<string>:L1:14 No source 'missing' found");
+            Assert.assertEquals(e.getMessage(), "<string>:L1:14 Source 'missing' not found");
         }
     }
 }

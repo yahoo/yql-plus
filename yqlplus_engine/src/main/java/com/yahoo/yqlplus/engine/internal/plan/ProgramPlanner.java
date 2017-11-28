@@ -10,7 +10,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yahoo.yqlplus.api.types.*;
+import com.yahoo.yqlplus.api.types.YQLArrayType;
+import com.yahoo.yqlplus.api.types.YQLBaseType;
+import com.yahoo.yqlplus.api.types.YQLMapType;
+import com.yahoo.yqlplus.api.types.YQLOptionalType;
+import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
@@ -96,7 +100,7 @@ public class ProgramPlanner implements ViewRegistry {
         }
         SourceType result = sourceNamespace.findSource(source.getLocation(), contextPlanner, path);
         if (result == null) {
-            throw new DependencyNotFoundException(source.getLocation(), "Unknown source '%s'", name);
+            throw new DependencyNotFoundException(source.getLocation(), "Source '%s' not found", name);
         }
         resolvedSources.put(name, result);
         return result;

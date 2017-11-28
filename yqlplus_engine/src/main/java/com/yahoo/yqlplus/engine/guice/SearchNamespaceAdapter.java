@@ -10,7 +10,11 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
@@ -70,7 +74,7 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
 
             }
         }
-        throw new DependencyNotFoundException(location, "No module '%s' found", Joiner.on('.').join(modulePath));
+        return null;
     }
 
     private <T> SuffixMatch<T> prefixSearch(Map<String, T> map, List<String> path) {
@@ -104,6 +108,6 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
 
             }
         }
-        throw new DependencyNotFoundException(location, "Unknown source '%s'", Joiner.on('.').join(path));
+        return null;
     }
 }

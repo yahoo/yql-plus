@@ -8,18 +8,14 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.name.Names;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.sources.TimeoutSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -30,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 public class TimeoutTest {
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutWorking() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -39,7 +35,7 @@ public class TimeoutTest {
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutFailing() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -52,7 +48,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheck() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -65,7 +61,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheckWorks() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -74,7 +70,7 @@ public class TimeoutTest {
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testProgramTimeout() throws Exception {
         // Not overriding default program timeout
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
@@ -99,7 +95,7 @@ public class TimeoutTest {
     // --- now the join version of all ---
 
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutFailingJoin() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -112,7 +108,7 @@ public class TimeoutTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeoutCheckJoin() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);

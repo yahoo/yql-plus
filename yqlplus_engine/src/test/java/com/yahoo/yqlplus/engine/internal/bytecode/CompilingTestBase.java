@@ -17,11 +17,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.cloud.metrics.api.DummyStandardRequestEmitter;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.RequestEvent;
 import com.yahoo.cloud.metrics.api.RequestMetricSink;
+import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.DummyTracer;
 import com.yahoo.yqlplus.engine.TaskContext;
@@ -29,20 +31,37 @@ import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.*;
+import com.yahoo.yqlplus.engine.guice.EngineThreadPoolModule;
+import com.yahoo.yqlplus.engine.guice.ExecutionScopeModule;
+import com.yahoo.yqlplus.engine.guice.PhysicalOperatorBuiltinsModule;
+import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
+import com.yahoo.yqlplus.engine.guice.ProgramTracerModule;
+import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
+import com.yahoo.yqlplus.engine.guice.SourceApiModule;
 import com.yahoo.yqlplus.engine.internal.bytecode.exprs.NullExpr;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.*;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.CallableInvocableBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
+import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.NativeSerialization;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.java.runtime.RelativeTicker;
 import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutTracker;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEnvironment;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.streams.SequenceBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.engine.java.JavaTestModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
 import com.yahoo.yqlplus.engine.scope.EmptyExecutionScope;
@@ -73,6 +92,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     GambitScope scope;
     Map<String, OperatorNode<SequenceOperator>> views;
     Map<String, OperatorNode<PhysicalExprOperator>> modules;
+    Map<String, Provider<? extends Source>> sources;
     JavaTestModule.MetricModule metricModule;
 
 
@@ -110,6 +130,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         scope = new GambitSource(source);
         this.modules = Maps.newLinkedHashMap();
         this.views = Maps.newHashMap();
+        this.sources = Maps.newLinkedHashMap();
     }
 
     @Override
@@ -124,7 +145,14 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
 
     @Override
     public SourceType findSource(Location location, ContextPlanner planner, List<String> path) {
-        return null;
+        String pathKey = Joiner.on('.').join(path);
+        Provider<? extends Source> source = sources.get(pathKey);
+        if (source == null) {
+            return null;
+        } else {
+            SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
+            return adapter.apply(path, source);
+        }
     }
 
     protected Callable<Object> compileExpression(OperatorNode<PhysicalExprOperator> expr) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
@@ -216,6 +244,14 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
                 views.put(viewName, parsedQuery);
             }
         }
+    }
+
+    protected void defineSource(String name, Provider<Source> sourceProvider) {
+        sources.put(name, sourceProvider);
+    }
+
+    protected void defineSource(String name, Class<? extends Source> sourceClazz) {
+        sources.put(name, (Provider<? extends Source>)injector.getProvider(sourceClazz));
     }
 
     protected OperatorNode<StatementOperator> parseQueryProgram(String query) throws IOException {
