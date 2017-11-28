@@ -96,7 +96,7 @@ public class ProgramPlanner implements ViewRegistry {
         }
         SourceType result = sourceNamespace.findSource(source.getLocation(), contextPlanner, path);
         if (result == null) {
-            throw new DependencyNotFoundException(source.getLocation(), "Unknown source '%s'", name);
+            throw new DependencyNotFoundException(source.getLocation(), "Source '%s' not found", name);
         }
         resolvedSources.put(name, result);
         return result;

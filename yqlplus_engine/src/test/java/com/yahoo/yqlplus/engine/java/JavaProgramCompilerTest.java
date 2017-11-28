@@ -48,7 +48,6 @@ import com.yahoo.yqlplus.engine.sources.AsyncUpdateMovieSource;
 import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
 import com.yahoo.yqlplus.engine.sources.BatchKeySource;
 import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
-import com.yahoo.yqlplus.engine.sources.StatusSource;
 import com.yahoo.yqlplus.engine.sources.BulkResponse;
 import com.yahoo.yqlplus.engine.sources.ErrorSource;
 import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
@@ -92,6 +91,7 @@ import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZer
 import com.yahoo.yqlplus.engine.sources.SingleKeySource;
 import com.yahoo.yqlplus.engine.sources.SingleListOfStringKeySourceWithSkipEmptyOrZeroSetToTrue;
 import com.yahoo.yqlplus.engine.sources.SingleStringKeySourceWithSkipEmptyOrZeroSetToTrue;
+import com.yahoo.yqlplus.engine.sources.StatusSource;
 import com.yahoo.yqlplus.engine.sources.StringUtilUDF;
 import com.yahoo.yqlplus.engine.sources.UnrulyRequestSource;
 import com.yahoo.yqlplus.engine.sources.UnrulyRequestSource.UnrulyRequestHandle;
@@ -100,7 +100,6 @@ import com.yahoo.yqlplus.engine.sources.UpdateMovieSource;
 import com.yahoo.yqlplus.engine.sources.UpdateMovieSourceWithUnsortedParameters;
 import com.yahoo.yqlplus.engine.tools.TraceFormatter;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -3227,7 +3226,7 @@ public class JavaProgramCompilerTest {
         assertEquals("Quentin Tarantino, Kate Winslet", records.get(0).get("cast"));
     }
 
-    @Test(expectedExceptions = DependencyNotFoundException.class, expectedExceptionsMessageRegExp = ".*Unknown source 'testSource'")
+    @Test(expectedExceptions = DependencyNotFoundException.class, expectedExceptionsMessageRegExp = ".*Source 'testSource' not found")
     public void testMissingDependencyError() throws Exception {
         Long uuid = Long.valueOf("1234");
         MovieSourceWithLongUuid movieSourceWithLongUuid = new MovieSourceWithLongUuid();

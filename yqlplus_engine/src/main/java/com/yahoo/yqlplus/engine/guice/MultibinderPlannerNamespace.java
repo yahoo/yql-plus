@@ -11,12 +11,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.internal.plan.*;
 import com.yahoo.yqlplus.engine.internal.source.ExportUnitGenerator;
 import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.language.parser.Location;
-import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,7 @@ public class MultibinderPlannerNamespace implements SourceNamespace, ModuleNames
     public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
         Provider<Exports> moduleProvider = exportsBindings.get(keyFor(modulePath));
         if (moduleProvider == null) {
-            throw new ProgramCompileException(location, "No source '%s' found", keyFor(modulePath));
+            return null;
         }
         ExportUnitGenerator adapter = new ExportUnitGenerator(planner.getGambitScope());
         return adapter.apply(modulePath, moduleProvider);
@@ -52,7 +50,7 @@ public class MultibinderPlannerNamespace implements SourceNamespace, ModuleNames
     public SourceType findSource(Location location, ContextPlanner planner, List<String> sourcePath) {
         Provider<Source> sourceProvider = sourceBindings.get(keyFor(sourcePath));
         if (sourceProvider == null) {
-            throw new DependencyNotFoundException(location, "No source '%s' found", keyFor(sourcePath));
+            return null;
         }
         SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
         return adapter.apply(sourcePath, sourceProvider);

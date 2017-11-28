@@ -167,4 +167,11 @@ public class NullableTypeWidget implements TypeWidget {
     public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
         return new NullTestingSerializationAdapter(this, target, encoding);
     }
+
+    @Override
+    public String toString() {
+        return "NullableType<" +
+                target +
+                '>';
+    }
 }

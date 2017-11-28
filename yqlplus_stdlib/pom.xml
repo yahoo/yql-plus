@@ -12,12 +12,20 @@
     <parent>
         <groupId>com.yahoo.yqlplus</groupId>
         <artifactId>yqlplus_engine_project</artifactId>
+<<<<<<< HEAD
         <version>2.0.0-SNAPSHOT</version>
+=======
+        <version>1.0.4-SNAPSHOT</version>
+>>>>>>> master
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>yqlplus_stdlib</artifactId>
+<<<<<<< HEAD
     <version>${yqlplus.version}</version>
+=======
+    <version>1.0.4-SNAPSHOT</version>
+>>>>>>> master
     <dependencies>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
