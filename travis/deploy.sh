@@ -2,9 +2,10 @@
 
 set -ev
 
+echo "TRAVIS_TAG is ${TRAVIS_TAG}"
+
 test "${TRAVIS_PULL_REQUEST}" == "false"
 test "${TRAVIS_BRANCH}" == "master"
-test "${TRAVIS_TAG}" != ""
 
 # Pushing yqlplus_engine
 cd yqlplus_engine
