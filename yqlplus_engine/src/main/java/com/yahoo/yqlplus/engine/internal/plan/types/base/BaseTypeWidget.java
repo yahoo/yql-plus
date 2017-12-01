@@ -121,7 +121,7 @@ public abstract class BaseTypeWidget implements TypeWidget {
                 if (type instanceof ListTypeWidget) {
                     return true;
                 } else {
-                    return type.getJVMType().getDescriptor().equals(getJVMType().getDescriptor());
+                    return isAssignableFrom(getJVMType(), type.getJVMType());
                 }
             case MAP:
                 if (type instanceof StructBaseTypeWidget) {
@@ -131,11 +131,23 @@ public abstract class BaseTypeWidget implements TypeWidget {
             case UNION:
             case STRUCT:
             case OBJECT:
-                return type.getJVMType().getDescriptor().equals(getJVMType().getDescriptor());
+                return isAssignableFrom(getJVMType(), type.getJVMType());
             default:
                 return false;
         }
 
+    }
+    
+    private boolean isAssignableFrom(Type type1, Type type2) {
+      try {
+          Class clazz1 = Class.forName(type1.getClassName());
+          Class clazz2 = Class.forName(type2.getClassName());
+          if (clazz1.isAssignableFrom(clazz2)) {
+              return true;
+          }
+      } catch (ClassNotFoundException e) {
+      }
+      return type2.getDescriptor().equals(type1.getDescriptor());
     }
 
     @Override

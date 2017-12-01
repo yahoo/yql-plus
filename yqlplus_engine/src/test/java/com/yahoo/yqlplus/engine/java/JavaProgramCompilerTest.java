@@ -84,6 +84,8 @@ import com.yahoo.yqlplus.engine.sources.MovieUDF;
 import com.yahoo.yqlplus.engine.sources.NestedMapSource;
 import com.yahoo.yqlplus.engine.sources.NestedSource;
 import com.yahoo.yqlplus.engine.sources.PersonMakerSource;
+import com.yahoo.yqlplus.engine.sources.Sample;
+import com.yahoo.yqlplus.engine.sources.SampleListSource;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
 import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
@@ -3685,6 +3687,21 @@ public class JavaProgramCompilerTest {
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.UPDATE));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
+    }
+    
+    @Test
+    public void tesCollectionTypeAssignanle() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("samples", new SampleListSource()));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "PROGRAM ();" + 
+                            "CREATE TEMP TABLE tmp AS (SELECT * FROM samples); \n" +
+                            "SELECT * FROM samples(@tmp) OUTPUT AS sampleList;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                    .build(), true);
+        List<Sample> responses = myResult.getResult("sampleList").get().getResult();
+        Assert.assertEquals(1, responses.size());
+        Assert.assertTrue(responses.get(0) instanceof Sample);
     }
     
     @Test
