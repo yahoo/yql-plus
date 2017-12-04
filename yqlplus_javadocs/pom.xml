@@ -12,13 +12,13 @@
     <parent>
         <groupId>com.yahoo.yqlplus</groupId>
         <artifactId>yqlplus_engine_project</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
+        <version>1.0.6</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.yahoo.yqlplus</groupId>
     <artifactId>yqlplus_javadocs</artifactId>
-    <version>1.0.6-SNAPSHOT</version>
+    <version>1.0.6</version>
     <build>
         <finalName>yqlplus_javadocs</finalName>
     </build>
