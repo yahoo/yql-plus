@@ -14,10 +14,10 @@ import com.yahoo.yqlplus.engine.internal.compiler.ConstructorGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.internal.plan.types.base.BytecodeCastExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.NotNullableTypeWidget;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -86,7 +86,14 @@ public class ConstructInvocation extends BytecodeInvocable {
                 }
             }
             if (foundGenerators.size() == 1) {
-                return constructor(targetType, owner, foundGenerators.get(0).getArgumentTypes()).prefix(args);
+                ConstructorGenerator foundConstructor = foundGenerators.get(0);
+                List<TypeWidget> foundArguments = foundConstructor.getArgumentTypes();
+                GambitCreator.Invocable constructor = constructor(targetType, owner, foundArguments);
+                List<BytecodeExpression> resultArgs = Lists.newArrayListWithExpectedSize(args.length);
+                for(int i = 0; i < args.length; i++) {
+                    resultArgs.add(new BytecodeCastExpression(foundArguments.get(i), args[i]));
+                }
+                return constructor.prefix(resultArgs);
             } else if (foundGenerators.size() == 0) {
                 throw new ProgramCompileException("No matching ConstructorGenerator");
             } else {

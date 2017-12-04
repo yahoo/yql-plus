@@ -26,6 +26,7 @@ import com.yahoo.cloud.metrics.api.RequestMetricSink;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.DummyTracer;
+import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.NativeEncoding;
@@ -277,10 +278,15 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         throw new IllegalStateException("Unable to find f1 output query in parsed program?: " + program);
     }
 
-    protected <T> T runQueryProgram(String query) throws Exception {
+    protected ProgramResult runProgram(String programText) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("program.yql", query + " OUTPUT AS f1;");
-        return program.run(ImmutableMap.<String,Object>of(), true).getResult("f1").get().getResult();
+        CompiledProgram program = compiler.compile("program.yql", programText);
+        return program.run(ImmutableMap.<String,Object>of(), true);
+
+    }
+
+    protected <T> T runQueryProgram(String query) throws Exception {
+        return runProgram(query + " OUTPUT AS f1;").getResult("f1").get().getResult();
     }
 
     protected CompiledProgram compileProgram(String programName, String program) throws Exception {
