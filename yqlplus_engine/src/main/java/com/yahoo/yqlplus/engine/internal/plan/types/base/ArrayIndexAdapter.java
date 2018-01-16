@@ -72,9 +72,9 @@ public class ArrayIndexAdapter implements IndexAdapter, IterateAdapter {
                 code.exec(tgt);
                 code.nullTest(tgt.getType(), done);
                 mv.visitInsn(Opcodes.ARRAYLENGTH);
-                count.write(BaseTypeAdapter.INT32);
+                code.exec(count.write(BaseTypeAdapter.INT32));
                 code.emitIntConstant(0);
-                idx.write(BaseTypeAdapter.INT32);
+                code.exec(idx.write(BaseTypeAdapter.INT32));
                 mv.visitLabel(next);
                 code.exec(count.read());
                 mv.visitJumpInsn(Opcodes.IFEQ, done);
@@ -82,6 +82,7 @@ public class ArrayIndexAdapter implements IndexAdapter, IterateAdapter {
                 code.exec(tgt);
                 code.exec(idx.read());
                 code.getMethodVisitor().visitInsn(ownerType.getJVMType().getOpcode(Opcodes.IALOAD));
+                code.inc(idx, 1);
                 code.nullTest(valueType, next);
                 code.exec(item.write(item.getType()));
                 loop.item(code, item.read(), done, next);

@@ -49,6 +49,7 @@ import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
 import com.yahoo.yqlplus.engine.sources.BatchKeySource;
 import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
 import com.yahoo.yqlplus.engine.sources.BulkResponse;
+import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
 import com.yahoo.yqlplus.engine.sources.ErrorSource;
 import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
 import com.yahoo.yqlplus.engine.sources.FRSource;
@@ -3578,6 +3579,23 @@ public class JavaProgramCompilerTest {
         recordsList = programResult.getResult("out3").get().getResult();
         assertEquals(3, recordsList.size());
         assertEquals(1, PersonSource.getIndex());
+    }
+    
+    @Test
+    public void testArrayIndexAdapter() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule(
+            "Collection", CollectionFunctionsUdf.class));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("SELECT id, value FROM people | Collection.asArray OUTPUT AS peoples;");
+        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<Record> findLike = programResult.getResult("peoples").get().getResult();
+        assertEquals(3, findLike.size());
+        assertEquals("1", findLike.get(0).get("id"));
+        assertEquals("bob", findLike.get(0).get("value"));
+        assertEquals("2", findLike.get(1).get("id"));
+        assertEquals("joe", findLike.get(1).get("value"));
+        assertEquals("3", findLike.get(2).get("id"));
+        assertEquals("smith", findLike.get(2).get("value"));
     }
     
     @Test
