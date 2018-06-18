@@ -3736,6 +3736,18 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals("500", responses.get(0).getBulkResponseItems().get(0).getErrorCode());
         Assert.assertEquals("id", responses.get(0).getBulkResponseItems().get(0).getId());
     }
+
+    @Test
+    public void testSelectWithoutSource() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "PROGRAM(@next string=''); SELECT 2 WHERE @next='' OUTPUT AS out;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .build(), true);
+        List obj = myResult.getResult("out").get().getResult();
+        assertEquals(1, obj.size());
+    }
     
     @Test
     public void testIntCompare() throws Exception {

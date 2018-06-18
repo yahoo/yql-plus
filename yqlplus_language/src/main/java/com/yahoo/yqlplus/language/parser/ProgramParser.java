@@ -79,6 +79,7 @@ import com.yahoo.yqlplus.language.grammar.yqlplusParser.RelationalExpressionCont
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.RelationalOpContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Returning_specContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Scalar_literalContext;
+import com.yahoo.yqlplus.language.grammar.yqlplusParser.Select_sourceContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Select_source_joinContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Select_source_multiContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Select_statementContext;
@@ -443,7 +444,7 @@ public final class ProgramParser {
         ParseTree sourceNode;
 
         if (node instanceof Select_statementContext) {
-            sourceNode = node.getChild(2) != null ? node.getChild(2).getChild(0) : null;
+            sourceNode = node.getChild(2) instanceof Select_sourceContext ? node.getChild(2).getChild(0) : null;
         } else {
             sourceNode = node.getChild(1);
         }
