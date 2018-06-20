@@ -58,9 +58,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class PhysicalExprOperatorCompiler {
     public static final MetricDimension EMPTY_DIMENSION = new MetricDimension();
+    private static final Pattern JAVA_VARIABLE_NAME_PATTERN = Pattern.compile("^[a-zA-Z_$][a-zA-Z_$0-9]*$");
+    
     private ScopedBuilder scope;
 
     public PhysicalExprOperatorCompiler(ScopedBuilder scope) {
@@ -277,7 +280,19 @@ public class PhysicalExprOperatorCompiler {
                 List<String> names = expr.getArgument(0);
                 List<OperatorNode<PhysicalExprOperator>> exprs = expr.getArgument(1);
                 List<BytecodeExpression> evaluated = evaluateExpressions(program, context, exprs);
-                GambitCreator.RecordBuilder recordBuilder = scope.record();
+                GambitCreator.RecordBuilder recordBuilder = null;
+                boolean hasNonValidJavaFieldName = false;
+                for (int i = 0; i < names.size(); ++i) {
+                    if (!JAVA_VARIABLE_NAME_PATTERN.matcher(names.get(i)).matches()) {
+                        hasNonValidJavaFieldName = true;
+                        break;
+                    }
+                }
+                if (!hasNonValidJavaFieldName) {
+                    recordBuilder = scope.record();
+                } else {
+                    recordBuilder = scope.dynamicRecord();
+                }
                 for (int i = 0; i < names.size(); ++i) {
                     recordBuilder.add(expr.getLocation(), names.get(i), evaluated.get(i));
                 }
