@@ -134,4 +134,51 @@ public class EvaluateStatementTest extends CompilingTestBase {
         List<String> output = Lists.newArrayList(program.run(ImmutableMap.of(), true).getResultNames());
         Assert.assertEquals(output.size(), 8);
     }
+
+    public static class FantasyGame {
+        private final Integer id;
+
+        public FantasyGame(int id) {
+            this.id = id;
+        }
+
+        public Integer getId() {
+            return id;
+        }
+    }
+
+    public static class FantasyGameSource implements Source {
+        @Query
+        public List<FantasyGame> getGames() {
+            return ImmutableList.of(new FantasyGame(1));
+        }
+    }
+
+    public static class FantasyGameContext {
+        private final int id;
+
+        public FantasyGameContext(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+    }
+
+    public static class FantasyGameContextSource implements Source {
+        @Query
+        public List<FantasyGameContext> get(int id) {
+            return ImmutableList.of(new FantasyGameContext(1));
+        }
+    }
+
+    @Test
+    public void requireIndexedLookup() throws Exception {
+        defineSource("games", FantasyGameSource.class);
+        defineSource("contexts", FantasyGameContextSource.class);
+        runProgram("CREATE TEMP TABLE g AS (SELECT id FROM games); " +
+                "SELECT * FROM contexts(@g[0].id) OUTPUT AS f1;");
+
+    }
 }

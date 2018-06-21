@@ -17,6 +17,7 @@
     </parent>
 
     <artifactId>yqlplus_engine</artifactId>
+    <version>1.0.9</version>
     <dependencies>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>

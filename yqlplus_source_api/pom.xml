@@ -19,6 +19,7 @@
     </parent>
 
     <artifactId>yqlplus_source_api</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>

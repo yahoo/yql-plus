@@ -18,6 +18,7 @@
     </parent>
 
     <artifactId>yqlplus_language</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>org.testng</groupId>

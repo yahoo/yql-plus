@@ -49,6 +49,7 @@ import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
 import com.yahoo.yqlplus.engine.sources.BatchKeySource;
 import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
 import com.yahoo.yqlplus.engine.sources.BulkResponse;
+import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
 import com.yahoo.yqlplus.engine.sources.ErrorSource;
 import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
 import com.yahoo.yqlplus.engine.sources.FRSource;
@@ -734,6 +735,78 @@ public class JavaProgramCompilerTest {
         List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getId(), 2);
+    }
+
+    @Test
+    public void testMapInputKeyWithDot() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("PROGRAM ();\n" +
+                                                   "SELECT * FROM mapsource({'a.b.c':'abc'}) WHERE id = 2 OUTPUT AS out;");
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0).getId(), 3);
+    }
+    
+    @Test
+    public void testMapInputKeyWithDotExpr() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("PROGRAM (@count int32 = 15);\n" +
+                                                   "SELECT * FROM mapsource({'a.b.c': 'abc', 'a' : @count}) WHERE id = 2 OUTPUT AS out;");
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0).getId(), 4);
+    }
+    
+    @Test
+    public void testMapKeyWithDotAsExpr() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM (@count string = '15');\n" +
+                        "SELECT {'a.b.c': 'abc', 'a' : @count};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("abc", ((Record)record.get("expr")).get("a.b.c"));
+        assertEquals("15", ((Record)record.get("expr")).get("a"));
+    }
+    
+    @Test
+    public void testMapKeyWithDotAsExprDifferentOrders() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM (@count string = '15');\n" +
+                        "SELECT {'a' : @count, 'a.b.c' : 'abc', 'abc' : 'a.b.c', 'cdf' : 'c.d.f', 'c.d.f' : 'cdf'};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("abc", ((Record)record.get("expr")).get("a.b.c"));
+        assertEquals("15", ((Record)record.get("expr")).get("a"));
+        assertEquals("a.b.c", ((Record)record.get("expr")).get("abc"));
+        assertEquals("c.d.f", ((Record)record.get("expr")).get("cdf"));
+        assertEquals("cdf", ((Record)record.get("expr")).get("c.d.f"));
+    }
+    
+    @Test
+    public void testConstantyMap() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM ();\n" +
+                "    SELECT {'a.b': 'ab', 'a' : 'c'};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("ab", ((Record)record.get("expr")).get("a.b"));
+        assertEquals("c", ((Record)record.get("expr")).get("a"));
     }
     
     @Test
@@ -3582,6 +3655,23 @@ public class JavaProgramCompilerTest {
     }
     
     @Test
+    public void testArrayIndexAdapter() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule(
+            "Collection", CollectionFunctionsUdf.class));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("SELECT id, value FROM people | Collection.asArray OUTPUT AS peoples;");
+        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<Record> findLike = programResult.getResult("peoples").get().getResult();
+        assertEquals(3, findLike.size());
+        assertEquals("1", findLike.get(0).get("id"));
+        assertEquals("bob", findLike.get(0).get("value"));
+        assertEquals("2", findLike.get(1).get("id"));
+        assertEquals("joe", findLike.get(1).get("value"));
+        assertEquals("3", findLike.get(2).get("id"));
+        assertEquals("smith", findLike.get(2).get("value"));
+    }
+    
+    @Test
     public void testLike() throws Exception {
         Pattern likePattern = Pattern.compile(".*joe.*");
         Injector injector = Guice.createInjector(new JavaTestModule());
@@ -3718,6 +3808,18 @@ public class JavaProgramCompilerTest {
         List<BulkResponse> responses = myResult.getResult("bulkAddBalanceResponse").get().getResult();
         Assert.assertEquals("500", responses.get(0).getBulkResponseItems().get(0).getErrorCode());
         Assert.assertEquals("id", responses.get(0).getBulkResponseItems().get(0).getId());
+    }
+
+    @Test
+    public void testSelectWithoutSource() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "PROGRAM(@next string=''); SELECT 2 WHERE @next='' OUTPUT AS out;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .build(), true);
+        List obj = myResult.getResult("out").get().getResult();
+        assertEquals(1, obj.size());
     }
     
     @Test
