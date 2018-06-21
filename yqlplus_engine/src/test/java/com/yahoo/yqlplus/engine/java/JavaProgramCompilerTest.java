@@ -735,6 +735,78 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getId(), 2);
     }
+
+    @Test
+    public void testMapInputKeyWithDot() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("PROGRAM ();\n" +
+                                                   "SELECT * FROM mapsource({'a.b.c':'abc'}) WHERE id = 2 OUTPUT AS out;");
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0).getId(), 3);
+    }
+    
+    @Test
+    public void testMapInputKeyWithDotExpr() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("PROGRAM (@count int32 = 15);\n" +
+                                                   "SELECT * FROM mapsource({'a.b.c': 'abc', 'a' : @count}) WHERE id = 2 OUTPUT AS out;");
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0).getId(), 4);
+    }
+    
+    @Test
+    public void testMapKeyWithDotAsExpr() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM (@count string = '15');\n" +
+                        "SELECT {'a.b.c': 'abc', 'a' : @count};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("abc", ((Record)record.get("expr")).get("a.b.c"));
+        assertEquals("15", ((Record)record.get("expr")).get("a"));
+    }
+    
+    @Test
+    public void testMapKeyWithDotAsExprDifferentOrders() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM (@count string = '15');\n" +
+                        "SELECT {'a' : @count, 'a.b.c' : 'abc', 'abc' : 'a.b.c', 'cdf' : 'c.d.f', 'c.d.f' : 'cdf'};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("abc", ((Record)record.get("expr")).get("a.b.c"));
+        assertEquals("15", ((Record)record.get("expr")).get("a"));
+        assertEquals("a.b.c", ((Record)record.get("expr")).get("abc"));
+        assertEquals("c.d.f", ((Record)record.get("expr")).get("cdf"));
+        assertEquals("cdf", ((Record)record.get("expr")).get("c.d.f"));
+    }
+    
+    @Test
+    public void testConstantyMap() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule());
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String prgStr = "PROGRAM ();\n" +
+                "    SELECT {'a.b': 'ab', 'a' : 'c'};";
+        CompiledProgram program = compiler.compile(prgStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List list = myResult.getResult("result1").get().getResult();
+        Assert.assertEquals(list.size(), 1);
+        Record record = (Record) list.get(0);
+        assertEquals("ab", ((Record)record.get("expr")).get("a.b"));
+        assertEquals("c", ((Record)record.get("expr")).get("a"));
+    }
     
     @Test
     public void testMapSource() throws Exception {

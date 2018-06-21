@@ -879,6 +879,26 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             };
         }
     }
+    
+    private static boolean isJavaFieldName(String fieldName) {
+        if (fieldName.isEmpty()) {
+            return false;
+        } else {
+            if (!Character.isJavaIdentifierStart(fieldName.charAt(0))) {
+                return false;
+            }
+            if (fieldName.length() == 1) {
+                return true;
+            } else {
+                for (int i = 1; i < fieldName.length(); i++) {
+                    if (!Character.isJavaIdentifierPart(fieldName.charAt(i))) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }     
+    }
 
     private class ExpressionRecordBuilder implements RecordBuilder {
         private boolean dynamic = false;
@@ -887,9 +907,24 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         private final Map<String, BytecodeExpression> fieldSettings = Maps.newLinkedHashMap();
         private final StructBuilder staticStructBuilder = createStruct();
 
+        private void initDynamicBuilder() {
+            // reset and convert ourselves to dynamic
+            dynamic = true;
+            dynamicBuilder = new DynamicExpressionRecordBuilder();
+            // merge all of our existing properties to the dynamic builder
+            for (Map.Entry<String, BytecodeExpression> entry:fieldSettings.entrySet()) {
+                dynamicBuilder.add(Location.NONE, entry.getKey(), entry.getValue());
+            }              
+        }
+        
         @Override
         public RecordBuilder add(Location loc, String fieldName, BytecodeExpression input) {
             if(dynamic) {
+                dynamicBuilder.add(loc, fieldName, input);
+                return this;
+            }
+            if (!isJavaFieldName(fieldName)) {
+                initDynamicBuilder();
                 dynamicBuilder.add(loc, fieldName, input);
                 return this;
             }
@@ -910,13 +945,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             }
             PropertyAdapter inputProperties = inputType.getPropertyAdapter();
             if(!inputProperties.isClosed()) {
-                // reset and convert ourselves to dynamic
-                dynamic = true;
-                dynamicBuilder = new DynamicExpressionRecordBuilder();
-                // merge all of our existing properties to the dynamic builder
-                for(Map.Entry<String, BytecodeExpression> field : fieldSettings.entrySet()) {
-                    dynamicBuilder.add(Location.NONE, field.getKey(), field.getValue());
-                }
+                initDynamicBuilder();
                 dynamicBuilder.merge(loc, recordType);
                 return this;
             }
