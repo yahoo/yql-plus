@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/yahoo/yql-plus.svg?branch=master)](https://travis-ci.org/yahoo/yql-plus)
+
 # YQL+ Engine
 
 This is the YQL+ parser, execution engine, and source SDK.
