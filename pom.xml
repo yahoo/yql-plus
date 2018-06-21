@@ -19,7 +19,7 @@
     <properties>
         <yqlplus.version>2.0.0-SNAPSHOT</yqlplus.version>
         <additionalparam>-Xdoclint:none</additionalparam>
-        <min_jdk_version>1.9</min_jdk_version>
+        <min_jdk_version>1.10</min_jdk_version>
     </properties>
     <modules>
         <module>yqlplus_language</module>
