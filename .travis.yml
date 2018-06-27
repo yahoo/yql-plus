@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-- oraclejdk8
+- oraclejdk10
 
 cache:
   directories:
@@ -15,6 +15,7 @@ after_success:
 branches:
   only:
   - master
+  - jdk10
 
 env:
   global:
