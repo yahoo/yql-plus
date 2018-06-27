@@ -98,8 +98,7 @@ import com.yahoo.yqlplus.language.grammar.yqlplusParser.ViewContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.WhereContext;
 import com.yahoo.yqlplus.language.internal.ast.StringUnescaper;
 import com.yahoo.yqlplus.language.internal.logical.ProjectionBuilder;
-import com.yahoo.yqlplus.language.internal.parser.CaseInsensitiveFileStream;
-import com.yahoo.yqlplus.language.internal.parser.CaseInsensitiveInputStream;
+import com.yahoo.yqlplus.language.internal.parser.LowerCaseStream;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.logical.SortOperator;
@@ -108,6 +107,7 @@ import com.yahoo.yqlplus.language.logical.TypeOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
@@ -115,11 +115,10 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.antlr.v4.runtime.misc.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,15 +132,15 @@ import java.util.Set;
  */
 public final class ProgramParser {
     public yqlplusParser prepareParser(String programName, InputStream input) throws IOException {
-        return prepareParser(programName, new CaseInsensitiveInputStream(input));
+        return prepareParser(programName, new LowerCaseStream(CharStreams.fromStream(input)));
     }
 
-    public yqlplusParser prepareParser(String programName, String input) throws IOException {
-        return prepareParser(programName, new CaseInsensitiveInputStream(input));
+    public yqlplusParser prepareParser(String programName, String input) {
+        return prepareParser(programName, new LowerCaseStream(CharStreams.fromString(input)));
     }
 
     public yqlplusParser prepareParser(File file) throws IOException {
-        return prepareParser(file.getAbsoluteFile().toString(), new CaseInsensitiveFileStream(file.getAbsolutePath()));
+        return prepareParser(file.getAbsoluteFile().toString(), new LowerCaseStream(CharStreams.fromFileName(file.getAbsolutePath())));
     }
 
 
@@ -149,12 +148,12 @@ public final class ProgramParser {
         yqlplusLexer lex = new yqlplusLexer(input);
         lex.addErrorListener(new BaseErrorListener() {
             @Override
-            public void syntaxError(@NotNull Recognizer<?, ?> recognizer,
-                                    @Nullable Object offendingSymbol,
+            public void syntaxError(Recognizer<?, ?> recognizer,
+                                    Object offendingSymbol,
                                     int line,
                                     int charPositionInLine,
-                                    @NotNull String msg,
-                                    @Nullable RecognitionException e) {
+                                    String msg,
+                                    RecognitionException e) {
                 throw new ProgramCompileException(new Location(programName, line, charPositionInLine), msg);
             }
 
@@ -163,12 +162,12 @@ public final class ProgramParser {
         yqlplusParser parser = new yqlplusParser(tokens);
         parser.addErrorListener(new BaseErrorListener() {
             @Override
-            public void syntaxError(@NotNull Recognizer<?, ?> recognizer,
-                                    @Nullable Object offendingSymbol,
+            public void syntaxError(Recognizer<?, ?> recognizer,
+                                    Object offendingSymbol,
                                     int line,
                                     int charPositionInLine,
-                                    @NotNull String msg,
-                                    @Nullable RecognitionException e) {
+                                    String msg,
+                                    RecognitionException e) {
                 throw new ProgramCompileException(new Location(programName, line, charPositionInLine), msg);
             }
 
@@ -1092,7 +1091,7 @@ public final class ProgramParser {
             case yqlplusParser.RULE_fixed_or_parameter: {
                 ParseTree firstChild = parseTree.getChild(0);
                 if (getParseTreeIndex(firstChild) == yqlplusParser.INT) {
-                    return OperatorNode.create(toLocation(scope, firstChild), ExpressionOperator.LITERAL, new Integer(firstChild.getText()));
+                    return OperatorNode.create(toLocation(scope, firstChild), ExpressionOperator.LITERAL, firstChild.getText());
                 } else {
                     return convertExpr(firstChild, scope);
                 }
@@ -1425,14 +1424,14 @@ public final class ProgramParser {
         String text = literal.getChild(0).getText();
         switch (parseTreeIndex) {
             case yqlplusParser.INT:
-                return new Integer(text);
+                return Integer.valueOf(text);
             case yqlplusParser.FLOAT:
-                return new Double(text);
+                return Double.valueOf(text);
             case yqlplusParser.STRING:
                 return StringUnescaper.unquote(text);
             case yqlplusParser.TRUE:
             case yqlplusParser.FALSE:
-                return new Boolean(text);
+                return Boolean.valueOf(text);
             case yqlplusParser.LONG_INT:
                 return Long.parseLong(text.substring(0, text.length() - 1));
             default:
