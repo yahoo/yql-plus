@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/yahoo/yql-plus.svg?branch=master)](https://travis-ci.org/yahoo/yql-plus)
+[![Build Status](https://travis-ci.org/yahoo/yql-plus.svg?branch=jdk10)](https://travis-ci.org/yahoo/yql-plus)
 
 # YQL+ Engine
 
