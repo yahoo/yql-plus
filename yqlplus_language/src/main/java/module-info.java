@@ -3,8 +3,6 @@ module com.yahoo.yqlplus.language {
 
     requires com.google.common;
     requires com.google.guice;
-    requires com.fasterxml.jackson.core;
-    requires com.fasterxml.jackson.databind;
 
     requires antlr4.runtime;
 
