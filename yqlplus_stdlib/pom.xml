@@ -20,14 +20,13 @@
     <version>${yqlplus.version}</version>
     <dependencies>
         <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_source_api</artifactId>
             <version>${yqlplus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
