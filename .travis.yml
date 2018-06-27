@@ -16,6 +16,7 @@ branches:
   only:
   - master
   - /^v.*$/
+  - jdk10
 
 env:
   global:
