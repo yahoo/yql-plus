@@ -6,8 +6,6 @@
 
 package com.yahoo.yqlplus.engine.internal.operations;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Collection;
 import java.util.regex.Pattern;
 
@@ -30,8 +28,6 @@ public final class Comparisons {
     }
 
     public boolean compare(BinaryComparison op, int left, int right) {
-        Preconditions.checkNotNull(left);
-        Preconditions.checkNotNull(right);
         int val = Integer.compare(left, right);
         switch (op) {
             case LT:
