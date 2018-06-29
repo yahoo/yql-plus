@@ -15,12 +15,10 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 import com.yahoo.yqlplus.compiler.code.GambitRuntime;
 import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
-import com.yahoo.yqlplus.compiler.runtime.TimeoutHandler;
 import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
 
 import javax.inject.Named;
@@ -46,9 +44,6 @@ public abstract class ProgramInvocation {
     @Inject
     @Named("rootContext")
     public TaskContext rootContext;
-
-    @Inject
-    public TimeoutHandler timeouts;
 
     public void execute(Runnable runnable) {
         tasks.submit(wrap(runnable));
