@@ -85,19 +85,20 @@ public class ConstructInvocation extends BytecodeInvocable {
                     foundGenerators.add(generator);
                 }
             }
-            if (foundGenerators.size() == 1) {
-                ConstructorGenerator foundConstructor = foundGenerators.get(0);
-                List<TypeWidget> foundArguments = foundConstructor.getArgumentTypes();
-                GambitCreator.Invocable constructor = constructor(targetType, owner, foundArguments);
-                List<BytecodeExpression> resultArgs = Lists.newArrayListWithExpectedSize(args.length);
-                for(int i = 0; i < args.length; i++) {
-                    resultArgs.add(new BytecodeCastExpression(foundArguments.get(i), args[i]));
-                }
-                return constructor.prefix(resultArgs);
-            } else if (foundGenerators.size() == 0) {
-                throw new ProgramCompileException("No matching ConstructorGenerator");
-            } else {
-                throw new ProgramCompileException("Found ambiguous constructors for " + args);
+            switch (foundGenerators.size()) {
+                case 1:
+                    ConstructorGenerator foundConstructor = foundGenerators.get(0);
+                    List<TypeWidget> foundArguments = foundConstructor.getArgumentTypes();
+                    GambitCreator.Invocable constructor = constructor(targetType, owner, foundArguments);
+                    List<BytecodeExpression> resultArgs = Lists.newArrayListWithExpectedSize(args.length);
+                    for (int i = 0; i < args.length; i++) {
+                        resultArgs.add(new BytecodeCastExpression(foundArguments.get(i), args[i]));
+                    }
+                    return constructor.prefix(resultArgs);
+                case 0:
+                    throw new ProgramCompileException("No matching ConstructorGenerator");
+                default:
+                    throw new ProgramCompileException("Found ambiguous constructors for " + args);
             }          
         } else {
             throw new ProgramCompileException("No available ConstructorGenerator");

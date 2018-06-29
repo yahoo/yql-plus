@@ -240,29 +240,35 @@ public class IndexedQueryPlanner {
     private void processFilterClause(Map<String, OperatorNode<ExpressionOperator>> columns,
                                      List<OperatorNode<ExpressionOperator>> others,
                                      OperatorNode<ExpressionOperator> filter) {
-        if (filter.getOperator() == ExpressionOperator.EQ) {
-            OperatorNode<ExpressionOperator> left = filter.getArgument(0);
-            OperatorNode<ExpressionOperator> right = filter.getArgument(1);
-            String leftName = extractFieldMatch(left);
-            String rightName = extractFieldMatch(right);
-            if (leftName != null && rightName == null && indexColumns.contains(leftName)) {
-                columns.put(leftName, OperatorNode.create(filter.getLocation(), ExpressionOperator.EQ, left, right));
-            } else if (rightName != null && leftName != null && indexColumns.contains(rightName)) {
-                columns.put(rightName, OperatorNode.create(filter.getLocation(), ExpressionOperator.EQ, right, left));
-            } else {
-                others.add(filter);
+        switch (filter.getOperator()) {
+            case EQ: {
+                OperatorNode<ExpressionOperator> left = filter.getArgument(0);
+                OperatorNode<ExpressionOperator> right = filter.getArgument(1);
+                String leftName = extractFieldMatch(left);
+                String rightName = extractFieldMatch(right);
+                if (leftName != null && rightName == null && indexColumns.contains(leftName)) {
+                    columns.put(leftName, OperatorNode.create(filter.getLocation(), ExpressionOperator.EQ, left, right));
+                } else if (rightName != null && leftName != null && indexColumns.contains(rightName)) {
+                    columns.put(rightName, OperatorNode.create(filter.getLocation(), ExpressionOperator.EQ, right, left));
+                } else {
+                    others.add(filter);
+                }
+                break;
             }
-        } else if (filter.getOperator() == ExpressionOperator.IN) {
-            OperatorNode<ExpressionOperator> left = filter.getArgument(0);
-            OperatorNode<ExpressionOperator> right = filter.getArgument(1);
-            String leftField = extractFieldMatch(left);
-            if (left.getOperator() == ExpressionOperator.READ_FIELD && indexColumns.contains(leftField)) {
-                columns.put(leftField, OperatorNode.create(filter.getLocation(), filter.getAnnotations(), ExpressionOperator.IN, left, right));
-            } else {
-                others.add(filter);
+            case IN: {
+                OperatorNode<ExpressionOperator> left = filter.getArgument(0);
+                OperatorNode<ExpressionOperator> right = filter.getArgument(1);
+                String leftField = extractFieldMatch(left);
+                if (left.getOperator() == ExpressionOperator.READ_FIELD && indexColumns.contains(leftField)) {
+                    columns.put(leftField, OperatorNode.create(filter.getLocation(), filter.getAnnotations(), ExpressionOperator.IN, left, right));
+                } else {
+                    others.add(filter);
+                }
+                break;
             }
-        } else {
-            others.add(filter);
+            default:
+                others.add(filter);
+                break;
         }
     }
 

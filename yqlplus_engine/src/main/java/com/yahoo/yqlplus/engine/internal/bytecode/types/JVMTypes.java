@@ -60,7 +60,9 @@ public class JVMTypes {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("(" + super.toString() + "): ");
+            builder.append("(");
+            builder.append(super.toString());
+            builder.append("): ");
             builder.append(rawType);
             builder.append("<");
             Joiner j = Joiner.on(",");

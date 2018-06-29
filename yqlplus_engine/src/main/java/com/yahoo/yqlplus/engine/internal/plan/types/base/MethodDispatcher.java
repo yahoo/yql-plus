@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class MethodDispatcher {
     private final TypeLiteral<?> target;
@@ -30,31 +32,12 @@ public class MethodDispatcher {
         this.target = target;
     }
 
-    private String toKey(String methodName, List<TypeWidget> argumentTypes) {
-        StringBuilder out = new StringBuilder();
-        out.append(methodName)
-                .append('(');
-        Joiner.on(",").appendTo(out, Iterables.transform(argumentTypes, new Function<TypeWidget, String>() {
-            @Override
-            public String apply(TypeWidget input) {
-                return input.getJVMType().getDescriptor();
-            }
-        }));
-        out.append(')');
-        return out.toString();
-    }
-
 
     private String toKey(String methodName, Iterable<Type> argumentTypes) {
         StringBuilder out = new StringBuilder();
         out.append(methodName)
                 .append('(');
-        Joiner.on(",").appendTo(out, Iterables.transform(argumentTypes, new Function<Type, String>() {
-            @Override
-            public String apply(Type input) {
-                return input.getDescriptor();
-            }
-        }));
+        Joiner.on(",").appendTo(out, StreamSupport.stream(argumentTypes.spliterator(), false).map(input -> input.getDescriptor()).collect(Collectors.toList()));
         out.append(')');
         return out.toString();
     }
