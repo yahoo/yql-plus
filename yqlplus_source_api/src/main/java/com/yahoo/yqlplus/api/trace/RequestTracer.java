@@ -13,7 +13,5 @@ public interface RequestTracer extends Tracer {
 
     long elapsedTicks();
 
-    Timeout createTimeout(long timeout, TimeUnit timeoutUnits);
-
     TraceRequest createTrace();
 }

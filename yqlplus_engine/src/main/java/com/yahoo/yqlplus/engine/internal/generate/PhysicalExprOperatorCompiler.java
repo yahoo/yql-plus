@@ -26,7 +26,6 @@ import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.KeyCursorTypeWidget;
 import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
 import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
 import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;

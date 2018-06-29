@@ -224,11 +224,6 @@ public class ProgramTracer implements RequestTracer {
     }
 
     @Override
-    public Timeout createTimeout(final long timeout, final TimeUnit timeoutUnits) {
-        return new TimeoutTracker(timeout, timeoutUnits, ticker);
-    }
-
-    @Override
     public TimeUnit getTickUnits() {
         return TimeUnit.NANOSECONDS;
     }
