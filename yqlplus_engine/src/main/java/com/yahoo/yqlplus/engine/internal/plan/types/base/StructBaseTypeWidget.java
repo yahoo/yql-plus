@@ -7,9 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.plan.types.IndexAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import org.objectweb.asm.Type;
 
 public abstract class StructBaseTypeWidget extends BaseTypeWidget {
@@ -29,11 +27,6 @@ public abstract class StructBaseTypeWidget extends BaseTypeWidget {
 
     @Override
     public abstract PropertyAdapter getPropertyAdapter();
-
-    @Override
-    protected final SerializationAdapter getJsonSerializationAdapter() {
-        return new NativeObjectSerializer(getPropertyAdapter(), NativeEncoding.JSON);
-    }
 
     @Override
     public final IndexAdapter getIndexAdapter() {

@@ -9,10 +9,8 @@ package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.PromiseAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.TodoException;
 import org.objectweb.asm.Type;
 
 import java.util.concurrent.CompletableFuture;
@@ -57,8 +55,4 @@ public class CompletableFutureResultType extends BaseTypeWidget {
         };
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        throw new TodoException();
-    }
 }

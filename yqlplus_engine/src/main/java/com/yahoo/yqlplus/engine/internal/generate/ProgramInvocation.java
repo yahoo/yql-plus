@@ -18,8 +18,6 @@ import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
-import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitRuntime;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutHandler;
@@ -144,10 +142,6 @@ public abstract class ProgramInvocation {
             fail(e);
             throw e;
         }
-    }
-
-    public void invoke(NativeEncoding encoding, NativeInvocationResultHandler resultHandler, Map<String, Object> arguments) {
-        invoke(new NativeEncodingAdapter(encoding, resultHandler, getNativeSerializer()), arguments);
     }
 
     protected abstract void readArguments(Map<String, Object> arguments);

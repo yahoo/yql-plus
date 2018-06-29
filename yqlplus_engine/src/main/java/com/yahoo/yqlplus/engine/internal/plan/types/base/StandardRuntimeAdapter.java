@@ -6,7 +6,6 @@
 
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.exprs.NullExpr;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
@@ -34,16 +33,6 @@ public class StandardRuntimeAdapter implements RuntimeAdapter {
         } else {
             return new NullExpr(AnyTypeWidget.getInstance());
         }
-    }
-
-    @Override
-    public BytecodeSequence serializeJson(BytecodeExpression source, BytecodeExpression generator) {
-        return widget.getSerializationAdapter(NativeEncoding.JSON).serializeTo(source, generator);
-    }
-
-    @Override
-    public BytecodeSequence serializeTBin(BytecodeExpression source, BytecodeExpression generator) {
-        return widget.getSerializationAdapter(NativeEncoding.TBIN).serializeTo(source, generator);
     }
 
     @Override

@@ -11,7 +11,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.JVMTypes;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -159,14 +158,4 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
         return propertyAdapter;
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        if(hasProperties()) {
-            return new NativeObjectSerializer(getPropertyAdapter(), NativeEncoding.JSON);
-        } else if(isIterable()) {
-            return new IteratingSerializing(getIterableAdapter(), NativeEncoding.JSON);
-        } else {
-            return new EmptyObjectSerializer(this, NativeEncoding.JSON);
-        }
-    }
 }

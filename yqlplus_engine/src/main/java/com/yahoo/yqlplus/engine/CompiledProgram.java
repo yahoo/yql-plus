@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine;
 
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
-import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
 import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -71,8 +69,6 @@ public interface CompiledProgram {
     ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope scope, long timeout, TimeUnit timeoutUnit) throws Exception;
 
     void invoke(InvocationResultHandler resultHandler, Map<String, Object> arguments, ExecutionScope scope, TaskContext context);
-
-    void invoke(NativeEncoding encoding, NativeInvocationResultHandler resultHandler, Map<String, Object> arguments, ExecutionScope scope, TaskContext context);
 
     /**
      * Enumerated the arguments for this program. Required arguments must be passed to run to invoke the program.

@@ -11,16 +11,12 @@ import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
-import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
 import com.yahoo.yqlplus.engine.internal.code.CodeOutput;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.java.runtime.ProgramTracer;
@@ -157,23 +153,6 @@ public final class PlanCompiledProgram implements CompiledProgram {
             public void run() {
                 ProgramInvocation program = injector.getInstance(getCompiledProgram());
                 program.invoke(resultHandler, arguments);
-            }
-        });
-    }
-
-    @Override
-    public void invoke(final NativeEncoding encoding, final NativeInvocationResultHandler resultHandler, final Map<String, Object> arguments, ExecutionScope inputScope, TaskContext context) {
-        ExecutionScope scope = new WrapScope(inputScope)
-                .bind(Boolean.class, "debug", true)
-                .bind(String.class, "programName", name);
-        final TaskMetricEmitter programTasks = context.metricEmitter; //.start("program.tmp", name);
-        ScopedTracingExecutor tracingExecutor = new ScopedTracingExecutor(timerExecutor, workExecutor, scoper, programTasks, context.tracer, context.timeout, scope);
-        final Injector injector = this.injector;
-        tracingExecutor.runNow(new Runnable() {
-            @Override
-            public void run() {
-                ProgramInvocation program = injector.getInstance(getCompiledProgram());
-                program.invoke(encoding, resultHandler, arguments);
             }
         });
     }

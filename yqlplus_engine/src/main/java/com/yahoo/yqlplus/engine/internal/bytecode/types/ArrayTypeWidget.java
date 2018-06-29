@@ -7,13 +7,11 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.ArrayIndexAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.ComparisonAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.IteratingSerializing;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
@@ -114,11 +112,6 @@ public class ArrayTypeWidget implements TypeWidget {
     @Override
     public boolean isIterable() {
         return true;
-    }
-
-    @Override
-    public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
-        return new IteratingSerializing(getIterableAdapter(), encoding);
     }
 
     @Override

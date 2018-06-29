@@ -7,9 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.JacksonValueSerializationAdapter;
 import org.objectweb.asm.Type;
 
 public class EnumTypeAdapter extends BaseTypeWidget {
@@ -22,8 +20,4 @@ public class EnumTypeAdapter extends BaseTypeWidget {
         return YQLCoreType.STRING;
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        return new JacksonValueSerializationAdapter(this);
-    }
 }

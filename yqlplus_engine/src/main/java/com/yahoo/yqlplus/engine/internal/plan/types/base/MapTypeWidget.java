@@ -8,7 +8,6 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
 import org.objectweb.asm.Type;
 
@@ -111,8 +110,4 @@ public class MapTypeWidget extends BaseTypeWidget {
         }
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        return new NativeObjectSerializer(getPropertyAdapter(), NativeEncoding.JSON);
-    }
 }

@@ -8,9 +8,6 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -91,18 +88,4 @@ public class PrimitiveTypeWidget extends BaseTypeWidget {
         return "<PrimitiveType:" + getJVMType().getDescriptor() + ">";
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        return new SerializationAdapter() {
-            @Override
-            public BytecodeSequence serializeTo(BytecodeExpression source, BytecodeExpression generator) {
-                return new JacksonSerializePrimitive(source, generator);
-            }
-
-            @Override
-            public BytecodeExpression deserializeFrom(BytecodeExpression parser) {
-                return new JacksonParsePrimitive(PrimitiveTypeWidget.this, parser);
-            }
-        };
-    }
 }

@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
@@ -111,18 +110,6 @@ public class AnyTypeWidget implements TypeWidget {
     @Override
     public boolean isIterable() {
         return true;
-    }
-
-    @Override
-    public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
-        switch(encoding) {
-            case JSON:
-                return new DynamicSerializationAdapter("yql:serialize:json", "yql:deserialize:json");
-            case TBIN:
-                return new DynamicSerializationAdapter("yql:serialize:tbin", "yql:deserialize:tbin");
-            default:
-                throw new UnsupportedOperationException("Unknown NativeEncoding: " + encoding);
-        }
     }
 
     @Override

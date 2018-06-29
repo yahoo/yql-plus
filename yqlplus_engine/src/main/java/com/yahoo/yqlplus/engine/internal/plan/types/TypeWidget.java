@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.engine.internal.plan.types;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.ComparisonAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.PropertyAdapter;
@@ -34,8 +33,6 @@ public interface TypeWidget {
     BytecodeExpression invoke(BytecodeExpression target, String methodName, List<BytecodeExpression> arguments);
 
     BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments);
-
-    SerializationAdapter getSerializationAdapter(NativeEncoding encoding);
 
     ComparisonAdapter getComparisionAdapter();
 

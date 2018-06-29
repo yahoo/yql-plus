@@ -6,18 +6,13 @@
 
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.types.*;
-import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.java.types.DynamicRecordWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
 
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import java.nio.ByteBuffer;
@@ -26,26 +21,6 @@ import java.util.Map;
 
 public class BaseTypeAdapter implements ValueTypeAdapter {
     public static final TypeWidget VOID = new CoreTypeWidget(Type.VOID_TYPE, YQLCoreType.VOID) {
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            final TypeWidget type = this;
-            return new SerializationAdapter() {
-                @Override
-                public BytecodeSequence serializeTo(BytecodeExpression source, BytecodeExpression generator) {
-                    return BytecodeSequence.NOOP;
-                }
-
-                @Override
-                public BytecodeExpression deserializeFrom(BytecodeExpression parser) {
-                    return new BaseTypeExpression(type) {
-                        @Override
-                        public void generate(CodeEmitter code) {
-
-                        }
-                    };
-                }
-            };
-        }
     };
 
     public static final TypeWidget INT8;
@@ -64,10 +39,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
     public static final TypeWidget ANY = AnyTypeWidget.getInstance();
 
     public static final TypeWidget TIMEOUT_CORE = new CoreTypeWidget(Type.getType(Timeout.class), YQLCoreType.OBJECT) {
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new TodoException();
-        }
     };
 
     private static final ImmutableMap<String, TypeWidget> STATIC_MAPPINGS;
@@ -137,43 +108,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
             super(Type.getType(String.class), YQLCoreType.STRING);
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            return new SerializationAdapter() {
-                @Override
-                public BytecodeSequence serializeTo(final BytecodeExpression source, final BytecodeExpression generator) {
-                    return new BytecodeSequence() {
-                        @Override
-                        public void generate(CodeEmitter code) {
-                            MethodVisitor mv = code.getMethodVisitor();
-                            code.exec(generator);
-                            code.exec(source);
-                            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                                    Type.getInternalName(JsonGenerator.class),
-                                    "writeString",
-                                    Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(String.class)),
-                                    false);
-                        }
-                    };
-                }
-
-                @Override
-                public BytecodeExpression deserializeFrom(final BytecodeExpression parser) {
-                    return new BaseTypeExpression(StringTypeWidget.this) {
-                        @Override
-                        public void generate(CodeEmitter code) {
-                            MethodVisitor mv = code.getMethodVisitor();
-                            code.exec(parser);
-                            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                                    Type.getInternalName(JsonParser.class),
-                                    "nextTextValue",
-                                    Type.getMethodDescriptor(getType().getJVMType()),
-                                    false);
-                        }
-                    };
-                }
-            };
-        }
     }
 
     private static final class ByteBufferTypeWidget extends CoreTypeWidget {
@@ -181,10 +115,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
             super(Type.getType(ByteBuffer.class), YQLCoreType.BYTES);
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new TodoException();
-        }
     }
 
     private static final class ByteArrayTypeWidget extends CoreTypeWidget {
@@ -192,10 +122,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
             super(Type.getType(byte[].class), YQLCoreType.BYTES);
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new TodoException();
-        }
     }
 
     private static final class DateTypeWidget extends CoreTypeWidget {
@@ -203,10 +129,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
             super(Type.getType(Date.class), YQLCoreType.TIMESTAMP);
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new TodoException();
-        }
     }
 
     private static final class SqlDateTypeWidget extends CoreTypeWidget {
@@ -214,10 +136,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
             super(Type.getType(java.sql.Date.class), YQLCoreType.TIMESTAMP);
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new TodoException();
-        }
     }
 
     private static TypeWidget registerJavaType(YQLType type, ImmutableMap.Builder<String, TypeWidget> m, TypeWidget btw) {

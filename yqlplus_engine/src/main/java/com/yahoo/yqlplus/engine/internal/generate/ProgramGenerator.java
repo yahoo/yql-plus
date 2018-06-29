@@ -6,13 +6,11 @@
 
 package com.yahoo.yqlplus.engine.internal.generate;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.exprs.LocalVarExpr;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
@@ -21,7 +19,6 @@ import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
@@ -62,27 +59,6 @@ public class ProgramGenerator {
         this.runBody = runMethod.block();
         this.runBody.alias("this", "$program");
         this.runMethod.exit();
-        ObjectBuilder.MethodBuilder getSerializer = program.method("getNativeSerializer");
-        final ObjectBuilder serializer = scope.createObject();
-        serializer.implement(NativeSerialization.class);
-        // void writeJson(JsonGenerator target, Object input);
-        generateSerializationMethod(serializer, "writeJson", NativeEncoding.JSON, JsonGenerator.class);
-        final TypeWidget serializerType = serializer.type();
-        getSerializer.exit(new BaseTypeExpression(scope.adapt(NativeSerialization.class, false)) {
-            @Override
-            public void generate(CodeEmitter code) {
-                code.emitNew(serializerType.getJVMType().getInternalName());
-            }
-        });
-    }
-
-    private void generateSerializationMethod(ObjectBuilder serializer, String name, NativeEncoding encoding, Class<?> generatorType) {
-        ObjectBuilder.MethodBuilder method = serializer.method(name);
-        BytecodeExpression target = method.addArgument("target", scope.adapt(generatorType, false));
-        BytecodeExpression input = method.addArgument("input", AnyTypeWidget.getInstance());
-        SerializationAdapter adapter = input.getType().getSerializationAdapter(encoding);
-        method.exec(adapter.serializeTo(input, target));
-        method.exit();
     }
 
     public TypeWidget getValue(OperatorValue arg) {

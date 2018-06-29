@@ -8,7 +8,6 @@ package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.engine.internal.plan.types.IterateAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.JavaIterableAdapter;
@@ -51,8 +50,4 @@ public class KeyCursorTypeWidget extends BaseTypeWidget {
         return new JavaIterableAdapter(valueType);
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        throw new UnsupportedOperationException();
-    }
 }

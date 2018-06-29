@@ -16,12 +16,6 @@ public interface RuntimeAdapter {
     // Object property(Object target, Object indexExpr);
     BytecodeExpression index(BytecodeExpression target, BytecodeExpression indexExpr);
 
-    // void serializeJson(Object target, JsonGenerator target);
-    BytecodeSequence serializeJson(BytecodeExpression source, BytecodeExpression generator);
-
-    // void serializeTBin(Object target, TBinEncoder target);
-    BytecodeSequence serializeTBin(BytecodeExpression source, BytecodeExpression generator);
-
     // void mergeIntoFieldWriter(Object target, FieldWriter target);
     BytecodeSequence mergeIntoFieldWriter(BytecodeExpression source, BytecodeExpression map);
 }

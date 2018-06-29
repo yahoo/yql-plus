@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 import com.yahoo.yqlplus.engine.internal.compiler.ConstructorGenerator;
@@ -142,11 +141,6 @@ public class UnitGenerator {
                 return !fields.isEmpty() || !superFields.isEmpty();
             }
 
-            @Override
-            protected SerializationAdapter getJsonSerializationAdapter() {
-                return new NativeObjectSerializer(getPropertyAdapter(), NativeEncoding.JSON);
-            }
-            
             @Override
             public BytecodeExpression construct(BytecodeExpression... arguments) {
                 if (arguments.length > 0) {

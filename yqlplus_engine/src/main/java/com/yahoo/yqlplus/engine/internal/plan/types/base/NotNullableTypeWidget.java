@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.*;
 import org.objectweb.asm.Type;
@@ -114,11 +113,6 @@ public final class NotNullableTypeWidget implements TypeWidget {
     @Override
     public boolean isIterable() {
         return target.isIterable();
-    }
-
-    @Override
-    public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
-        return target.getSerializationAdapter(encoding);
     }
 
     @Override

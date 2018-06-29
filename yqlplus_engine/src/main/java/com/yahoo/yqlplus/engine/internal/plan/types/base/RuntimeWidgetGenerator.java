@@ -85,14 +85,6 @@ public class RuntimeWidgetGenerator extends UnitGenerator {
         });
     }
 
-    private void generateJson(TypeWidget targetType, RuntimeAdapter adapter) {
-        MethodGenerator method = createMethod("serializeJson");
-        BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
-        BytecodeExpression generatorExpr = method.addArgument("index", environment.adaptInternal(JsonGenerator.class)).read();
-        method.add(adapter.serializeJson(sourceExpr, generatorExpr));
-        method.add(new ReturnCode());
-    }
-
     private void generateMerge(TypeWidget targetType, RuntimeAdapter adapter) {
         MethodGenerator method = createMethod("mergeIntoFieldWriter");
         BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());

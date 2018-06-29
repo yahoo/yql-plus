@@ -30,7 +30,6 @@ import com.yahoo.yqlplus.engine.internal.plan.types.AssignableValue;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
 import com.yahoo.yqlplus.engine.internal.plan.types.IndexAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
@@ -854,10 +853,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             return YQLCoreType.OBJECT;
         }
 
-        @Override
-        protected SerializationAdapter getJsonSerializationAdapter() {
-            throw new UnsupportedOperationException();
-        }
     };
     private static final TypeWidget mapType = new MapTypeWidget(Type.getType(RecordMapWrapper.class), BaseTypeAdapter.STRING, BaseTypeAdapter.ANY);
 

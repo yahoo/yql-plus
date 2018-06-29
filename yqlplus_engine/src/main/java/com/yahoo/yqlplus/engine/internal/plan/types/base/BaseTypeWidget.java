@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.engine.internal.plan.types.base;
 import com.google.common.base.Preconditions;
 import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ConstructInvocation;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
@@ -184,33 +183,6 @@ public abstract class BaseTypeWidget implements TypeWidget {
         return null;
     }
 
-    @Override
-    public SerializationAdapter getSerializationAdapter(NativeEncoding encoding) {
-        switch(encoding) {
-            case JSON:
-                return getJsonSerializationAdapter();
-            case TBIN:
-                return getTBinSerializationAdapter();
-            default:
-                throw new UnsupportedOperationException("unknown serialization type: " + encoding);
-        }
-    }
-
-    protected SerializationAdapter getTBinSerializationAdapter() {
-        return new SerializationAdapter() {
-            @Override
-            public BytecodeSequence serializeTo(BytecodeExpression source, BytecodeExpression generator) {
-                return BytecodeSequence.NOOP;
-            }
-
-            @Override
-            public BytecodeExpression deserializeFrom(BytecodeExpression parser) {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
-
-    protected abstract SerializationAdapter getJsonSerializationAdapter();
 
     protected BytecodeExpression invokeNew(final Type type, BytecodeExpression... arguments) {
         return ConstructInvocation.boundInvoke(type, this, arguments).invoke(Location.NONE);

@@ -30,7 +30,6 @@ import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
 import com.yahoo.yqlplus.engine.internal.plan.types.IndexAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.IterateAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
@@ -466,10 +465,6 @@ public class ASMProgramTypeAdapter implements ProgramValueTypeAdapter {
                 return new ResultResultAdapter(this, valueType);
             }
 
-            @Override
-            protected SerializationAdapter getJsonSerializationAdapter() {
-                return new JsonResultAdapter(this, getResultAdapter());
-            }
         };
     }
 

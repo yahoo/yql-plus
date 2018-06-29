@@ -7,12 +7,9 @@
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
 import com.yahoo.yqlplus.engine.internal.plan.types.IterateAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.IteratingSerializing;
 import com.yahoo.yqlplus.engine.internal.plan.types.base.JavaIterableAdapter;
 import org.objectweb.asm.Type;
 
@@ -43,8 +40,4 @@ public class IterableTypeWidget extends BaseTypeWidget {
         return new JavaIterableAdapter(valueType);
     }
 
-    @Override
-    protected SerializationAdapter getJsonSerializationAdapter() {
-        return new IteratingSerializing(getIterableAdapter(), NativeEncoding.JSON);
-    }
 }
