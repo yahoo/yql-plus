@@ -55,7 +55,7 @@ public class Dynamic {
     public static DynamicLinker createDynamicLinker(ASMClassSource parentLoader) {
         final DynamicLinkerFactory factory = new DynamicLinkerFactory();
         final GuardingDynamicLinker jsonNodeLinker = new JsonNodeLinker();
-        factory.setPrioritizedLinkers(new ASMClassSourceLinker(parentLoader), new YqlFallbackLinker(), jsonNodeLinker);
+        factory.setPrioritizedLinkers(new ASMClassSourceLinker(parentLoader), jsonNodeLinker);
         return factory.createLinker();
     }
 
