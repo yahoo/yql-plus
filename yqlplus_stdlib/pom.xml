@@ -12,13 +12,13 @@
     <parent>
         <groupId>com.yahoo.yqlplus</groupId>
         <artifactId>yqlplus_engine_project</artifactId>
-        <version>1.0.10-SNAPSHOT</version>
+        <version>1.0.10</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.yahoo.yqlplus</groupId>
     <artifactId>yqlplus_stdlib</artifactId>
-    <version>1.0.10-SNAPSHOT</version>
+    <version>1.0.10</version>
     <dependencies>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
@@ -29,12 +29,12 @@
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_source_api</artifactId>
-            <version>1.0.10-SNAPSHOT</version>
+            <version>1.0.10</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_engine</artifactId>
-            <version>1.0.10-SNAPSHOT</version>
+            <version>1.0.10</version>
             <scope>test</scope>
         </dependency>
         <dependency>
