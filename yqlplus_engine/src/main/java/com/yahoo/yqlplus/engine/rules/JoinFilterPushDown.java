@@ -119,7 +119,7 @@ public class JoinFilterPushDown extends LogicalOperatorTransform {
                 result = OperatorNode.create(target.getLocation(), target.getAnnotations(), target.getOperator(),
                         leftSide, rightSide, joinExpr);
                 if (top.size() > 0) {
-                    result = OperatorNode.create(node.getLocation(), node.getAnnotations(), node.getOperator(), createFilter(top));
+                    result = OperatorNode.create(node.getLocation(), node.getAnnotations(), node.getOperator(), result, createFilter(top));
                 } else {
                     for (Map.Entry<String, Object> e : node.getAnnotations().entrySet()) {
                         result.putAnnotation(e.getKey(), e.getValue());

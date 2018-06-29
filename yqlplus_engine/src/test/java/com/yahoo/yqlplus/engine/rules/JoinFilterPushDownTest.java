@@ -86,6 +86,18 @@ public class JoinFilterPushDownTest {
         Assert.assertEquals(((OperatorNode) transformed.getArgument(1)).getOperator(), SequenceOperator.FILTER);
         // TODO: validate the rest of the tree
     }
+    
+    @Test
+    public void testClausePushWithExpression() throws IOException, RecognitionException {
+        ProgramParser parser = new ProgramParser();
+        OperatorNode<SequenceOperator> query = parser.parseQuery("SELECT * FROM left JOIN right ON left.id = right.id WHERE false AND left.category = 1 AND right.woeid = 2 AND true");
+        OperatorNode<SequenceOperator> transformed = new JoinFilterPushDown().visitSequenceOperator(query);
+        //System.err.println(transformed.toString());
+        Assert.assertEquals(transformed.getOperator(), SequenceOperator.FILTER);
+        Assert.assertEquals(((OperatorNode) transformed.getArgument(0)).getOperator(), SequenceOperator.JOIN);
+        Assert.assertEquals(((OperatorNode) transformed.getArgument(1)).getOperator(), ExpressionOperator.AND);
+        // TODO: validate the rest of the tree
+    }
 
     @Test
     public void testMultiClausePush() throws IOException, RecognitionException {
