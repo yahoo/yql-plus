@@ -64,10 +64,4 @@ public enum TaskOperator implements Operator {
         checker.check(args);
     }
 
-    public static Predicate<OperatorNode<? extends Operator>> IS = new Predicate<OperatorNode<? extends Operator>>() {
-        @Override
-        public boolean apply(OperatorNode<? extends Operator> input) {
-            return input.getOperator() instanceof PhysicalExprOperator;
-        }
-    };
 }

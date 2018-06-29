@@ -118,13 +118,6 @@ public enum PhysicalExprOperator implements Operator {
         checker.check(args);
     }
 
-    public static Predicate<OperatorNode<? extends Operator>> IS = new Predicate<OperatorNode<? extends Operator>>() {
-        @Override
-        public boolean apply(OperatorNode<? extends Operator> input) {
-            return input.getOperator() instanceof PhysicalExprOperator;
-        }
-    };
-
 
     public boolean asyncFor(OperatorNode<PhysicalExprOperator> node) {
         final boolean[] result = new boolean[]{false};
@@ -141,7 +134,7 @@ public enum PhysicalExprOperator implements Operator {
 
             @Override
             public <T extends Operator> void exit(OperatorNode<T> node) {
-                if (PhysicalExprOperator.IS.apply(node)) {
+                if (node.getOperator() instanceof PhysicalExprOperator) {
                     OperatorNode<PhysicalExprOperator> expr = (OperatorNode<PhysicalExprOperator>) node;
                     switch (expr.getOperator()) {
                         case ROOT_CONTEXT:
@@ -225,7 +218,7 @@ public enum PhysicalExprOperator implements Operator {
 
             @Override
             public <T extends Operator> void exit(OperatorNode<T> node) {
-                if (PhysicalExprOperator.IS.apply(node)) {
+                if (node.getOperator() instanceof PhysicalExprOperator) {
                     OperatorNode<PhysicalExprOperator> expr = (OperatorNode<PhysicalExprOperator>) node;
                     switch (expr.getOperator()) {
                         case LOCAL: {
