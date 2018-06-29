@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
+import com.yahoo.yqlplus.engine.internal.plan.ast.StreamValue;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;

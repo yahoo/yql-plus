@@ -4,14 +4,10 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.streams;
+package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
 import java.util.Collection;

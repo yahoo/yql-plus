@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
 import java.util.List;

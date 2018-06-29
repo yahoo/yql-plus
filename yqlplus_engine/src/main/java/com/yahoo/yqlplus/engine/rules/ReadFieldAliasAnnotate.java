@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.engine.rules;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.engine.internal.plan.JoinExpression;
 import com.yahoo.yqlplus.language.logical.*;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;

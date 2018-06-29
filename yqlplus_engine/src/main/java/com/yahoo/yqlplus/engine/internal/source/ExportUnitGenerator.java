@@ -24,7 +24,7 @@ import com.yahoo.yqlplus.compiler.code.GambitScope;
 import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.*;
+import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;

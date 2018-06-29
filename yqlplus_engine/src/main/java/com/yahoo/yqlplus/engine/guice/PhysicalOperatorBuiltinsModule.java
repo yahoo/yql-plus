@@ -9,9 +9,9 @@ package com.yahoo.yqlplus.engine.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.engine.internal.plan.streams.ConditionalsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.streams.RecordsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.streams.SequenceBuiltinsModule;
+import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
+import com.yahoo.yqlplus.engine.internal.plan.ast.RecordsBuiltinsModule;
+import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
 
 public class PhysicalOperatorBuiltinsModule extends AbstractModule {
     @Override

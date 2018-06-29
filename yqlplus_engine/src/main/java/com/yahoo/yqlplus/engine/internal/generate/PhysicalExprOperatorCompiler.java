@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
+package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +29,6 @@ import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
 import com.yahoo.yqlplus.compiler.code.KeyCursorTypeWidget;
 import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
 import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
 import com.yahoo.yqlplus.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
@@ -38,8 +37,8 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalProjectOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.SinkOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
+import com.yahoo.yqlplus.engine.internal.plan.ast.SinkOperator;
+import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;

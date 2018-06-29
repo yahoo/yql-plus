@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.streams;
+package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -12,8 +12,6 @@ import com.yahoo.yqlplus.engine.internal.plan.ConstantExpressionEvaluator;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.NotConstantExpressionException;
-import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;

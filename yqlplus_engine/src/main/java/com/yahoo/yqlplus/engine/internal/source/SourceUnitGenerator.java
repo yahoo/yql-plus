@@ -37,7 +37,7 @@ import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.GambitScope;
 import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
+import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.compiler.code.StructBuilder;
 import com.yahoo.yqlplus.engine.internal.plan.DispatchSourceTypeAdapter;

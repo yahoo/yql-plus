@@ -24,7 +24,7 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
+import com.yahoo.yqlplus.engine.internal.plan.ast.StreamValue;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.tasks.Value;

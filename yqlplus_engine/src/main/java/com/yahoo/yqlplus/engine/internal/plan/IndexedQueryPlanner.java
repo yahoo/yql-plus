@@ -16,6 +16,7 @@ import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.compiler.runtime.Chooser;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.rules.IndexMatchOperatorTransform;
+import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.engine.rules.PushAndTransform;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;

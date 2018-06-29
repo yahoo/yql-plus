@@ -4,11 +4,8 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.streams;
+package com.yahoo.yqlplus.engine.internal.plan.ast;
 
-import com.google.common.base.Predicate;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;

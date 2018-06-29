@@ -12,7 +12,6 @@ import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;

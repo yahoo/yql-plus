@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan;
+package com.yahoo.yqlplus.engine.rules;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
