@@ -45,16 +45,16 @@ public class ProjectionBuilder {
         String baseName = "expr";
         switch (expr.getOperator()) {
             case PROPREF:
-                baseName = (String) expr.getArgument(1);
+                baseName = expr.getArgument(1);
                 break;
             case READ_RECORD:
-                baseName = (String) expr.getArgument(0);
+                baseName = expr.getArgument(0);
                 break;
             case READ_FIELD:
-                baseName = (String) expr.getArgument(1);
+                baseName = expr.getArgument(1);
                 break;
             case VARREF:
-                baseName = (String) expr.getArgument(0);
+                baseName = expr.getArgument(0);
                 break;
             // fall through, leaving baseName alone
         }

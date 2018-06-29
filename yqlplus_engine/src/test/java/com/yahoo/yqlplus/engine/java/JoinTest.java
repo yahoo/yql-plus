@@ -38,7 +38,7 @@ public class JoinTest {
 				"JOIN people people2 ON people2.id = minions.minion_id " +
 				"OUTPUT AS foo;");
 		// program.dump(System.err);
-		ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+		ProgramResult myResult = program.run(ImmutableMap.of(), true);
 		YQLResultSet rez = myResult.getResult("foo").get();
 		List<Record> foo = rez.getResult();
 		Assert.assertEquals(foo.size(), 2);
@@ -61,7 +61,7 @@ public class JoinTest {
 						"JOIN p1 people2 ON people2.master_id= minions.minion_id " +
 				"OUTPUT AS foo;");
 		// program.dump(System.err);
-		ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+		ProgramResult myResult = program.run(ImmutableMap.of(), true);
 		YQLResultSet rez = myResult.getResult("foo").get();
 		List<Record> foo = rez.getResult();
 		Assert.assertEquals(foo.size(), 2);
@@ -81,7 +81,7 @@ public class JoinTest {
 				"SELECT * FROM innersource WHERE id IN ('1', '2') OUTPUT as b3;" +
                 "SELECT * FROM innersource WHERE id IN (SELECT id FROM innersource) OR id = '3' ORDER BY id DESC OUTPUT as b4;");
         // program.dump(System.err);
-		ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+		ProgramResult myResult = program.run(ImmutableMap.of(), true);
 		YQLResultSet rez = myResult.getResult("foo").get();
 		List<Person> foo = rez.getResult();
 		Assert.assertEquals(foo.size(), 1);
@@ -115,7 +115,7 @@ public class JoinTest {
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -130,7 +130,7 @@ public class JoinTest {
                 "FROM peopleWithNullId " +
                 "JOIN moreMinions ON peopleWithNullId.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        myResult = program.run(ImmutableMap.of(), true);
         rez = myResult.getResult("foo").get();
         foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -150,7 +150,7 @@ public class JoinTest {
                 "FROM peopleWithNullId " +
                 "JOIN minionsWithSkipNullSetToFalse ON peopleWithNullId.id = minionsWithSkipNullSetToFalse.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 2);
@@ -168,7 +168,7 @@ public class JoinTest {
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -183,7 +183,7 @@ public class JoinTest {
                 "FROM peopleWithEmptyId " +
                 "JOIN moreMinions ON peopleWithEmptyId.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        myResult = program.run(ImmutableMap.of(), true);
         rez = myResult.getResult("foo").get();
         foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -203,7 +203,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.minion_id minion_name " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -254,7 +254,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.minion_id minion_name " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);
@@ -317,7 +317,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, noMatchMinions.minion_id minion_name " +
                 "FROM people JOIN noMatchMinions ON people.id = noMatchMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 0);
@@ -333,7 +333,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.value master_name, moreMinions.* " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -373,7 +373,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.* " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -428,7 +428,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.* " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);
@@ -464,7 +464,7 @@ public class JoinTest {
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "JOIN images ON moreMinions.minion_id = images.imageId " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 2);
@@ -511,7 +511,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);
@@ -557,7 +557,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT p.*, m " +
                 "FROM people p LEFT JOIN moreMinions m ON p.id = m.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);
@@ -601,7 +601,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people, moreMinions " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);
@@ -649,7 +649,7 @@ public class JoinTest {
         CompiledProgram program = compiler.compile("SELECT people AS pp, moreMinions AS mm " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 4);

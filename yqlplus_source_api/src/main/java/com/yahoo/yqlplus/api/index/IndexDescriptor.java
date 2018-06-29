@@ -110,9 +110,7 @@ public final class IndexDescriptor {
 
         IndexDescriptor that = (IndexDescriptor) o;
 
-        if (!columns.equals(that.columns)) return false;
-
-        return true;
+        return columns.equals(that.columns);
     }
 
     @Override

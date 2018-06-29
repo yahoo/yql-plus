@@ -50,9 +50,7 @@ public class CompoundKeysTest {
 
             if (score != toy.score) return false;
             if (!category.equals(toy.category)) return false;
-            if (!id.equals(toy.id)) return false;
-
-            return true;
+            return id.equals(toy.id);
         }
 
         @Override
@@ -114,7 +112,7 @@ public class CompoundKeysTest {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> execute(String programText) throws Exception {
-        return (List<T>) execute(programText, ImmutableMap.<String, Object>of());
+        return (List<T>) execute(programText, ImmutableMap.of());
 
     }
 
@@ -166,7 +164,7 @@ public class CompoundKeysTest {
       
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(programStr);
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<ServiceMetrics> serviceMetrics = rez.getResult("serviceMetrics").get().getResult();
         List<ServiceMetrics> expectedServiceMetrics = Lists.newArrayList(new ServiceMetrics("begin", "service1", "foo", "foo"),
                                                                 new ServiceMetrics("begin", "service2", "foo", "foo"),
@@ -246,11 +244,8 @@ public class CompoundKeysTest {
           } else if (!serviceName.equals(other.serviceName))
             return false;
           if (start == null) {
-            if (other.start != null)
-              return false;
-          } else if (!start.equals(other.start))
-            return false;
-          return true;
+              return other.start == null;
+          } else return start.equals(other.start);
         }
         
         @Override

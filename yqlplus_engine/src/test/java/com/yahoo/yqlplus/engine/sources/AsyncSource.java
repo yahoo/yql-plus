@@ -26,7 +26,7 @@ public class AsyncSource implements Source {
     public ListenableFuture<List<Person>> scan(@TimeoutMilliseconds long timeoutMs) {
         Assert.assertTrue(timeoutMs <= 100, "timeoutBudget <= 100");
         // checking minimum is dodgy and leads to failures
-        return Futures.<List<Person>>immediateFuture(ImmutableList.of(new Person("1", "joe", 1)));
+        return Futures.immediateFuture(ImmutableList.of(new Person("1", "joe", 1)));
     }
 
     @Query

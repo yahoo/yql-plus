@@ -21,7 +21,7 @@ public class JsonOperatorDump {
         public ProgramDumpModule() {
             addSerializer(OperatorNode.class, new JsonSerializer<OperatorNode>() {
                 @Override
-                public void serialize(OperatorNode value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+                public void serialize(OperatorNode value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
                     Operator op = value.getOperator();
                     jgen.writeStartObject();
                     if (value.getLocation() != null) {

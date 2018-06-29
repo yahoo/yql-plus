@@ -207,7 +207,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
          */
         private void verifyArgumentType(String methodTypeName, TypeWidget rowType, PropertyAdapter rowProperties, String propertyName, TypeWidget argumentType, String annotationName,
                                         Method method)
-                throws ProgramCompileException, PropertyNotFoundException {
+                throws ProgramCompileException {
             try {
                 TypeWidget targetType = rowProperties.getPropertyType(propertyName);
                 if (!targetType.isAssignableFrom(argumentType)) {

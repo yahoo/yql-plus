@@ -65,7 +65,7 @@ public class MultisourceTest {
                 "SELECT * " +
                 "FROM SOURCES movies, hats " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Resource> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 5);

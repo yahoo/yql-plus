@@ -270,7 +270,7 @@ public class DeepJoinTest {
                         " JOIN models i ON c.id = i.zone " +
                         " JOIN machines p ON p.zone = i.zone AND p.domain = i.domain AND p.service = i.service AND p.name = i.name " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 12);
@@ -289,7 +289,7 @@ public class DeepJoinTest {
                         " JOIN models i ON c.id = i.zone " +
                         " JOIN machines p ON p.zone = i.ZoNe AND p.domain = i.Domain AND p.serVice = i.serviCe AND p.NAME = i.NAME " +
                         " OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 12);
@@ -307,7 +307,7 @@ public class DeepJoinTest {
                         "FROM machines " +
                         "WHERE zone = 'east' AND domain = 'webservice' AND service = 'hodor' AND name IN ('blue', 'green') " +
                         "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 6);
@@ -326,7 +326,7 @@ public class DeepJoinTest {
                         "WHERE zone = 'east' AND domain = 'webservice' AND service = 'hodor' AND name IN ('blue', 'green') " +
                         "ORDER BY name " +
                         "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Machine> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 2);

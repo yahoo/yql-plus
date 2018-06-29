@@ -128,7 +128,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     }
 
     @DataProvider(name = "expressions")
-    public Object[][] generateExpressions() throws IOException {
+    public Object[][] generateExpressions() {
         // read the parse tree sfrom trees.txt
         // // comment
         // blanks skipped
@@ -192,17 +192,17 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         Object leftValue = 1;
         ProgramValueTypeAdapter adapter = source.getValueTypeAdapter();
         TypeWidget leftType = adapter.inferConstantType(leftValue);
-        OperatorNode<PhysicalExprOperator> leftExpr = OperatorNode.create(PhysicalExprOperator.CONSTANT, (TypeWidget) leftType, leftValue);
+        OperatorNode<PhysicalExprOperator> leftExpr = OperatorNode.create(PhysicalExprOperator.CONSTANT, leftType, leftValue);
         Object rightValue = 1.1;
         TypeWidget rightType = adapter.inferConstantType(rightValue);
         TypeWidget rightTypeBoxed = rightType.boxed();
-        OperatorNode<PhysicalExprOperator> rightExprBox = OperatorNode.create(PhysicalExprOperator.CONSTANT, (TypeWidget) rightTypeBoxed, rightValue);
+        OperatorNode<PhysicalExprOperator> rightExprBox = OperatorNode.create(PhysicalExprOperator.CONSTANT, rightTypeBoxed, rightValue);
         boolean expected = leftValue.equals(rightValue);
         requireExpressions(lr(leftExpr, rightExprBox), "map.left = map.right", expected);
     }
 
     @DataProvider(name = "generateComparisons")
-    public Object[][] generateComparisons() throws IOException {
+    public Object[][] generateComparisons() {
         // read the parse tree sfrom trees.txt
         // // comment
         // blanks skipped

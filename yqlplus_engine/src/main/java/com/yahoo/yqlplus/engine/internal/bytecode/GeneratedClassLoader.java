@@ -30,7 +30,7 @@ class GeneratedClassLoader extends ClassLoader {
         return loadClass(name, true);
     }
 
-    private Class<?> defineClass(byte[] bytes) throws ClassNotFoundException, IOException {
+    private Class<?> defineClass(byte[] bytes) {
         Class<?> result = defineClass(null, bytes, 0, bytes.length, getClass().getProtectionDomain());
         classes.put(result.getName(), result);
         return result;
@@ -44,11 +44,7 @@ class GeneratedClassLoader extends ClassLoader {
         }
         byte[] bytes = classBytes.get(name);
         if (bytes != null) {
-            try {
-                return defineClass(bytes);
-            } catch (IOException e) {
-                throw new ClassNotFoundException("IOException loading class", e);
-            }
+            return defineClass(bytes);
         }
         result = super.loadClass(name, resolve);
         if (result == null) {

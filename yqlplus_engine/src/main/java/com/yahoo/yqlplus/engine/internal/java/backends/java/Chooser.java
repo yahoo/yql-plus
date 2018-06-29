@@ -38,7 +38,7 @@ public class Chooser<T> {
         } else {
             // should use an exact sized list, or better yet don't materialize the list
             List<List<T>> output = Lists.newArrayList();
-            chooseN(n, 0, Lists.<T>newArrayListWithCapacity(n), input, output);
+            chooseN(n, 0, Lists.newArrayListWithCapacity(n), input, output);
             return output;
         }
     }

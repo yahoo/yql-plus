@@ -17,7 +17,7 @@ public enum PhysicalProjectOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private PhysicalProjectOperator(Object... types) {
+    PhysicalProjectOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

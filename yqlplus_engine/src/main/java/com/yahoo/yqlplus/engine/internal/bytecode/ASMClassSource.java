@@ -141,7 +141,7 @@ public class ASMClassSource {
         }
     }
 
-    public void build() throws IOException, ClassNotFoundException {
+    public void build() throws ClassNotFoundException {
         Preconditions.checkState(!built, "ASMClassSource may only be built once");
         DynamicBootstrapUnit bootstrapper = new DynamicBootstrapUnit(this);
         bootstrapper.init();

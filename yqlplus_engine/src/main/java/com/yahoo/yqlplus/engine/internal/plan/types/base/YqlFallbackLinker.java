@@ -60,7 +60,7 @@ public class YqlFallbackLinker implements GuardingDynamicLinker {
     private static MethodHandle SERIALIZE_JSON = Lookup.findOwnStatic(MethodHandles.lookup(), "serializeJson", void.class, Object.class, JsonGenerator.class);
 
     @Override
-    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) throws Exception {
+    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) {
         CallSiteDescriptor desc = linkRequest.getCallSiteDescriptor();
         Class<?> clazz = linkRequest.getReceiver().getClass();
         if ("yql".equals(desc.getNameToken(0))) {

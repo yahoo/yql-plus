@@ -26,7 +26,7 @@ public enum SortOperator implements Operator {
         }
     };
 
-    private SortOperator(Object... types) {
+    SortOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

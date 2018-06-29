@@ -39,9 +39,7 @@ public class UnrulyRequestSource implements Source {
 
             UnrulyRequestRecord that = (UnrulyRequestRecord) o;
 
-            if (id != that.id) return false;
-
-            return true;
+            return id == that.id;
         }
 
         @Override

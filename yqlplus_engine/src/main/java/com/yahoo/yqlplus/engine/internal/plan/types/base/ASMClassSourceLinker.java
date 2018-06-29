@@ -32,7 +32,7 @@ public class ASMClassSourceLinker implements GuardingDynamicLinker {
 
 
     @Override
-    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) throws Exception {
+    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) {
         if (linkRequest.getReceiver() == null) {
             return null;
         }
@@ -83,7 +83,7 @@ public class ASMClassSourceLinker implements GuardingDynamicLinker {
             childEnvironment.build();
             Class<? extends RuntimeWidget> adapterWidget = (Class<? extends RuntimeWidget>) childEnvironment.getGeneratedClass(generator);
             return new RuntimeLinker(clazz, adapterWidget);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } catch(NegativeArraySizeException e) {
             childEnvironment.dump(System.err);

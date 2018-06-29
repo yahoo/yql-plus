@@ -71,11 +71,11 @@ public class TypesHandler implements GambitTypes {
 
     @Override
     public TypeWidget unify(TypeWidget left, TypeWidget right) {
-        return source.getValueTypeAdapter().unifyTypes((TypeWidget) left, (TypeWidget) right);
+        return source.getValueTypeAdapter().unifyTypes(left, right);
     }
 
     public BytecodeExpression constant(TypeWidget type, Object value) {
-        return source.constant((TypeWidget) type, value);
+        return source.constant(type, value);
     }
 
     public BytecodeExpression constant(Object value) {
@@ -83,7 +83,7 @@ public class TypesHandler implements GambitTypes {
     }
 
     public BytecodeExpression nullFor(TypeWidget type) {
-        return new NullExpr(NullableTypeWidget.create((TypeWidget) type));
+        return new NullExpr(NullableTypeWidget.create(type));
     }
 
     @Override
@@ -114,12 +114,12 @@ public class TypesHandler implements GambitTypes {
 
     @Override
     public GambitCreator.Invocable findExactInvoker(Class<?> owner, String methodName, TypeWidget returnType, TypeWidget... argumentTypes) {
-        return findExactInvoker(owner, methodName, returnType, argumentTypes != null ? Arrays.asList(argumentTypes) : ImmutableList.<TypeWidget>of());
+        return findExactInvoker(owner, methodName, returnType, argumentTypes != null ? Arrays.asList(argumentTypes) : ImmutableList.of());
     }
 
     @Override
     public GambitCreator.Invocable findStaticInvoker(Class<?> owner, String methodName, TypeWidget returnType, TypeWidget... argumentTypes) {
-        return findStaticInvoker(owner, methodName, returnType, argumentTypes != null ? Arrays.asList(argumentTypes) : ImmutableList.<TypeWidget>of());
+        return findStaticInvoker(owner, methodName, returnType, argumentTypes != null ? Arrays.asList(argumentTypes) : ImmutableList.of());
     }
 
     @Override

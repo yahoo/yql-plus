@@ -41,7 +41,7 @@ public class ExpandViewsTest {
     }
 
     @Test
-    public void testExpandView() throws IOException {
+    public void testExpandView() {
         OperatorNode<SequenceOperator> query = OperatorNode.create(SequenceOperator.FILTER,
                 OperatorNode.create(SequenceOperator.JOIN,
                         OperatorNode.create(SequenceOperator.SCAN, Lists.newArrayList("left"), ImmutableList.of()).putAnnotation("alias", "left"),
@@ -71,7 +71,7 @@ public class ExpandViewsTest {
         Assert.assertEquals(((OperatorNode) transformed.getArgument(0)).getOperator(), SequenceOperator.FILTER);
         Assert.assertEquals(((OperatorNode) transformed.getArgument(1)).getOperator(), SequenceOperator.SCAN);
 
-        OperatorNode<SequenceOperator> left = (OperatorNode<SequenceOperator>) transformed.getArgument(0);
+        OperatorNode<SequenceOperator> left = transformed.getArgument(0);
         // FILTER FILTER SCAN (already checked that left is FILTER, so the next should be too
         Assert.assertEquals(((OperatorNode) left.getArgument(0)).getOperator(), SequenceOperator.FILTER);
         // now look for the scan

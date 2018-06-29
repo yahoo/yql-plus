@@ -29,7 +29,7 @@ class DynamicPropertyAdapter extends OpenPropertyAdapter {
 
             @Override
             public BytecodeExpression read() {
-                return AnyTypeWidget.invokeDynamic("dyn:getProp|getElem:" + propertyName, AnyTypeWidget.getInstance(), target, ImmutableList.<BytecodeExpression>of());
+                return AnyTypeWidget.invokeDynamic("dyn:getProp|getElem:" + propertyName, AnyTypeWidget.getInstance(), target, ImmutableList.of());
             }
 
             @Override
@@ -57,6 +57,6 @@ class DynamicPropertyAdapter extends OpenPropertyAdapter {
     @Override
     public BytecodeExpression getPropertyNameIterable(BytecodeExpression target) {
         return AnyTypeWidget.invokeDynamic("yql:getFieldNames",
-                new IterableTypeWidget(BaseTypeAdapter.STRING), target, ImmutableList.<BytecodeExpression>of());
+                new IterableTypeWidget(BaseTypeAdapter.STRING), target, ImmutableList.of());
     }
 }

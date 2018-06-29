@@ -22,7 +22,7 @@ public interface GambitCreator extends GambitTypes {
 
     BytecodeExpression length(Location location, BytecodeExpression inputExpr);
 
-    public interface Invocable {
+    interface Invocable {
         TypeWidget getReturnType();
 
         List<TypeWidget> getArgumentTypes();
@@ -36,7 +36,7 @@ public interface GambitCreator extends GambitTypes {
         BytecodeExpression invoke(final Location loc, BytecodeExpression... args);
     }
 
-    public interface RecordBuilder {
+    interface RecordBuilder {
         RecordBuilder add(Location loc, String fieldName, BytecodeExpression input);
 
         RecordBuilder merge(Location loc, BytecodeExpression recordType);
@@ -44,25 +44,25 @@ public interface GambitCreator extends GambitTypes {
         BytecodeExpression build();
     }
 
-    public interface ScopeBuilder extends ScopedBuilder {
+    interface ScopeBuilder extends ScopedBuilder {
         void jump(BytecodeExpression test, BytecodeExpression result);
 
         BytecodeExpression complete(BytecodeExpression result);
     }
 
-    public interface CaseBuilder {
+    interface CaseBuilder {
         void when(BytecodeExpression test, BytecodeExpression value);
 
         BytecodeExpression exit(BytecodeExpression defaultCase);
     }
 
-    public interface IfBuilder {
+    interface IfBuilder {
         ScopedBuilder when(BytecodeExpression test);
         ScopedBuilder elseIf();
         BytecodeSequence build();
     }
 
-    public interface CatchBuilder {
+    interface CatchBuilder {
         ScopedBuilder body();
 
         ScopedBuilder on(String varName, TypeWidget exceptionType, TypeWidget... moreExceptionTypes);
@@ -74,7 +74,7 @@ public interface GambitCreator extends GambitTypes {
         BytecodeSequence build();
     }
 
-    public interface LoopBuilder extends ScopedBuilder {
+    interface LoopBuilder extends ScopedBuilder {
         void abort(BytecodeExpression test);
 
         void next(BytecodeExpression test);
@@ -82,7 +82,7 @@ public interface GambitCreator extends GambitTypes {
         BytecodeExpression build();
     }
 
-    public interface IterateBuilder extends ScopedBuilder {
+    interface IterateBuilder extends ScopedBuilder {
         BytecodeExpression getItem();
 
         void abort(BytecodeExpression test);

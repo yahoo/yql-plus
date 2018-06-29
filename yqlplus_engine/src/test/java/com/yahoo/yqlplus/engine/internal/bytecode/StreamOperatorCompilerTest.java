@@ -50,9 +50,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             MyRecord myRecord = (MyRecord) o;
 
             if (ival != myRecord.ival) return false;
-            if (!sval.equals(myRecord.sval)) return false;
-
-            return true;
+            return sval.equals(myRecord.sval);
         }
 
         @Override
@@ -94,10 +92,10 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
 
     @Test
     public void requireFlatten() throws Exception {
-        List<List<MyRecord>> input = ImmutableList.<List<MyRecord>>of(
+        List<List<MyRecord>> input = ImmutableList.of(
                 ImmutableList.of(new MyRecord(1, "one")),
                 ImmutableList.of(new MyRecord(2, "two"), new MyRecord(3, "three")),
-                ImmutableList.<MyRecord>of(),
+                ImmutableList.of(),
                 ImmutableList.of(new MyRecord(4, "four"))
         );
         Callable<Object> invoker = compileStream(input, OperatorNode.create(StreamOperator.FLATTEN, accumulate()));
@@ -169,9 +167,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             Photo photo = (Photo) o;
 
             if (id != photo.id) return false;
-            if (!name.equals(photo.name)) return false;
-
-            return true;
+            return name.equals(photo.name);
         }
 
         @Override
@@ -227,9 +223,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             if (id != image.id) return false;
             if (photo_id != image.photo_id) return false;
             if (width != image.width) return false;
-            if (name != null ? !name.equals(image.name) : image.name != null) return false;
-
-            return true;
+            return name != null ? name.equals(image.name) : image.name == null;
         }
 
         @Override

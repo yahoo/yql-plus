@@ -22,11 +22,11 @@ public class DynamicSerializationAdapter implements SerializationAdapter {
 
     @Override
     public BytecodeSequence serializeTo(BytecodeExpression source, BytecodeExpression generator) {
-        return AnyTypeWidget.invokeDynamic(serializeOperation, BaseTypeAdapter.VOID, source, ImmutableList.<BytecodeExpression>of(generator));
+        return AnyTypeWidget.invokeDynamic(serializeOperation, BaseTypeAdapter.VOID, source, ImmutableList.of(generator));
     }
 
     @Override
     public BytecodeExpression deserializeFrom(BytecodeExpression parser) {
-        return AnyTypeWidget.invokeDynamic(deserializeOperation, NullableTypeWidget.create(AnyTypeWidget.getInstance()), parser, ImmutableList.<BytecodeExpression>of());
+        return AnyTypeWidget.invokeDynamic(deserializeOperation, NullableTypeWidget.create(AnyTypeWidget.getInstance()), parser, ImmutableList.of());
     }
 }

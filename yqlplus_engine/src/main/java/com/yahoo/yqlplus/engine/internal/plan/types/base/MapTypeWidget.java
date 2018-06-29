@@ -97,17 +97,17 @@ public class MapTypeWidget extends BaseTypeWidget {
 
         @Override
         public BytecodeSequence iterate(final BytecodeExpression target, IterateLoop loop) {
-            return entryIterator.iterate(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.<BytecodeExpression>of()), loop);
+            return entryIterator.iterate(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.of()), loop);
         }
 
         @Override
         public BytecodeSequence iterate(BytecodeExpression target, AssignableValue item, IterateLoop loop) {
-            return entryIterator.iterate(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.<BytecodeExpression>of()), item, loop);
+            return entryIterator.iterate(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.of()), item, loop);
         }
 
         @Override
         public BytecodeExpression first(BytecodeExpression target) {
-            return entryIterator.first(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.<BytecodeExpression>of()));
+            return entryIterator.first(new InvokeExpression(Map.class, "entrySet", new SetTypeWidget(entryIterator.getValue()), target, ImmutableList.of()));
         }
     }
 

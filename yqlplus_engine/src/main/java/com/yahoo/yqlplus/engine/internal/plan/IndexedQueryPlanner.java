@@ -68,11 +68,11 @@ public class IndexedQueryPlanner {
      * @return
      */
     public QueryStrategy planExact(OperatorNode<ExpressionOperator> filter) {
-        return planInternal(ImmutableSet.<String>of(), filter, true);
+        return planInternal(ImmutableSet.of(), filter, true);
     }
 
     public QueryStrategy plan(OperatorNode<ExpressionOperator> filter) {
-        return planInternal(ImmutableSet.<String>of(), filter, false);
+        return planInternal(ImmutableSet.of(), filter, false);
     }
 
     public QueryStrategy planJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<ExpressionOperator> filter) {
@@ -80,7 +80,7 @@ public class IndexedQueryPlanner {
         Set<String> joinColumns = Sets.newHashSet();
         for(JoinExpression join : clauses) {
             if(join.right.getOperator() == ExpressionOperator.READ_FIELD) {
-                joinColumns.add((String) join.right.getArgument(1));
+                joinColumns.add(join.right.getArgument(1));
             }
         }
         return planInternal(joinColumns, filter, false);

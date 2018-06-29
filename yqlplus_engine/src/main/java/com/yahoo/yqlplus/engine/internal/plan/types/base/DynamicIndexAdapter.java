@@ -31,6 +31,6 @@ public class DynamicIndexAdapter implements IndexAdapter {
 
     @Override
     public BytecodeExpression length(BytecodeExpression inputExpr) {
-        return AnyTypeWidget.invokeDynamic("dyn:getLength", BaseTypeAdapter.INT32, inputExpr, ImmutableList.<BytecodeExpression>of());
+        return AnyTypeWidget.invokeDynamic("dyn:getLength", BaseTypeAdapter.INT32, inputExpr, ImmutableList.of());
     }
 }

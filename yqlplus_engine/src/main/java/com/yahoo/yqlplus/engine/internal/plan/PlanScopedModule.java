@@ -19,22 +19,22 @@ public class PlanScopedModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(TaskContext.class).annotatedWith(Names.named("rootContext"))
-                .toProvider(SeededKeyProvider.<TaskContext>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
         bind(ListeningExecutorService.class).annotatedWith(Names.named("programExecutor"))
-                .toProvider(SeededKeyProvider.<ListeningExecutorService>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
         bind(ListeningExecutorService.class).annotatedWith(Names.named("programTimeout"))
-                .toProvider(SeededKeyProvider.<ListeningExecutorService>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
         bind(TaskMetricEmitter.class).annotatedWith(Names.named("task"))
-                .toProvider(SeededKeyProvider.<TaskMetricEmitter>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
         bind(Tracer.class)
-                .toProvider(SeededKeyProvider.<Tracer>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
         bind(String.class).annotatedWith(Names.named("programName"))
-                .toProvider(SeededKeyProvider.<String>seededKeyProvider())
+                .toProvider(SeededKeyProvider.seededKeyProvider())
                 .in(ExecuteScoped.class);
     }
 }

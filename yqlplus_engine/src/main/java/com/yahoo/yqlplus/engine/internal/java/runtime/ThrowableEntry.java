@@ -69,7 +69,7 @@ final class ThrowableEntry implements TraceLogEntry, JsonSerializable {
     }
 
     @Override
-    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException {
         // TODO: we'd like an internal-view which gave copious details as well as an external-view which only did this
         jgen.writeStartObject();
         jgen.writeStringField("level", level.getName());
@@ -80,7 +80,7 @@ final class ThrowableEntry implements TraceLogEntry, JsonSerializable {
     }
 
     @Override
-    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException, JsonProcessingException {
+    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
         serialize(jgen, provider);
     }
 }

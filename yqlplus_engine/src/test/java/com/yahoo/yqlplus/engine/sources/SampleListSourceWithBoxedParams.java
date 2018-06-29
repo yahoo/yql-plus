@@ -25,7 +25,7 @@ public class SampleListSourceWithBoxedParams implements Source {
      */
     @Query
     public Iterable<SampleId> getSampleIds(@Key("category") String category,
-            Integer count, Double doubleValue, String stringValue) throws InterruptedException {
+            Integer count, Double doubleValue, String stringValue) {
 
         List<SampleId> ids = new ArrayList<SampleId>(count);
         for (int i = 0; i < count; i++) {

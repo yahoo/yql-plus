@@ -33,7 +33,7 @@ public enum SinkOperator implements Operator {
         }
     };
 
-    private SinkOperator(Object... types) {
+    SinkOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

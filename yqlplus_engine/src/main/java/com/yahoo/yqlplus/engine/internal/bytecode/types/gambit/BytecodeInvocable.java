@@ -58,7 +58,7 @@ abstract class BytecodeInvocable implements GambitCreator.Invocable {
     }
 
     public final BytecodeExpression invoke(Location loc, BytecodeExpression... args) {
-        return invoke(loc, args == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(args));
+        return invoke(loc, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
     @Override

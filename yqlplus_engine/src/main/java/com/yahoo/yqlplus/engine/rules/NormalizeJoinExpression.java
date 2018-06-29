@@ -28,10 +28,7 @@ public class NormalizeJoinExpression extends LogicalOperatorTransform {
         node.visit(new OperatorVisitor() {
             @Override
             public <T extends Operator> boolean enter(OperatorNode<T> node) {
-                if (node.getOperator() instanceof SequenceOperator) {
-                    return true;
-                }
-                return false;
+                return node.getOperator() instanceof SequenceOperator;
             }
 
             @Override
@@ -57,7 +54,7 @@ public class NormalizeJoinExpression extends LogicalOperatorTransform {
             @Override
             public <T extends Operator> void exit(OperatorNode<T> node) {
                 if (node.getOperator() instanceof ExpressionOperator && (node.getOperator() == ExpressionOperator.READ_RECORD || node.getOperator() == ExpressionOperator.READ_FIELD)) {
-                    sources.add((String) node.getArgument(0));
+                    sources.add(node.getArgument(0));
                 }
             }
         });

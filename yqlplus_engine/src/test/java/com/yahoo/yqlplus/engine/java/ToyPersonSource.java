@@ -110,7 +110,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<List<Person>> futureScan(int delay) {
         return eventually(delay, new Callable<List<Person>>() {
             @Override
-            public List<Person> call() throws Exception {
+            public List<Person> call() {
                 return scan();
             }
         });
@@ -120,7 +120,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Person> lookup(@Key("id") final String id, int delay) {
         return eventually(delay, new Callable<Person>() {
             @Override
-            public Person call() throws Exception {
+            public Person call() {
                 return lookup(id);
             }
         });
@@ -130,7 +130,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookupBatch(@Key("otherId") final List<String> id, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookupBatch(id);
             }
         });
@@ -140,7 +140,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookup(@Key("iid") final List<Integer> iids, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookup(iids);
             }
         });
@@ -150,7 +150,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookupName(@Key("value") final String value, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookupName(value);
             }
         });

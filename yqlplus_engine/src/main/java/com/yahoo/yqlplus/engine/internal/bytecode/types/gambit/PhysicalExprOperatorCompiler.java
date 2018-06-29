@@ -104,19 +104,19 @@ public class PhysicalExprOperatorCompiler {
                 return scope.invokeExact(expr.getLocation(), "start", TaskContext.class, context.getType(), context, metricDimension);
             }
             case TIMEOUT_MAX: {
-                final BytecodeExpression timeout = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0)));
-                final BytecodeExpression units = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(1));
+                final BytecodeExpression timeout = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(0)));
+                final BytecodeExpression units = evaluateExpression(program, context, expr.getArgument(1));
                 return scope.invokeExact(expr.getLocation(), "timeout", TaskContext.class, context.getType(), context, timeout, units);
             }
             case TIMEOUT_GUARD: {
-                final BytecodeExpression min = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0)));
-                final BytecodeExpression minUnits = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(1));
-                final BytecodeExpression max = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(2)));
-                final BytecodeExpression maxUnits = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(3));
+                final BytecodeExpression min = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(0)));
+                final BytecodeExpression minUnits = evaluateExpression(program, context, expr.getArgument(1));
+                final BytecodeExpression max = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(2)));
+                final BytecodeExpression maxUnits = evaluateExpression(program, context, expr.getArgument(3));
                 return scope.invokeExact(expr.getLocation(), "timeout", TaskContext.class, context.getType(), context, min, minUnits, max, maxUnits);
             }
             case END_CONTEXT: {
-                final BytecodeExpression output = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0));
+                final BytecodeExpression output = evaluateExpression(program, context, expr.getArgument(0));
                 GambitCreator.ScopeBuilder child = scope.scope();
                 BytecodeExpression result = child.evaluateInto(output);
                 child.exec(child.invokeExact(expr.getLocation(), "end", TaskContext.class, BaseTypeAdapter.VOID, context));
@@ -133,14 +133,14 @@ public class PhysicalExprOperatorCompiler {
                 return scope.cast(expr.getLocation(), outputType, output);
             }
             case FOREACH: {
-                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0));
+                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
                 OperatorNode<FunctionOperator> function = expr.getArgument(1);
                 TypeWidget itemType = inputExpr.getType().getIterableAdapter().getValue();
                 GambitCreator.Invocable functionImpl = compileFunction(program.getType(), context.getType(), ImmutableList.of(itemType), function);
                 return scope.transform(expr.getLocation(), inputExpr, functionImpl.prefix(program, context));
             }
             case FIRST: {
-                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0));
+                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
                 return scope.first(expr.getLocation(), inputExpr);
             }
             case SINGLETON: {
@@ -149,7 +149,7 @@ public class PhysicalExprOperatorCompiler {
                 return scope.invokeExact(expr.getLocation(), "singleton", ProgramInvocation.class, new ListTypeWidget(targetExpression.getType()), program, scope.cast(AnyTypeWidget.getInstance(), targetExpression));
             }
             case LENGTH: {
-                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0));
+                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
                 return scope.length(expr.getLocation(), inputExpr);
             }
             case PROPREF: {
@@ -168,7 +168,7 @@ public class PhysicalExprOperatorCompiler {
             case WITH_CONTEXT: {
                 GambitCreator.ScopeBuilder contextScope = scope.scope();
                 PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(contextScope);
-                BytecodeExpression ctxExpr = contextScope.evaluateInto(compiler.evaluateExpression(program, context, expr.<OperatorNode<PhysicalExprOperator>>getArgument(0)));
+                BytecodeExpression ctxExpr = contextScope.evaluateInto(compiler.evaluateExpression(program, context, expr.getArgument(0)));
                 OperatorNode<PhysicalExprOperator> exprTarget = expr.getArgument(1);
                 BytecodeExpression resultExpr = compiler.evaluateExpression(program, ctxExpr, OperatorNode.create(PhysicalExprOperator.END_CONTEXT, exprTarget));
                 return contextScope.complete(resultExpr);
@@ -1055,7 +1055,7 @@ public class PhysicalExprOperatorCompiler {
                     throw new UnsupportedOperationException("Unknown SINK operator: " + sink);
             }
         }
-        StreamSink next = compileStream(program, ctxExpr, stream.<OperatorNode<StreamOperator>>getArgument(0));
+        StreamSink next = compileStream(program, ctxExpr, stream.getArgument(0));
         switch (stream.getOperator()) {
             case TRANSFORM: {
                 OperatorNode<FunctionOperator> function = stream.getArgument(1);

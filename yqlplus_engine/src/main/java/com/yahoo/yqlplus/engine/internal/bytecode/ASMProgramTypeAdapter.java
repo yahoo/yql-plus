@@ -505,7 +505,7 @@ public class ASMProgramTypeAdapter implements ProgramValueTypeAdapter {
         @Override
         public BytecodeExpression resolve(BytecodeExpression target) {
             GambitCreator.Invocable invocable = ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "resolve", ownerType, AnyTypeWidget.getInstance(), target);
-            return new BytecodeCastExpression(valueType, invocable.invoke(Location.NONE, ImmutableList.<BytecodeExpression>of()));
+            return new BytecodeCastExpression(valueType, invocable.invoke(Location.NONE, ImmutableList.of()));
         }
 
         @Override

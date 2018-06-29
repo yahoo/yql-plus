@@ -18,7 +18,7 @@ public interface IterateAdapter {
 
     BytecodeExpression first(BytecodeExpression target);
 
-    public interface IterateLoop {
+    interface IterateLoop {
         void item(CodeEmitter code, BytecodeExpression item, Label abortLoop, Label nextItem);
     }
 }

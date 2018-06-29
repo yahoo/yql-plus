@@ -27,9 +27,7 @@ public abstract class YQLValueType extends YQLType {
         }
         YQLValueType that = (YQLValueType) o;
 
-        if (!valueType.equals(that.valueType)) return false;
-
-        return true;
+        return valueType.equals(that.valueType);
     }
 
     @Override

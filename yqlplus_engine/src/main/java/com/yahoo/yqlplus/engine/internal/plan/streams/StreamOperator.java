@@ -45,7 +45,7 @@ public enum StreamOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private StreamOperator(Object... types) {
+    StreamOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

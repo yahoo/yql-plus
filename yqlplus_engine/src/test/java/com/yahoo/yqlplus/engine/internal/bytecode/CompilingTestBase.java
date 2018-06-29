@@ -194,7 +194,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
 
     protected OperatorNode<PhysicalExprOperator> parseExpression(String expr) throws IOException, RecognitionException {
         ProgramParser parser = new ProgramParser();
-        OperatorNode<ExpressionOperator> op = parser.parseExpression(expr, ImmutableSet.<String>of(), ImmutableMap.<String, List<String>>of("map", ImmutableList.of("map")));
+        OperatorNode<ExpressionOperator> op = parser.parseExpression(expr, ImmutableSet.of(), ImmutableMap.of("map", ImmutableList.of("map")));
         DynamicExpressionEnvironment env = new DynamicExpressionEnvironment() {
             @Override
             public OperatorValue getVariable(String name) {
@@ -253,7 +253,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     }
 
     protected void defineSource(String name, Class<? extends Source> sourceClazz) {
-        sources.put(name, (Provider<? extends Source>)injector.getProvider(sourceClazz));
+        sources.put(name, injector.getProvider(sourceClazz));
     }
 
     protected OperatorNode<StatementOperator> parseQueryProgram(String query) throws IOException {
@@ -281,7 +281,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     protected ProgramResult runProgram(String programText) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("program.yql", programText);
-        return program.run(ImmutableMap.<String,Object>of(), true);
+        return program.run(ImmutableMap.of(), true);
 
     }
 
@@ -346,7 +346,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
             public void end() {
 
             }
-        }, ImmutableMap.<String,Object>of(), new EmptyExecutionScope(), new TaskContext(new DummyStandardRequestEmitter(new MetricDimension(), new RequestMetricSink() {
+        }, ImmutableMap.of(), new EmptyExecutionScope(), new TaskContext(new DummyStandardRequestEmitter(new MetricDimension(), new RequestMetricSink() {
             @Override
             public void emitRequest(RequestEvent requestEvent) {
 

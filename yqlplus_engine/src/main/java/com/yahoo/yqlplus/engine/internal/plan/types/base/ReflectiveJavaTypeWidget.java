@@ -144,10 +144,7 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
         if (properties == null) {
             return false;
         }
-        if (properties.isClosed() && Iterables.isEmpty(properties.getProperties())) {
-            return false;
-        }
-        return true;
+        return !properties.isClosed() || !Iterables.isEmpty(properties.getProperties());
     }
 
     @Override

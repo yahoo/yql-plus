@@ -39,7 +39,7 @@ public class PlanProgramResultAdapter implements ProgramResult, InvocationResult
         ImmutableMap.Builder<String, SettableFuture<YQLResultSet>> resultSets = ImmutableMap.builder();
         for (CompiledProgram.ResultSetInfo info : resultSetInfos) {
             names.add(info.getName());
-            resultSets.put(info.getName(), SettableFuture.<YQLResultSet>create());
+            resultSets.put(info.getName(), SettableFuture.create());
         }
         this.end = SettableFuture.create();
         this.names = names.build();

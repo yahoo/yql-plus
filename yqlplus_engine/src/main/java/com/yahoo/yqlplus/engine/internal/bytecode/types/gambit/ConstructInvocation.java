@@ -45,7 +45,7 @@ public class ConstructInvocation extends BytecodeInvocable {
 
 
     public static GambitCreator.Invocable constructor(Type targetType, final TypeWidget returnType, TypeWidget... argsWidgets) {
-        return constructor(targetType, returnType, argsWidgets == null ? ImmutableList.<TypeWidget>of() : Arrays.asList(argsWidgets));
+        return constructor(targetType, returnType, argsWidgets == null ? ImmutableList.of() : Arrays.asList(argsWidgets));
     }
 
     public static GambitCreator.Invocable constructor(Type targetType, final TypeWidget returnType, List<TypeWidget> argsWidgets) {
@@ -53,7 +53,7 @@ public class ConstructInvocation extends BytecodeInvocable {
     }
 
     public static GambitCreator.Invocable boundInvoke(Type targetType, final TypeWidget owner, BytecodeExpression... args) {
-        return boundInvoke(targetType, owner, args == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(args));
+        return boundInvoke(targetType, owner, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
     public static GambitCreator.Invocable boundInvoke(Type targetType, final TypeWidget owner, final List<BytecodeExpression> args) {

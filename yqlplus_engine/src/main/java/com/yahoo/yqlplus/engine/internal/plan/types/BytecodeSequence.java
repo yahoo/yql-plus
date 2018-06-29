@@ -10,7 +10,7 @@ package com.yahoo.yqlplus.engine.internal.plan.types;
 import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
 
 public interface BytecodeSequence {
-    public static final BytecodeSequence NOOP = new BytecodeSequence() {
+    BytecodeSequence NOOP = new BytecodeSequence() {
         @Override
         public void generate(CodeEmitter code) {
 

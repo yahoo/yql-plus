@@ -82,7 +82,7 @@ public final class GraphPlanner {
 
         for (Map.Entry<Step, Node> e : nodes.entrySet()) {
             if (e.getValue().inputs.isEmpty()) {
-                populateAvailable(e.getValue(), Sets.<Value>newIdentityHashSet(), nodes);
+                populateAvailable(e.getValue(), Sets.newIdentityHashSet(), nodes);
             }
         }
 
@@ -138,7 +138,7 @@ public final class GraphPlanner {
                 if (join == null) {
                     join = new JoinTask();
                     joinTasks.put(key, join);
-                    join.setAvailable(Sets.<Value>newIdentityHashSet());
+                    join.setAvailable(Sets.newIdentityHashSet());
                 }
                 join.addNext(n.run);
                 join.getAvailable().addAll(n.available);

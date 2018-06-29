@@ -44,7 +44,7 @@ public abstract class StructBase implements Record, JsonSerializable, Map<Object
     }
 
     @Override
-    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
         for (String fieldName : getAllFieldNames()) {
             Object value = get(fieldName);
@@ -56,7 +56,7 @@ public abstract class StructBase implements Record, JsonSerializable, Map<Object
     }
 
     @Override
-    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException, JsonProcessingException {
+    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
         // we just don't support this
         serialize(jgen, provider);
     }
@@ -148,7 +148,7 @@ public abstract class StructBase implements Record, JsonSerializable, Map<Object
 
     @Override
     public Set<Object> keySet() {
-        return ImmutableSet.<Object>copyOf(getFieldNames());
+        return ImmutableSet.copyOf(getFieldNames());
     }
 
     @Override
@@ -211,7 +211,7 @@ public abstract class StructBase implements Record, JsonSerializable, Map<Object
                         String field = fields.next();
                         Object value = get(field);
                         if (value != null) {
-                            return Maps.<Object, Object>immutableEntry(field, value);
+                            return Maps.immutableEntry(field, value);
                         }
                     }
                     return endOfData();

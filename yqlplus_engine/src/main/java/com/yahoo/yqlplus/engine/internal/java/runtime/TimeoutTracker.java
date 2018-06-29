@@ -69,7 +69,7 @@ public class TimeoutTracker implements Timeout {
     }
 
     @Override
-    public long computeMaximum(long maximum, TimeUnit maximumUnits) throws TimeoutException {
+    public long computeMaximum(long maximum, TimeUnit maximumUnits) {
         long maxNanos = maximumUnits.toNanos(maximum);
         return Math.min(remainingTicks(), maxNanos);
     }

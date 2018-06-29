@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutionException;
 
 public class ScopedTracingExecutorTest {
     @Test
-    public void requireScoping() throws ExecutionException, InterruptedException {
+    public void requireScoping() {
 //        ExecutorService service = Executors.newFixedThreadPool(5);
 //        ScheduledExecutorService timers = Executors.newSingleThreadScheduledExecutor();
 //        ExecutionScoper scoper = new ExecutionScoper();

@@ -431,7 +431,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public BytecodeExpression invokeExact(Location loc, String methodName, Class<?> owner, TypeWidget returnType, BytecodeExpression... args) {
-        return invokeExact(loc, methodName, owner, returnType, args == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(args));
+        return invokeExact(loc, methodName, owner, returnType, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
     @Override
@@ -442,17 +442,17 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public BytecodeExpression invokeStatic(Location loc, String methodName, Class<?> owner, TypeWidget returnType, BytecodeExpression... args) {
-        return invokeStatic(loc, methodName, owner, returnType, args == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(args));
+        return invokeStatic(loc, methodName, owner, returnType, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
     @Override
     public BytecodeExpression invokeStatic(Location loc, String methodName, Class<?> owner, TypeWidget returnType, List<BytecodeExpression> args) {
-        return invoke(loc, ExactInvocation.boundInvoke(Opcodes.INVOKESTATIC, methodName, adapt(owner, false), returnType, args), ImmutableList.<BytecodeExpression>of());
+        return invoke(loc, ExactInvocation.boundInvoke(Opcodes.INVOKESTATIC, methodName, adapt(owner, false), returnType, args), ImmutableList.of());
     }
 
     @Override
     public BytecodeExpression invoke(Location loc, BytecodeExpression target, String operationName, BytecodeExpression... args) {
-        return invoke(loc, target, operationName, args != null ? Arrays.asList(args) : ImmutableList.<BytecodeExpression>of());
+        return invoke(loc, target, operationName, args != null ? Arrays.asList(args) : ImmutableList.of());
     }
 
     @Override
@@ -469,7 +469,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public Invocable constructor(TypeWidget type, TypeWidget... argumentTypes) {
-        return constructor(type, argumentTypes == null ? ImmutableList.<TypeWidget>of() : Arrays.asList(argumentTypes));
+        return constructor(type, argumentTypes == null ? ImmutableList.of() : Arrays.asList(argumentTypes));
     }
 
     @Override
@@ -628,7 +628,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public BytecodeExpression fork(Location location, BytecodeExpression runtime, CallableInvocable function, BytecodeExpression... arguments) {
-        return fork(location, runtime, function, arguments == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(arguments));
+        return fork(location, runtime, function, arguments == null ? ImmutableList.of() : Arrays.asList(arguments));
     }
 
     @Override

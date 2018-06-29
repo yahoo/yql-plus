@@ -192,7 +192,7 @@ public final class ProgramParser {
         return convertProgram(parseProgram(parser), parser, programName);
     }
 
-    public OperatorNode<StatementOperator> parse(String programName, String program) throws IOException, RecognitionException {
+    public OperatorNode<StatementOperator> parse(String programName, String program) throws RecognitionException {
         yqlplusParser parser = prepareParser(programName, program);
         return convertProgram(parseProgram(parser), parser, programName);
     }
@@ -202,11 +202,11 @@ public final class ProgramParser {
         return convertProgram(parseProgram(parser), parser, input.getAbsoluteFile().toString());
     }
 
-    public OperatorNode<ExpressionOperator> parseExpression(String input) throws IOException, RecognitionException {
+    public OperatorNode<ExpressionOperator> parseExpression(String input) throws RecognitionException {
         return convertExpr(prepareParser("<expression>", input).expression(false).getRuleContext(), new Scope());
     }
 
-    public OperatorNode<ExpressionOperator> parseExpression(String input, Set<String> visibleAliases) throws IOException, RecognitionException {
+    public OperatorNode<ExpressionOperator> parseExpression(String input, Set<String> visibleAliases) throws RecognitionException {
         Scope scope = new Scope();
         final Location loc = new Location("<expression>", -1, -1);
         for (String alias : visibleAliases) {
@@ -215,7 +215,7 @@ public final class ProgramParser {
         return convertExpr(prepareParser("<expression>", input).expression(false).getRuleContext(), scope);
     }
 
-    public OperatorNode<ExpressionOperator> parseExpression(String input, Set<String> visibleAliases, Map<String, List<String>> imports) throws IOException, RecognitionException {
+    public OperatorNode<ExpressionOperator> parseExpression(String input, Set<String> visibleAliases, Map<String, List<String>> imports) throws RecognitionException {
         Scope scope = new Scope();
         final Location loc = new Location("<expression>", -1, -1);
         for (String alias : visibleAliases) {
@@ -621,7 +621,7 @@ public final class ProgramParser {
             while (startNode.getChildCount() < 3) {
                 startNode = startNode.getChild(0);
             }
-            fieldNames.add((String) convertExpr(startNode.getChild(0), scope).getArgument(1));
+            fieldNames.add(convertExpr(startNode.getChild(0), scope).getArgument(1));
             fieldValues.add(convertExpr(startNode.getChild(2), scope));
         }
         return OperatorNode.create(ExpressionOperator.MAP, fieldNames, fieldValues);
@@ -772,7 +772,7 @@ public final class ProgramParser {
         switch (getParseTreeIndex(dataSourceNode)) {
             case yqlplusParser.RULE_write_data_source:
             case yqlplusParser.RULE_call_source: {
-                List<String> names = readName((Namespaced_nameContext) dataSourceNode.getChild(Namespaced_nameContext.class, 0));
+                List<String> names = readName(dataSourceNode.getChild(Namespaced_nameContext.class, 0));
                 alias = assignAlias(names.get(names.size() - 1), aliasContext, scope);
                 List<OperatorNode<ExpressionOperator>> arguments = ImmutableList.of();
                 ArgumentsContext argumentsContext = dataSourceNode.getRuleContext(ArgumentsContext.class, 0);
@@ -1060,7 +1060,7 @@ public final class ProgramParser {
         for (Field_defContext rulenode : fieldDefs) {
             // FIELD
                 // expression alias_def?
-            OperatorNode<ExpressionOperator> expr = convertExpr((ExpressionContext) rulenode.getChild(0), scope);
+            OperatorNode<ExpressionOperator> expr = convertExpr(rulenode.getChild(0), scope);
 
                 String aliasName = null;
                 if (rulenode.getChildCount() > 1) {
@@ -1199,8 +1199,8 @@ public final class ProgramParser {
                 AnnotationContext annotateExpressionContext = ((AnnotateExpressionContext) parseTree).annotation();
                 OperatorNode<ExpressionOperator> annotation = convertExpr(annotateExpressionContext.constantMapExpression(), scope);
                 OperatorNode<ExpressionOperator> expr = convertExpr(parseTree.getChild(1), scope);
-                List<String> names = (List<String>) annotation.getArgument(0);
-                List<OperatorNode<ExpressionOperator>> annotates = (List<OperatorNode<ExpressionOperator>>) annotation.getArgument(1);
+                List<String> names = annotation.getArgument(0);
+                List<OperatorNode<ExpressionOperator>> annotates = annotation.getArgument(1);
                 for (int i = 0; i < names.size(); ++i) {
                     expr.putAnnotation(names.get(i), readConstantExpression(annotates.get(i)));
                 }
@@ -1404,7 +1404,7 @@ public final class ProgramParser {
                 if (elements.size() == 1) {
                     Literal_elementContext child = elements.get(0);
                     OperatorNode<ExpressionOperator> expr = convertExpr(child.getChild(0), scope);
-                    if(expr.getOperator() == ExpressionOperator.VARREF && scope.isArrayArgument((String)expr.getArgument(0))) {
+                    if(expr.getOperator() == ExpressionOperator.VARREF && scope.isArrayArgument(expr.getArgument(0))) {
                         return expr;
                     }
                     return OperatorNode.create(toLocation(scope, elements.get(0)), ExpressionOperator.ARRAY, ImmutableList.of(expr));
@@ -1445,15 +1445,15 @@ public final class ProgramParser {
                 return node.getArgument(0);
             case MAP: {
                 ImmutableMap.Builder<String, Object> map = ImmutableMap.builder();
-                List<String> names = (List<String>) node.getArgument(0);
-                List<OperatorNode<ExpressionOperator>> exprs = (List<OperatorNode<ExpressionOperator>>) node.getArgument(1);
+                List<String> names = node.getArgument(0);
+                List<OperatorNode<ExpressionOperator>> exprs = node.getArgument(1);
                 for (int i = 0; i < names.size(); ++i) {
                     map.put(names.get(i), readConstantExpression(exprs.get(i)));
                 }
                 return map.build();
             }
             case ARRAY: {
-                List<OperatorNode<ExpressionOperator>> exprs = (List<OperatorNode<ExpressionOperator>>) node.getArgument(0);
+                List<OperatorNode<ExpressionOperator>> exprs = node.getArgument(0);
                 ImmutableList.Builder<Object> lst = ImmutableList.builder();
                 for (OperatorNode<ExpressionOperator> expr : exprs) {
                     lst.add(readConstantExpression(expr));
@@ -1523,7 +1523,7 @@ public final class ProgramParser {
         fieldNames = Lists.newArrayListWithExpectedSize(numPairs);
         fieldValues = Lists.newArrayListWithExpectedSize(numPairs);
         for (int i = 0; i < numPairs; i++) {
-            fieldNames.add((String) convertExpr(fieldDefs.get(i).expression(), scope).getArgument(1));
+            fieldNames.add(convertExpr(fieldDefs.get(i).expression(), scope).getArgument(1));
             fieldValues.add(convertExpr(valueDefs.get(i), scope));
         }
         return OperatorNode.create(ExpressionOperator.MAP, fieldNames, fieldValues);
@@ -1538,7 +1538,7 @@ public final class ProgramParser {
             fieldNames = Lists.newArrayListWithExpectedSize(node.getChildCount());
             fieldValues = Lists.newArrayListWithExpectedSize(node.getChildCount());
             for (int i = 0; i < node.getChildCount(); i++) {
-                fieldNames.add((String) convertExpr(node.getChild(i).getChild(0).getChild(0), scope).getArgument(1));
+                fieldNames.add(convertExpr(node.getChild(i).getChild(0).getChild(0), scope).getArgument(1));
                 fieldValues.add(convertExpr(node.getChild(i).getChild(0).getChild(1), scope));
             }
         } else {
@@ -1547,7 +1547,7 @@ public final class ProgramParser {
             fieldNames = Lists.newArrayListWithExpectedSize(numPairs);
             fieldValues = Lists.newArrayListWithExpectedSize(numPairs);
             for (int i = 0; i < numPairs; i++) {
-                fieldNames.add((String) convertExpr(node.getChild(i).getChild(0), scope).getArgument(1));
+                fieldNames.add(convertExpr(node.getChild(i).getChild(0), scope).getArgument(1));
                 fieldValues.add(convertExpr(node.getChild(numPairs + i), scope));
             }
         }
@@ -1568,7 +1568,7 @@ public final class ProgramParser {
         List<Field_defContext> nameContexts = nameDefs.field_def();
         List<String> fieldNames = Lists.newArrayList();
         for (Field_defContext nameContext : nameContexts) {
-            fieldNames.add((String) convertExpr(nameContext.getChild(0), scope).getArgument(1));
+            fieldNames.add(convertExpr(nameContext.getChild(0), scope).getArgument(1));
         }
         List<OperatorNode> records = Lists.newArrayList();
         for (Field_values_group_specContext valueGorup : valueGroups) {

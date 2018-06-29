@@ -33,7 +33,7 @@ public class MergeFilters extends LogicalOperatorTransform {
 
     private OperatorNode<SequenceOperator> visitChain(OperatorNode<SequenceOperator> top, OperatorNode<SequenceOperator> current) {
         if (MERGE_THROUGH.contains(current.getOperator())) {
-            return visitChain(top, (OperatorNode<SequenceOperator>) current.getArgument(0));
+            return visitChain(top, current.getArgument(0));
         } else if (top == current) {
             return top;
         } else {
@@ -48,7 +48,7 @@ public class MergeFilters extends LogicalOperatorTransform {
             while (n != current) {
                 if (n.getOperator() == SequenceOperator.FILTER) {
                     annotations.putAll(n.getAnnotations());
-                    filters.add(super.visitExpr((OperatorNode<ExpressionOperator>) n.getArgument(1)));
+                    filters.add(super.visitExpr(n.getArgument(1)));
                     n = n.getArgument(0);
                 } else if (n.getOperator() == SequenceOperator.SORT) {
                     sorts.addFirst(n);

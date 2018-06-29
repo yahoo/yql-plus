@@ -68,7 +68,7 @@ public enum ExpressionOperator implements Operator {
     private final ArgumentsTypeChecker checker;
 
 
-    private ExpressionOperator(Object... types) {
+    ExpressionOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

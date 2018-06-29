@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.engine.internal.code;
 import java.io.Writer;
 
 public interface CodePrinter {
-    static final String EOL = "\n";
+    String EOL = "\n";
 
     /**
      * Print a partial line to the current code buffer.

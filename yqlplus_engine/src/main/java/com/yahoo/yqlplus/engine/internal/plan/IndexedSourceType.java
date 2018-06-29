@@ -348,7 +348,7 @@ public abstract class IndexedSourceType implements SourceType {
                 for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : strategy.indexFilter.entrySet()) {
                     String key = e.getKey();
                     OperatorNode<ExpressionOperator> zip = e.getValue();
-                    OperatorNode<PhysicalExprOperator> keyExpr = context.evaluate((OperatorNode<ExpressionOperator>) zip.getArgument(1));
+                    OperatorNode<PhysicalExprOperator> keyExpr = context.evaluate(zip.getArgument(1));
                     switch (zip.getOperator()) {
                         case EQ:
                             keyExpr = OperatorNode.create(keyExpr.getLocation(), PhysicalExprOperator.ARRAY, ImmutableList.of(keyExpr));

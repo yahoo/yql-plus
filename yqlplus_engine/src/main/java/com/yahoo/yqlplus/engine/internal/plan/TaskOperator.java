@@ -54,7 +54,7 @@ public enum TaskOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private TaskOperator(Object... types) {
+    TaskOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

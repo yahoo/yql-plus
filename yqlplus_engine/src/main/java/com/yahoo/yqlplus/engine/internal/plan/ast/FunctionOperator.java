@@ -16,7 +16,7 @@ public enum FunctionOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private FunctionOperator(Object... types) {
+    FunctionOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

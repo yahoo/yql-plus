@@ -38,9 +38,7 @@ public final class IndexName {
 
         IndexName indexName = (IndexName) o;
 
-        if (!columns.equals(indexName.columns)) return false;
-
-        return true;
+        return columns.equals(indexName.columns);
     }
 
     @Override

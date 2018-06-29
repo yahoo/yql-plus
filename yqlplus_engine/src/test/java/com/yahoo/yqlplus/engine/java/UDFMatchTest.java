@@ -76,7 +76,7 @@ public class UDFMatchTest {
         )));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT a, b FROM source OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
         Assert.assertEquals(records.get(0).get("a"), 1L);
         Assert.assertEquals(records.get(0).get("b"), null);
@@ -94,7 +94,7 @@ public class UDFMatchTest {
         )));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT func.add(a, b) rez FROM source OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
         Assert.assertEquals(records.get(0).get("a"), 1L);
         Assert.assertEquals(records.get(0).get("b"), null);
@@ -112,7 +112,7 @@ public class UDFMatchTest {
         )));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT func.add(a, b) rez FROM source WHERE b IS NOT NULL OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
         Assert.assertEquals(records.get(0).get("rez"), 4L);
     }
@@ -127,7 +127,7 @@ public class UDFMatchTest {
         )));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT func.safeadd(a, b) rez FROM source OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
         Assert.assertEquals(records.get(0).get("rez"), null);
         Assert.assertEquals(records.get(1).get("rez"), 4L);
@@ -143,7 +143,7 @@ public class UDFMatchTest {
         )));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT func.safeadd(a, b) rez FROM source WHERE b IS NULL OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
         Assert.assertEquals(records.get(0).get("rez"), null);
     }
@@ -154,7 +154,7 @@ public class UDFMatchTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT func.safeadd(1, 1) rez1, func.add(1, 1) rez2 OUTPUT AS f1;");
-        List<Record> records = (List<Record>) (program.run(ImmutableMap.<String, Object>of(), true).getResult("f1").get().getResult());
+        List<Record> records = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
         Assert.assertEquals(records.get(0).get("rez1"), 2L);
         Assert.assertEquals(records.get(0).get("rez2"), 2L);

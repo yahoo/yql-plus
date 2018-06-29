@@ -76,7 +76,7 @@ public class ProgramParserTest {
         long start = System.currentTimeMillis();
         try {
             ast = parser.parse("query", yqlQuery);
-        } catch (IOException | RecognitionException e) {
+        } catch (RecognitionException e) {
             throw new IllegalArgumentException(e);
         }
         long elapsed = System.currentTimeMillis() - start;

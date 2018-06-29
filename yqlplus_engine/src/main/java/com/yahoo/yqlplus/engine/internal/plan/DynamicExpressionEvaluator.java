@@ -77,8 +77,8 @@ public class DynamicExpressionEvaluator implements Function<OperatorNode<Express
             case NOT_IN:
             case IN: {
                 return compare(input.getLocation(), input.getOperator(),
-                        apply((OperatorNode<ExpressionOperator>) input.getArgument(0)),
-                        apply((OperatorNode<ExpressionOperator>) input.getArgument(1)));
+                        apply(input.getArgument(0)),
+                        apply(input.getArgument(1)));
             }
             case LIKE:
             case NOT_LIKE:
@@ -97,14 +97,14 @@ public class DynamicExpressionEvaluator implements Function<OperatorNode<Express
                 } else if (!(patternValue instanceof Pattern)) {
                     throw new ProgramCompileException(input.getLocation(), input.getOperator() + " pattern must be constant String or Pattern");
                 }
-                OperatorNode<PhysicalExprOperator> left = apply((OperatorNode<ExpressionOperator>) input.getArgument(0));
+                OperatorNode<PhysicalExprOperator> left = apply(input.getArgument(0));
                 OperatorNode<PhysicalExprOperator> right = environment.constant(patternValue);
                 return compare(input.getLocation(), input.getOperator(), left, right);
             }
             case IS_NULL:
-                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.IS_NULL, apply((OperatorNode<ExpressionOperator>) input.getArgument(0)));
+                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.IS_NULL, apply(input.getArgument(0)));
             case IS_NOT_NULL: {
-                OperatorNode<PhysicalExprOperator> target = apply(input.<OperatorNode<ExpressionOperator>>getArgument(0));
+                OperatorNode<PhysicalExprOperator> target = apply(input.getArgument(0));
                 return OperatorNode.create(input.getLocation(), PhysicalExprOperator.NOT,
                         OperatorNode.create(input.getLocation(), PhysicalExprOperator.IS_NULL, target));
             }
@@ -113,16 +113,16 @@ public class DynamicExpressionEvaluator implements Function<OperatorNode<Express
             case MULT:
             case DIV:
             case MOD: {
-                OperatorNode<PhysicalExprOperator> left = apply((OperatorNode<ExpressionOperator>) input.getArgument(0));
-                OperatorNode<PhysicalExprOperator> right = apply((OperatorNode<ExpressionOperator>) input.getArgument(1));
+                OperatorNode<PhysicalExprOperator> left = apply(input.getArgument(0));
+                OperatorNode<PhysicalExprOperator> right = apply(input.getArgument(1));
                 ArithmeticOperation arithmeticOperation = MATH.get(input.getOperator());
                 return OperatorNode.create(input.getLocation(), PhysicalExprOperator.BINARY_MATH, arithmeticOperation,
                         left, right);
             }
             case NEGATE:
-                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.NEGATE, apply((OperatorNode<ExpressionOperator>) input.getArgument(0)));
+                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.NEGATE, apply(input.getArgument(0)));
             case NOT:
-                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.NOT, apply((OperatorNode<ExpressionOperator>) input.getArgument(0)));
+                return OperatorNode.create(input.getLocation(), PhysicalExprOperator.NOT, apply(input.getArgument(0)));
             case MAP: {
                 List<String> keys = input.getArgument(0);
                 List<OperatorNode<ExpressionOperator>> values = input.getArgument(1);
@@ -141,12 +141,12 @@ public class DynamicExpressionEvaluator implements Function<OperatorNode<Express
                 return OperatorNode.create(input.getLocation(), PhysicalExprOperator.ARRAY, out);
             }
             case INDEX: {
-                OperatorNode<PhysicalExprOperator> left = apply((OperatorNode<ExpressionOperator>) input.getArgument(0));
-                OperatorNode<PhysicalExprOperator> right = apply((OperatorNode<ExpressionOperator>) input.getArgument(1));
+                OperatorNode<PhysicalExprOperator> left = apply(input.getArgument(0));
+                OperatorNode<PhysicalExprOperator> right = apply(input.getArgument(1));
                 return OperatorNode.create(input.getLocation(), PhysicalExprOperator.INDEX, left, right);
             }
             case PROPREF: {
-                OperatorNode<PhysicalExprOperator> left = apply((OperatorNode<ExpressionOperator>) input.getArgument(0));
+                OperatorNode<PhysicalExprOperator> left = apply(input.getArgument(0));
                 return OperatorNode.create(input.getLocation(), PhysicalExprOperator.PROPREF, left, input.getArgument(1));
             }
             case LITERAL:

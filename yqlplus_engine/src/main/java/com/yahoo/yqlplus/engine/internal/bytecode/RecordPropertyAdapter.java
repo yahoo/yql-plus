@@ -48,7 +48,7 @@ public class RecordPropertyAdapter extends OpenPropertyAdapter {
         return new InvokeExpression(Record.class, "getFieldNames",
                 new IterableTypeWidget(BaseTypeAdapter.STRING),
                 target,
-                ImmutableList.<BytecodeExpression>of());
+                ImmutableList.of());
     }
 
     @Override

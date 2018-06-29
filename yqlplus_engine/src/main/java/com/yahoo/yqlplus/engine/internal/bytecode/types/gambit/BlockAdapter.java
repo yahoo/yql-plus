@@ -26,7 +26,7 @@ public class BlockAdapter extends ExpressionHandler implements GambitCreator.Sco
     @Override
     public BytecodeExpression complete(BytecodeExpression end) {
         body.add(end);
-        return new BaseTypeExpression((TypeWidget) end.getType()) {
+        return new BaseTypeExpression(end.getType()) {
             @Override
             public void generate(CodeEmitter code) {
                 body.generate(code);

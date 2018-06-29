@@ -74,7 +74,7 @@ public class NamespaceBindingsTest {
     // run the same sequence of queries against the given engine
     private void runInvocations(YQLPlusCompiler compiler) throws Exception {
         CompiledProgram program = compiler.compile("SELECT * FROM mine OUTPUT AS f1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("f1").get();
         Assert.assertEquals(rez.getResult(), ImmutableList.of(new Person("1", "1", 1)));
 

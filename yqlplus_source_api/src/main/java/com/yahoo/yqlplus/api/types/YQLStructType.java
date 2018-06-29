@@ -174,9 +174,7 @@ public final class YQLStructType extends YQLType {
         YQLStructType that = (YQLStructType) o;
 
         if (closed != that.closed) return false;
-        if (!fields.equals(that.fields)) return false;
-
-        return true;
+        return fields.equals(that.fields);
     }
 
     @Override

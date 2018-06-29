@@ -64,7 +64,7 @@ public enum SequenceOperator implements Operator {
         }
     };
 
-    private SequenceOperator(Object... types) {
+    SequenceOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

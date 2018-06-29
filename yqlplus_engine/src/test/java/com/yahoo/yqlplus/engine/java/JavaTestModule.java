@@ -111,12 +111,12 @@ public class JavaTestModule extends AbstractModule {
           } else {
             bind(ExecutionScope.class).annotatedWith(Names.named("compile")).toInstance( 
                 new MapExecutionScope().bind(TaskMetricEmitter.class, requestEmitter.start(new MetricDimension())));
-            bind(TaskMetricEmitter.class).toProvider(SeededKeyProvider.<TaskMetricEmitter> seededKeyProvider()).in(
+            bind(TaskMetricEmitter.class).toProvider(SeededKeyProvider.seededKeyProvider()).in(
                 ExecuteScoped.class);
           }
         }
 
-        RequestEvent getRequestEvent() throws InterruptedException {
+        RequestEvent getRequestEvent() {
             return requestEmitter.complete();
         }
         

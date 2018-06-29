@@ -144,7 +144,7 @@ public class ProgramTracer implements RequestTracer {
         }
 
         @Override
-        public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException {
             // hm, do we want a flat JSON representation or a structured one?
             // let's go with structured for now
 
@@ -196,7 +196,7 @@ public class ProgramTracer implements RequestTracer {
         }
 
         @Override
-        public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException, JsonProcessingException {
+        public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
             serialize(jgen, provider);
         }
     }

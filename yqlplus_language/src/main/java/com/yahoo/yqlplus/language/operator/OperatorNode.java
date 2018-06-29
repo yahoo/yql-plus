@@ -322,9 +322,7 @@ public final class OperatorNode<T extends Operator> {
         if (!annotations.equals(that.annotations)) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(args, that.args)) return false;
-        if (!operator.equals(that.operator)) return false;
-
-        return true;
+        return operator.equals(that.operator);
     }
 
     @Override

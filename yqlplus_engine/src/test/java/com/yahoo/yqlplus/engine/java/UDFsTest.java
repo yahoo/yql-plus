@@ -129,7 +129,7 @@ public class UDFsTest {
         CompiledProgram program = compiler.compile("PROGRAM (@str string); \n"
                 + "SELECT cool.convertString(@str) upperStr OUTPUT as arg;");
         ProgramResult rez = program.run(
-                ImmutableMap.<String, Object> of("str", "cool"), true);
+                ImmutableMap.of("str", "cool"), true);
         List<Record> record = rez.getResult("arg").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("upperStr"), "COOL");
@@ -140,7 +140,7 @@ public class UDFsTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT cool.joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Record> record = rez.getResult("f1").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
@@ -169,7 +169,7 @@ public class UDFsTest {
         CompiledProgram program = compiler.compile("" +
                 "FROM cool IMPORT joeify;" +
                 "SELECT joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Record> record = rez.getResult("f1").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
@@ -182,7 +182,7 @@ public class UDFsTest {
         CompiledProgram program = compiler.compile("" +
                 "IMPORT cool.joeify AS baz;" +
                 "SELECT baz(value) name from source WHERE id = '1' OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Record> record = rez.getResult("f1").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
@@ -195,7 +195,7 @@ public class UDFsTest {
         CompiledProgram program = compiler.compile("" +
                 "IMPORT cool;" +
                 "SELECT cool.joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Record> record = rez.getResult("f1").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
@@ -206,7 +206,7 @@ public class UDFsTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id IN ('1', '10') | cool.doubleScores OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         AssertJUnit.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 2), new Person("10", "10", 20)));
     }
 
@@ -216,7 +216,7 @@ public class UDFsTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("CREATE TEMPORARY TABLE frobaz AS (SELECT * FROM people WHERE id IN ('1', '2', '3', '4') | cool.removeEvenPeople());" +
                 "SELECT id FROM frobaz OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         AssertJUnit.assertEquals(foo.size(), 2);
@@ -233,7 +233,7 @@ public class UDFsTest {
             "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3', '4', '5');" +
             "SELECT * FROM foo LIMIT cool.incr(@lmt) OUTPUT AS f1;" +
             "SELECT * FROM foo LIMIT cool.incr(@lmt) OFFSET cool.incr(@off) OUTPUT AS f2;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         AssertJUnit.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
         AssertJUnit.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("3", "3", 3), new Person("4", "4", 4)));
     }

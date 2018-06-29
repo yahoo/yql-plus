@@ -18,7 +18,7 @@ public class BaseTypeAdapterTest {
     }
 
     @Test
-    public void testName() throws Exception {
+    public void testName() {
 
 
     }

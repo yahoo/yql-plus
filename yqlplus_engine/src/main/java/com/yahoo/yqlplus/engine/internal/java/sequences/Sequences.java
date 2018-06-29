@@ -37,13 +37,13 @@ public final class Sequences {
         }
 
         @Override
-        public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStartObject();
             jgen.writeEndObject();
         }
 
         @Override
-        public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException, JsonProcessingException {
+        public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
             jgen.writeStartObject();
             jgen.writeEndObject();
         }

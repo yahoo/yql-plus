@@ -54,14 +54,14 @@ public abstract class StreamValue {
         switch (target.getOperator()) {
             case SINK: {
                 if (operator == StreamOperator.SINK) {
-                    return OperatorNode.createAs(location, ImmutableMap.<String, Object>of(), operator, arguments);
+                    return OperatorNode.createAs(location, ImmutableMap.of(), operator, arguments);
                 } else {
                     Object[] args = new Object[arguments == null ? 1 : 1 + arguments.length];
                     args[0] = target;
                     if (arguments != null) {
                         System.arraycopy(arguments, 0, args, 1, arguments.length);
                     }
-                    return OperatorNode.createAs(location, ImmutableMap.<String, Object>of(), operator, args);
+                    return OperatorNode.createAs(location, ImmutableMap.of(), operator, args);
                 }
             }
             case DISTINCT:

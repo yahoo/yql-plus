@@ -182,7 +182,7 @@ public class JavaEngineTest {
         public ListenableFuture<Iterable<Person>> futureScan(int delay) {
             return eventually(delay, new Callable<Iterable<Person>>() {
                 @Override
-                public Iterable<Person> call() throws Exception {
+                public Iterable<Person> call() {
                     return scan();
                 }
             });
@@ -289,7 +289,7 @@ public class JavaEngineTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.<String, Object>newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap(), true);
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -303,7 +303,7 @@ public class JavaEngineTest {
             JsonGenerator gen = JSON_FACTORY.createGenerator(outstream);
             gen.writeObject(rez);
             gen.flush();
-            parsed.put(key, (JsonNode) JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
+            parsed.put(key, JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
         }
         return parsed;
     }
@@ -320,7 +320,7 @@ public class JavaEngineTest {
         CompiledProgram program = compiler.compile("PROGRAM (); \n" +
                 "SELECT * FROM source WHERE id IN (1, 2, 3) " +
                 "OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         /*
          * Without the fix, the following line would throw:
          * java.util.concurrent.ExecutionException: java.util.concurrent.TimeoutException: Timeout after ... NANOSECONDS.

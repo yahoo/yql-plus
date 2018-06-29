@@ -29,7 +29,7 @@ public class ConstantTable {
             Type.getDescriptor(double.class),
             Type.getDescriptor(int.class),
             Type.getDescriptor(long.class));
-    private static final Set<Class<?>> BOXED_CONSTANTS = ImmutableSet.<Class<?>>of(Float.class, Double.class, Integer.class, Long.class);
+    private static final Set<Class<?>> BOXED_CONSTANTS = ImmutableSet.of(Float.class, Double.class, Integer.class, Long.class);
 
 
     private final ASMClassSource source;

@@ -53,8 +53,8 @@ public class MultiSourceParseTest {
         OperatorNode<StatementOperator> program = parser.parse("sources.yql", "SELECT * FROM SOURCES joe, smith, weather.id OUTPUT AS a;");
         OperatorNode<SequenceOperator> multi = OperatorNode.create(SequenceOperator.MULTISOURCE,
                 ImmutableList.of(ImmutableList.of("joe"),
-                        ImmutableList.<String>of("smith"),
-                        ImmutableList.<String>of("weather", "id")));
+                        ImmutableList.of("smith"),
+                        ImmutableList.of("weather", "id")));
         multi.putAnnotation("alias", "row");
         Assert.assertEquals(program, OperatorNode.create(StatementOperator.PROGRAM,
                 ImmutableList.of(OperatorNode.create(StatementOperator.EXECUTE,

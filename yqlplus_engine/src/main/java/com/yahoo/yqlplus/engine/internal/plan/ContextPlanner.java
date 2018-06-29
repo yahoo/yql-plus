@@ -336,7 +336,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     private OperatorNode<SequenceOperator> chainSource(OperatorNode<SequenceOperator> current) {
         if (CHAINABLE.contains(current.getOperator())) {
             // keep chaining transforms
-            return chainSource((OperatorNode<SequenceOperator>) current.getArgument(0));
+            return chainSource(current.getArgument(0));
         }
         switch (current.getOperator()) {
             case JOIN:
@@ -364,7 +364,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     private OperatorNode<SequenceOperator> replaceTail(OperatorNode<SequenceOperator> current, OperatorNode<SequenceOperator> tail, OperatorNode<SequenceOperator> target) {
         if (CHAINABLE.contains(current.getOperator())) {
             // keep chaining transforms
-            OperatorNode<SequenceOperator> next = replaceTail((OperatorNode<SequenceOperator>) current.getArgument(0), tail, target);
+            OperatorNode<SequenceOperator> next = replaceTail(current.getArgument(0), tail, target);
 
             Object[] args = current.getArguments();
             args[0] = next;

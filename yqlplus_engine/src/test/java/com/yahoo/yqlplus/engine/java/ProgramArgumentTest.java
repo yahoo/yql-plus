@@ -35,7 +35,7 @@ public class ProgramArgumentTest {
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a string);" +
                 "SELECT * FROM innersource WHERE id = @a OUTPUT AS b1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("a", "1"), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("a", "1"), true);
         YQLResultSet b1 = myResult.getResult("b1").get();
         List<Person> b1r = b1.getResult();
         Assert.assertEquals(b1r.size(), 1);
@@ -51,7 +51,7 @@ public class ProgramArgumentTest {
                 "PROGRAM (@a int32);" +
                 "SELECT id FROM innersource WHERE iid = @a OUTPUT AS b1;" +
                 "SELECT id FROM b1 OUTPUT AS b2;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("a", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("a", 1), true);
         YQLResultSet b1 = myResult.getResult("b1").get();
         List<Record> b1r = b1.getResult();
         Assert.assertEquals(b1r.size(), 1);
@@ -69,7 +69,7 @@ public class ProgramArgumentTest {
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a int32);" +
                 "SELECT * FROM innersource WHERE iid = @a OUTPUT AS b1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("a", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("a", 1), true);
         YQLResultSet b1 = myResult.getResult("b1").get();
         List<Person> b1r = b1.getResult();
         Assert.assertEquals(b1r.size(), 1);
@@ -84,7 +84,7 @@ public class ProgramArgumentTest {
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a int32);" +
                 "SELECT * FROM innersource WHERE iidprimitive = @a OUTPUT AS b1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("a", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("a", 1), true);
         YQLResultSet b1 = myResult.getResult("b1").get();
         List<Person> b1r = b1.getResult();
         Assert.assertEquals(b1r.size(), 1);
@@ -99,7 +99,7 @@ public class ProgramArgumentTest {
         CompiledProgram program = compiler.compile("PROGRAM (@ids array<string>, @codes array<int32>);" +
                 "SELECT * FROM people WHERE id IN (@ids) OUTPUT AS f1;" +
                 "SELECT * FROM people WHERE score in (@codes) OUTPUT AS f2;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("ids", ImmutableList.of("1", "2", "3"), "codes", ImmutableList.of(0, 1, 2)), true);
+        ProgramResult rez = program.run(ImmutableMap.of("ids", ImmutableList.of("1", "2", "3"), "codes", ImmutableList.of(0, 1, 2)), true);
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "bob", 0), new Person("2", "joe", 1), new Person("3", "smith", 2)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "bob", 0), new Person("2", "joe", 1), new Person("3", "smith", 2)));
     }
@@ -128,7 +128,7 @@ public class ProgramArgumentTest {
                                 " = [1,2,3]); " +
                                 "SELECT @strArg, @intArg OUTPUT AS program_arguments;";
          CompiledProgram program = compiler.compile(programStr);    
-         ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("intArg", ImmutableList.of(99, 88)), true);
+         ProgramResult myResult = program.run(ImmutableMap.of("intArg", ImmutableList.of(99, 88)), true);
          Object intArg = ((Record) ((List<Object>)myResult.getResult("program_arguments").get().getResult()).get(0)).get("intArg");
          Assert.assertEquals(intArg, ImmutableList.of(99, 88));
          Object strArg = ((Record) ((List<Object>)myResult.getResult("program_arguments").get().getResult()).get(0)).get("strArg");
@@ -144,7 +144,7 @@ public class ProgramArgumentTest {
                                 " = [1,2,3]); " +
                                 "SELECT @doubleArg, @intArg OUTPUT AS program_arguments;";
          CompiledProgram program = compiler.compile(programStr);
-         ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("intArg", ImmutableList.of(99, 88)), true);
+         ProgramResult myResult = program.run(ImmutableMap.of("intArg", ImmutableList.of(99, 88)), true);
          Object intArg = ((Record) ((List<Object>)myResult.getResult("program_arguments").get().getResult()).get(0)).get("intArg");
          Assert.assertEquals(intArg, ImmutableList.of(99, 88));
          Object doubleArg = ((Record) ((List<Object>)myResult.getResult("program_arguments").get().getResult()).get(0)).get("doubleArg");

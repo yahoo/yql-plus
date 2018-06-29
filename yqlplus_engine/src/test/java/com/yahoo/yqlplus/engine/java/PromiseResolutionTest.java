@@ -41,9 +41,7 @@ public class PromiseResolutionTest {
 
             IntegerKeyed that = (IntegerKeyed) o;
 
-            if (woeid != that.woeid) return false;
-
-            return true;
+            return woeid == that.woeid;
         }
 
         @Override
@@ -57,7 +55,7 @@ public class PromiseResolutionTest {
         public Future<List<IntegerKeyed>> lookup(@Key("woeid") final Integer integer) {
             return ForkJoinPool.commonPool().submit(new Callable<List<IntegerKeyed>>() {
                 @Override
-                public List<IntegerKeyed> call() throws Exception {
+                public List<IntegerKeyed> call() {
                     return ImmutableList.of(new IntegerKeyed(integer));
                 }
             });
@@ -84,7 +82,7 @@ public class PromiseResolutionTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -95,7 +93,7 @@ public class PromiseResolutionTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }

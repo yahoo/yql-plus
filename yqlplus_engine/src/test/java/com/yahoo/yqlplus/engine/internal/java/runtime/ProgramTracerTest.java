@@ -46,7 +46,7 @@ public class ProgramTracerTest {
     }
 
     @Test
-    public void testDebugProgramTracer() throws IOException {
+    public void testDebugProgramTracer() {
         MapExecutionScope scope = new MapExecutionScope()
                 .bind(String.class, "programName", "program")
                 .bind(Boolean.class, "debug", true);

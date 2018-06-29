@@ -17,17 +17,17 @@ class BufferWriter extends Writer {
     }
 
     @Override
-    public void write(char[] cbuf, int off, int len) throws IOException {
+    public void write(char[] cbuf, int off, int len) {
         buffer.append(cbuf, off, len);
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flush() {
         // no-op
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // no-op
     }
 }

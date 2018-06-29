@@ -66,7 +66,7 @@ public class Container implements EngineContainerInterface {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.<String, Object>newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap(), true);
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -80,7 +80,7 @@ public class Container implements EngineContainerInterface {
             JsonGenerator gen = JSON_FACTORY.createGenerator(outstream);
             gen.writeObject(rez);
             gen.flush();
-            parsed.put(key, (JsonNode) JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
+            parsed.put(key, JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
         }
         return parsed;
     }

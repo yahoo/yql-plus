@@ -54,10 +54,10 @@ public class MapPropertyAdapter extends OpenPropertyAdapter {
                 Type.getMethodDescriptor(Type.getType(Iterable.class), Type.getType(Iterable.class)),
                 new IterableTypeWidget(BaseTypeAdapter.STRING),
                 null,
-                ImmutableList.<BytecodeExpression>of(new InvokeExpression(Map.class,
+                ImmutableList.of(new InvokeExpression(Map.class,
                 "keySet",
                 new SetTypeWidget(keyType),
                 target,
-                ImmutableList.<BytecodeExpression>of())));
+                ImmutableList.of())));
     }
 }

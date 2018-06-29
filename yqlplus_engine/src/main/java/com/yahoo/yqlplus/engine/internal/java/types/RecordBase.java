@@ -17,7 +17,7 @@ import java.io.IOException;
 
 public abstract class RecordBase implements Record, JsonSerializable {
     @Override
-    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
         for (String fieldName : getFieldNames()) {
             Object value = get(fieldName);
@@ -29,7 +29,7 @@ public abstract class RecordBase implements Record, JsonSerializable {
     }
 
     @Override
-    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException, JsonProcessingException {
+    public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
         // we just don't support this
         serialize(jgen, provider);
     }

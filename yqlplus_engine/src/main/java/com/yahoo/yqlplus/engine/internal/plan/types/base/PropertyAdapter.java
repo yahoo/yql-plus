@@ -31,7 +31,7 @@ public interface PropertyAdapter {
 
     BytecodeSequence mergeIntoFieldWriter(BytecodeExpression target, BytecodeExpression fieldWriter);
 
-    public interface PropertyVisit {
+    interface PropertyVisit {
         void item(CodeEmitter code, BytecodeExpression propertyName, BytecodeExpression propertyValue, Label abortLoop, Label nextItem);
     }
 

@@ -170,7 +170,7 @@ public class ProgramPlanner implements ViewRegistry {
         return plan(parsedProgram);
     }
 
-    public OperatorNode<TaskOperator> plan(OperatorNode<StatementOperator> program) throws IOException {
+    public OperatorNode<TaskOperator> plan(OperatorNode<StatementOperator> program) {
         Preconditions.checkArgument(program.getOperator() == StatementOperator.PROGRAM);
         if (!once.compareAndSet(false, true)) {
             throw new ProgramCompileException("ProgramPlanners cannot be reused");
@@ -207,7 +207,7 @@ public class ProgramPlanner implements ViewRegistry {
                     break;
                 }
                 case DEFINE_VIEW:
-                    defineView((String) stmt.getArgument(0), logicalTransforms.apply((OperatorNode<SequenceOperator>) stmt.getArgument(1), this));
+                    defineView(stmt.getArgument(0), logicalTransforms.apply(stmt.getArgument(1), this));
                     break;
                 case EXECUTE: {
                     OperatorNode<SequenceOperator> query = stmt.getArgument(0);
@@ -311,10 +311,10 @@ public class ProgramPlanner implements ViewRegistry {
             case BOOLEAN:
                 return YQLBaseType.BOOLEAN;
             case ARRAY: {
-                return YQLArrayType.create(toYQLType((OperatorNode<TypeOperator>) typeNode.getArgument(0)));
+                return YQLArrayType.create(toYQLType(typeNode.getArgument(0)));
             }
             case MAP: {
-                return YQLMapType.create(YQLBaseType.STRING, toYQLType((OperatorNode<TypeOperator>) typeNode.getArgument(0)));
+                return YQLMapType.create(YQLBaseType.STRING, toYQLType(typeNode.getArgument(0)));
             }
         }
         throw new ProgramCompileException(typeNode.getLocation(), "Unknown TypeOperator %s", typeNode.getOperator());

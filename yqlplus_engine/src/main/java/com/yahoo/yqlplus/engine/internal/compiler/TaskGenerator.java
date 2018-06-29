@@ -72,7 +72,7 @@ public class TaskGenerator {
 
     public void executeStep(OperatorStep step) {
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(runBody);
-        OperatorNode<PhysicalOperator> op = (OperatorNode<PhysicalOperator>) step.getCompute();
+        OperatorNode<PhysicalOperator> op = step.getCompute();
         OperatorValue output = step.getOutput();
         BytecodeExpression rootContext = runBody.propertyValue(op.getLocation(), runBody.local("$program"), "rootContext");
         switch (op.getOperator()) {

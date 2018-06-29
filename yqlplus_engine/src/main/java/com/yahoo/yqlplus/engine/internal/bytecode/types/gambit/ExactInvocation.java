@@ -22,7 +22,7 @@ import java.util.List;
 public class ExactInvocation extends BytecodeInvocable {
 
     public static GambitCreator.Invocable exactInvoke(int op, final String methodName, final TypeWidget owner, TypeWidget returnType, TypeWidget... argsWidgets) {
-        return exactInvoke(op, methodName, owner, returnType, argsWidgets == null ? ImmutableList.<TypeWidget>of() : Arrays.asList(argsWidgets));
+        return exactInvoke(op, methodName, owner, returnType, argsWidgets == null ? ImmutableList.of() : Arrays.asList(argsWidgets));
     }
 
     private static boolean hasReceiver(int op) {
@@ -55,7 +55,7 @@ public class ExactInvocation extends BytecodeInvocable {
     }
 
     public static GambitCreator.Invocable boundInvoke(int op, final String methodName, final TypeWidget owner, TypeWidget returnType, BytecodeExpression... args) {
-        return boundInvoke(op, methodName, owner, returnType, args == null ? ImmutableList.<BytecodeExpression>of() : Arrays.asList(args));
+        return boundInvoke(op, methodName, owner, returnType, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
     public static GambitCreator.Invocable boundInvoke(int op, final String methodName, final TypeWidget owner, TypeWidget returnType, final List<BytecodeExpression> args) {

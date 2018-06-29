@@ -81,7 +81,7 @@ class QueryMethod extends IndexedMethod {
     }
 
     private OperatorNode<PhysicalExprOperator> createInvocation(Location location, OperatorNode<PhysicalExprOperator> source, ContextPlanner planner, OperatorNode<PhysicalExprOperator> key) {
-        return super.createInvocation(location, source, planner, key, ImmutableList.<OperatorNode<PhysicalExprOperator>>of());
+        return super.createInvocation(location, source, planner, key, ImmutableList.of());
     }
 
     public StreamValue scan(Location location, OperatorNode<PhysicalExprOperator> source, ContextPlanner planner, PlanChain.LocalChainState state) {

@@ -133,7 +133,7 @@ public class JavaProgramCompilerTest {
                 "SELECT * FROM people WHERE score = 1 OUTPUT AS score1;" +
                 "SELECT * FROM people WHERE id IN (SELECT id FROM people) OUTPUT AS baz;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 2);
@@ -159,7 +159,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("CREATE TEMPORARY TABLE frobaz AS (SELECT * FROM people WHERE id IN ('1', '2'));" +
                 "CREATE TEMPORARY TABLE frobaz2 AS (SELECT * FROM people WHERE id IN ('1', '2'));" +
                 "SELECT * FROM frobaz JOIN frobaz2 on frobaz.id = frobaz2.id OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertTrue(((Person)foo.get(0).get("frobaz")).getId().equals("1"));
@@ -173,7 +173,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM innersource WHERE id = '1' OUTPUT AS b1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet b1 = myResult.getResult("b1").get();
         List<Person> b1r = b1.getResult();
         Assert.assertEquals(b1r.size(), 1);
@@ -194,7 +194,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM trace OUTPUT AS b1;");
-        TraceRequest trace = program.run(ImmutableMap.<String, Object>of(), true).getEnd().get();
+        TraceRequest trace = program.run(ImmutableMap.of(), true).getEnd().get();
         for (TraceEntry entry : trace.getEntries()) {
             if ("MINE".equals(entry.getName())) {
                 return; // found it
@@ -208,7 +208,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("traceMethod", MethodTracingSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("testMethodTrace", "SELECT * FROM traceMethod OUTPUT AS b1;");
-        TraceRequest trace = program.run(ImmutableMap.<String, Object>of(), true).getEnd().get();
+        TraceRequest trace = program.run(ImmutableMap.of(), true).getEnd().get();
         for (TraceEntry entry : trace.getEntries()) {
             if (entry.getGroup().equals("program")) {
                 assertEquals("testMethodTrace", entry.getName());
@@ -239,7 +239,7 @@ public class JavaProgramCompilerTest {
         ExecutionScope scope = new MapExecutionScope()
             .bind(TaskMetricEmitter.class, requestEmitter.start("program", "<string>"));
 
-        program.run(ImmutableMap.<String, Object>of(), true, scope).getEnd().get();
+        program.run(ImmutableMap.of(), true, scope).getEnd().get();
         requestEmitter.complete();
         RequestEvent requestEvent = javaTestModule.getRequestEvent();
         Queue<RequestMetric> metrics = requestEvent.getMetrics();
@@ -265,7 +265,7 @@ public class JavaProgramCompilerTest {
         StandardRequestEmitter requestEmitter =  metricModule.getStandardRequestEmitter();
         ExecutionScope scope = new MapExecutionScope()
             .bind(TaskMetricEmitter.class, requestEmitter.start("program", "emitterTestProgram"));
-        program.run(ImmutableMap.<String, Object>of(), true, scope).getEnd().get();
+        program.run(ImmutableMap.of(), true, scope).getEnd().get();
         RequestEvent requestEvent = javaTestModule.getRequestEvent();
         Queue<RequestMetric> metrics = requestEvent.getMetrics();
         boolean foundTask = false;
@@ -310,7 +310,7 @@ public class JavaProgramCompilerTest {
                 "SELECT * FROM asyncsource WHERE id = '2' OUTPUT as b2;" +
                 "SELECT * FROM asyncsource WHERE id IN ('1', '2') OUTPUT as b3;" +
                 "SELECT * FROM asyncsource WHERE id IN (SELECT id FROM innersource) OR id = '3' ORDER BY id DESC OUTPUT as b4;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -341,7 +341,7 @@ public class JavaProgramCompilerTest {
             sourceBindings.addBinding("unruly").to(UnrulyRequestSource.class);
 
             bind(UnrulyRequestHandle.class)
-                    .toProvider(SeededKeyProvider.<UnrulyRequestHandle>seededKeyProvider())
+                    .toProvider(SeededKeyProvider.seededKeyProvider())
                     .in(ExecuteScoped.class);
         }
     }
@@ -357,7 +357,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from unruly OUTPUT as foo;");
         for (int i = 0; i < 20; ++i) {
-            ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true, createUnrulyScope(i));
+            ProgramResult myResult = program.run(ImmutableMap.of(), true, createUnrulyScope(i));
             Assert.assertEquals(myResult.getResult("foo").get().getResult(), ImmutableList.of(new UnrulyRequestRecord(i)));
         }
     }
@@ -375,7 +375,7 @@ public class JavaProgramCompilerTest {
                 new SourceBindingModule("executeScopedInjectedSource", ExecuteScopedInjectedSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from executeScopedInjectedSource OUTPUT as foo;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         List<Record> list = programResult.getResult("foo").get().getResult();
         // Get the Foo instance that is returned in the program result
         ExecuteScopedProviderModule.Foo fooResult = (ExecuteScopedProviderModule.Foo) list.get(0);
@@ -389,11 +389,11 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new UnrulyRequestModule(), new SourceBindingModule("iasource", InjectedArgumentSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from iasource(10) OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true, createUnrulyScope(100));
+        ProgramResult myResult = program.run(ImmutableMap.of(), true, createUnrulyScope(100));
         Assert.assertEquals(myResult.getResult("foo").get().getResult(), ImmutableList.of(new UnrulyRequestRecord(10)));
 
         program = compiler.compile("SELECT * from iasource OUTPUT as foo;");
-        myResult = program.run(ImmutableMap.<String, Object>of(), true, createUnrulyScope(100));
+        myResult = program.run(ImmutableMap.of(), true, createUnrulyScope(100));
         Assert.assertEquals(myResult.getResult("foo").get().getResult(), ImmutableList.of(new UnrulyRequestRecord(100)));
     }
 
@@ -405,7 +405,7 @@ public class JavaProgramCompilerTest {
                 "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
                 "SELECT * FROM source WHERE id IN ('1', '2', '3') OUTPUT AS f3;" +
                 "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f4;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
         Assert.assertEquals(rez.getResult("f3").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2), new Person("3", "3", 3)));
@@ -418,7 +418,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;");
 //        program.dump(System.err);
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
     }
 
@@ -429,7 +429,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3');" +
                 "SELECT * FROM foo LIMIT 1                OUTPUT AS f1;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
@@ -440,7 +440,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3');" +
                 "SELECT * FROM foo LIMIT 1    OFFSET 1    OUTPUT AS f2;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("2", "2", 2)));
     }
 
@@ -452,7 +452,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3');" +
                 "SELECT * FROM foo LIMIT @lmt OFFSET @off OUTPUT AS f3;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         Assert.assertEquals(rez.getResult("f3").get().getResult(), ImmutableList.of(new Person("2", "2", 2)));
     }
 
@@ -463,7 +463,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3');" +
                 "SELECT * FROM foo LIMIT @lmt             OUTPUT AS f4;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         Assert.assertEquals(rez.getResult("f4").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
@@ -475,7 +475,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3');" +
                 "SELECT * FROM foo OFFSET @off            OUTPUT AS f5;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("lmt", 1, "off", 1), true);
+        ProgramResult rez = program.run(ImmutableMap.of("lmt", 1, "off", 1), true);
         Assert.assertEquals(rez.getResult("f5").get().getResult(), ImmutableList.of(new Person("2", "2", 2), new Person("3", "3", 3)));
     }
 
@@ -487,7 +487,7 @@ public class JavaProgramCompilerTest {
                 "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
                 "SELECT * FROM source WHERE id IN ('1', '2', '3') OUTPUT AS f3;" +
                 "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f4;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
         Assert.assertEquals(rez.getResult("f3").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2), new Person("3", "3", 3)));
@@ -514,7 +514,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("SELECT * from source WHERE id = '1' OUTPUT as f1;" +
                 "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
                 "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f3;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
         Assert.assertEquals(rez.getResult("f3").get().getResult(), ImmutableList.of(new Person("1", "1", 10), new Person("2", "2", 10), new Person("3", "3", 10)));
@@ -527,7 +527,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(
                 "SELECT * FROM (SELECT * from source WHERE id = '1' MERGE SELECT * FROM source(10) WHERE id = '2' MERGE SELECT * FROM source WHERE id = '3') ORDER BY id OUTPUT AS f4;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("f4").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 10), new Person("3", "3", 3)));
     }
 
@@ -550,7 +550,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", KeyTypeSource2.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT id FROM source WHERE value = 1 OUTPUT AS f1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(((List<Record>) myResult.getResult("f1").get().getResult()).get(0).get("id"), "1");
     }
 
@@ -567,7 +567,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT people[0] person FROM source OUTPUT AS f1;\n" +
                 "SELECT dudes[0] dude FROM source OUTPUT AS f2;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.size(), 1);
         Assert.assertEquals(f1.get(0).get("person"), new ArraySyntaxTestRecord().people.get(0));
@@ -584,7 +584,7 @@ public class JavaProgramCompilerTest {
                 "SELECT result.dudes[0] dude FROM source OUTPUT AS f2;" +
                 "SELECT * FROM lookup WHERE id IN (SELECT result.people[0].id FROM source) OUTPUT AS f3;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.size(), 1);
         Assert.assertEquals(f1.get(0).get("person"), new ArraySyntaxTestRecord().people.get(0));
@@ -602,7 +602,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@strArg1 array<string>= ['array test1'], @strArg2 array<string> = ['array test2']);" +
                 "SELECT @strArg1, @strArg2 OUTPUT AS program_arguments;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("program_arguments").get().getResult();
         Assert.assertEquals(f1.get(0).get("strArg1").toString(), "[array test1]");
         Assert.assertEquals(f1.get(0).get("strArg2").toString(), "[array test2]");
@@ -615,7 +615,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("SELECT people['joe'] person FROM source OUTPUT AS f1;\n" +
                 "SELECT dudes['dude'] dude FROM source OUTPUT AS f2;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.size(), 1);
         Assert.assertEquals(f1.get(0).get("person"), new MapSyntaxTestRecord().people.get("joe"));
@@ -631,7 +631,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("SELECT result.people['joe'] person FROM source OUTPUT AS f1;\n" +
                 "SELECT result.dudes['dude'] dude FROM source OUTPUT AS f2;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.size(), 1);
         Assert.assertEquals(f1.get(0).get("person"), new MapSyntaxTestRecord().people.get("joe"));
@@ -646,7 +646,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -658,7 +658,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@id1 string, @id2 string);" +
                 "CREATE VIEW foo AS SELECT * FROM source WHERE id IN (@id1 , @id2);" +
                 "SELECT * FROM foo OUTPUT AS output;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("id1", "2", "id2", "3"), true);
+        ProgramResult rez = program.run(ImmutableMap.of("id1", "2", "id2", "3"), true);
         Assert.assertEquals(rez.getResult("output").get().getResult(), ImmutableList.of(new Person("2", "2", 2), new Person("3", "3", 3)));
     }
 
@@ -669,7 +669,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@woeid int32);\n" +
                 "SELECT * FROM source WHERE woeid = @woeid OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("woeid", 10), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("woeid", 10), true);
         List<IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -681,7 +681,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@woeid int32);\n" +
                 "SELECT * FROM source WHERE woeid = @woeid OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -693,7 +693,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("PROGRAM (@woeid int32 = 1234);\n" +
                 "SELECT * FROM source WHERE woeid = @woeid OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("woeid", 10), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("woeid", 10), true);
         List<IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -704,7 +704,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT {'foo' : 'bar', 'box' : box.add(1, 1)} f1 OUTPUT AS f1;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.get(0).get("f1"), ImmutableMap.<String, Object>builder().put("foo", "bar").put("box", 2).build());
     }
@@ -715,7 +715,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT {'foo' : 'bar', 'box' : box.add(1, 1), 'nil' : box.nil()} f1 OUTPUT AS f1;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.get(0).get("f1"), ImmutableMap.<String, Object>builder().put("foo", "bar").put("box", 2).build());
     }
@@ -731,7 +731,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT * FROM mapsource({}) WHERE id = 2 OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getId(), 2);
@@ -743,7 +743,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                                                    "SELECT * FROM mapsource({'a.b.c':'abc'}) WHERE id = 2 OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getId(), 3);
@@ -755,7 +755,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@count int32 = 15);\n" +
                                                    "SELECT * FROM mapsource({'a.b.c': 'abc', 'a' : @count}) WHERE id = 2 OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<MapSource.SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getId(), 4);
@@ -768,7 +768,7 @@ public class JavaProgramCompilerTest {
         String prgStr = "PROGRAM (@count string = '15');\n" +
                         "SELECT {'a.b.c': 'abc', 'a' : @count};";
         CompiledProgram program = compiler.compile(prgStr);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List list = myResult.getResult("result1").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Record record = (Record) list.get(0);
@@ -783,7 +783,7 @@ public class JavaProgramCompilerTest {
         String prgStr = "PROGRAM (@count string = '15');\n" +
                         "SELECT {'a' : @count, 'a.b.c' : 'abc', 'abc' : 'a.b.c', 'cdf' : 'c.d.f', 'c.d.f' : 'cdf'};";
         CompiledProgram program = compiler.compile(prgStr);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List list = myResult.getResult("result1").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Record record = (Record) list.get(0);
@@ -801,7 +801,7 @@ public class JavaProgramCompilerTest {
         String prgStr = "PROGRAM ();\n" +
                 "    SELECT {'a.b': 'ab', 'a' : 'c'};";
         CompiledProgram program = compiler.compile(prgStr);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List list = myResult.getResult("result1").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Record record = (Record) list.get(0);
@@ -829,7 +829,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@value string = 'value');\n" +
                 "SELECT * FROM mapsource({'key':@value}) WHERE id = 2  OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(3, list.get(0).getId());
@@ -841,7 +841,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT * FROM mapsource({'key':'value'}) WHERE id = 2  OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<SampleId> list = myResult.getResult("out").get().getResult();
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(3, list.get(0).getId());
@@ -868,7 +868,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT [1, 2, 3] f1 OUTPUT AS f1;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.get(0).get("f1"), ImmutableList.of(1, 2, 3));
     }
@@ -904,7 +904,7 @@ public class JavaProgramCompilerTest {
                 "SELECT box.now() now OUTPUT AS f2;" +
                 "SELECT box.nil() nil OUTPUT AS f3;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1.get(0).get("f1"), 11);
         Assert.assertEquals(f1.get(0).get("f2"), 11);
@@ -921,10 +921,10 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT floaty, doubley FROM source OUTPUT AS f1;");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("f1").get().getResult();
-        Assert.assertEquals((Float) f1.get(0).get("floaty"), 1.0f);
-        Assert.assertEquals((Double) f1.get(0).get("doubley"), 2.0);
+        Assert.assertEquals(f1.get(0).get("floaty"), 1.0f);
+        Assert.assertEquals(f1.get(0).get("doubley"), 2.0);
     }
 
     @Test
@@ -933,7 +933,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@param boolean = false);" +
                 "SELECT @param p OUTPUT AS testProgram;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("testProgram").get().getResult();
         Assert.assertEquals(f1.get(0).get("p"), Boolean.FALSE);
     }
@@ -967,7 +967,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new ASource()));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT b.name name FROM source OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         List<Record> f1 = myResult.getResult("out").get().getResult();
         Assert.assertEquals("joe", f1.get(0).get("name"));
         Assert.assertNull(f1.get(1).get("name"));
@@ -1310,7 +1310,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("INSERT INTO source2 " +
                 "SELECT source1.* FROM source1 " +
                 "OUTPUT AS insertedMovies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> result = rez.getResult("insertedMovies").get().getResult();
 
         Assert.assertEquals(result.size(), 2, "Wrong number of movie records inserted");
@@ -1683,8 +1683,8 @@ public class JavaProgramCompilerTest {
                 "values ('1111', null, @category, @prodDate),('2222', @title, @category, @prodDate)," +
                 "('4444', @title, @category, @prodDate) " +
                 "OUTPUT AS out;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of("title", "title", "category", "category", "prodDate", "prodDate"), true);
-        Assert.assertTrue((boolean)rez.getResult("out").get().getResult()); // should not pass (.get() throws)
+        ProgramResult rez = program.run(ImmutableMap.of("title", "title", "category", "category", "prodDate", "prodDate"), true);
+        Assert.assertTrue(rez.getResult("out").get().getResult()); // should not pass (.get() throws)
     }
 
     /**
@@ -1728,7 +1728,7 @@ public class JavaProgramCompilerTest {
                .put("duration", 30)
                .put("reviews", ImmutableList.of())
                .build(), true);
-        Assert.assertTrue((boolean)rez.getResult("out").get().getResult()); // should not pass (.get() throws)
+        Assert.assertTrue(rez.getResult("out").get().getResult()); // should not pass (.get() throws)
     }
 
     /**
@@ -1851,7 +1851,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("INSERT INTO source2 " +
                 "SELECT uuid, title, category, prodDate, duration, reviews, newRelease, rating, cast FROM source1 " +
                 "OUTPUT AS insertedMovies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> result = rez.getResult("insertedMovies").get().getResult();
 
         Assert.assertEquals(result.size(), 2, "Wrong number of movie records inserted");
@@ -1898,7 +1898,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("INSERT INTO source2 " +
                 "SELECT source1.* FROM source1 " +
                 "OUTPUT AS insertedMovies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> result = rez.getResult("insertedMovies").get().getResult();
 
         Assert.assertEquals(result.size(), 2, "Wrong number of movie records inserted");
@@ -1941,7 +1941,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("INSERT INTO source3 " +
                 "SELECT * FROM (SELECT source1.* FROM source1 MERGE SELECT source2.* FROM source2) u1 ORDER BY u1.uuid " +
                 "OUTPUT AS insertedMergedMovies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> result = rez.getResult("insertedMergedMovies").get().getResult();
 
         Assert.assertEquals(result.size(), 2, "Wrong number of movie records inserted");
@@ -2027,7 +2027,7 @@ public class JavaProgramCompilerTest {
         CompiledProgram program = compiler.compile("CREATE TEMPORARY TABLE movies AS (SELECT * FROM source1); " +
                 "INSERT INTO source2 SELECT movies.* FROM movies " +
                 "OUTPUT AS insertedMovies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> result = rez.getResult("insertedMovies").get().getResult();
 
         Assert.assertEquals(result.size(), 2, "Wrong number of movie records inserted");
@@ -2725,7 +2725,7 @@ public class JavaProgramCompilerTest {
         StandardRequestEmitter requestEmitter =  metricModule.getStandardRequestEmitter();
         ExecutionScope scope = new MapExecutionScope()
             .bind(TaskMetricEmitter.class, requestEmitter.start("program", "<string>"));
-        program.run(ImmutableMap.<String, Object>of(), true, scope).getEnd().get();
+        program.run(ImmutableMap.of(), true, scope).getEnd().get();
         RequestEvent requestEvent = javaTestModule.getRequestEvent();
         Queue<RequestMetric> metrics = requestEvent.getMetrics();
         boolean foundTask = false;
@@ -2752,7 +2752,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT cool.joeify(people.value) AS joeified FROM people ORDER BY joeified OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2775,7 +2775,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT cool.joeify(people.value) AS joeified FROM people ORDER BY joeified DESC OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2798,7 +2798,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT cool.joeify(people.value) AS joeified FROM people ORDER BY joeified LIMIT 1 OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -2812,7 +2812,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT value FROM people ORDER BY value OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2830,7 +2830,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT value AS aliasValue FROM people ORDER BY aliasValue OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2848,7 +2848,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT value FROM people ORDER BY cool.strlen(value) DESC OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2866,7 +2866,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "SELECT value AS aliasValue FROM people ORDER BY cool.strlen(aliasValue) DESC OUTPUT AS foo;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2886,7 +2886,7 @@ public class JavaProgramCompilerTest {
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "ORDER BY people.score DESC, moreMinions.minion_id OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2909,7 +2909,7 @@ public class JavaProgramCompilerTest {
                 "FROM people " +
                 "JOIN citizen ON people.id = citizen.id " +
                 "ORDER BY people.id DESC OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2929,7 +2929,7 @@ public class JavaProgramCompilerTest {
                 "FROM people " +
                 "JOIN citizen ON people.id = citizen.id " +
                 "ORDER BY citizen.id DESC OUTPUT AS foo;");
-        myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        myResult = program.run(ImmutableMap.of(), true);
         rez = myResult.getResult("foo").get();
         foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2954,7 +2954,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM people OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -2967,7 +2967,7 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(person.getScore(), 0);
 
         program = compiler.compile("SELECT people.* FROM people OUTPUT AS foo;");
-        myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        myResult = program.run(ImmutableMap.of(), true);
         rez = myResult.getResult("foo").get();
         foo = rez.getResult();
         Assert.assertEquals(foo.size(), 3);
@@ -3010,7 +3010,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("people.matches", personSource));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM people.matches WHERE score = 1 OUTPUT AS matches;\n");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet rez = myResult.getResult("matches").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -3147,7 +3147,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(programStr);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet result = myResult.getResult("contestSeries").get();
         List<Record> records = result.getResult();
         Object obj = ((Map) records.get(0).get("mocked")).get("sports");
@@ -3277,7 +3277,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("movieSource", movieSource));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM movieSource ORDER BY duration OUTPUT AS movies;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Movie> records = rez.getResult("movies").get().getResult();
         assertEquals(2, records.size());
         assertNull(records.get(0).getDuration());
@@ -3295,7 +3295,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("movieSource", movieSource));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT cast FROM movieSource OUTPUT AS cast;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         List<Record> records = rez.getResult("cast").get().getResult();
         assertEquals(1, records.size());
         assertEquals("Quentin Tarantino, Kate Winslet", records.get(0).get("cast"));
@@ -3322,7 +3322,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("errorSource", new ErrorSource()));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (); SELECT * FROM errorSource OUTPUT AS errorResult;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         TraceRequest traceRequest = rez.getEnd().get();
         traceRequest.getEntries();
     }
@@ -3377,8 +3377,8 @@ public class JavaProgramCompilerTest {
         YQLResultSet result = myResult.getResult("orderedSamples").get();
         List<Record> resultSet = result.getResult();
         assertEquals(20, resultSet.size());
-        assertEquals(0, ((Record)resultSet.get(0)).get("id"));
-        assertEquals(0, ((Record)resultSet.get(1)).get("id"));
+        assertEquals(0, resultSet.get(0).get("id"));
+        assertEquals(0, resultSet.get(1).get("id"));
     }
     
     @Test
@@ -3414,8 +3414,8 @@ public class JavaProgramCompilerTest {
         YQLResultSet result = myResult.getResult("orderedSamples").get();
         List<Record> resultSet = result.getResult();
         assertEquals(20, resultSet.size());
-        assertEquals(0, ((Record)resultSet.get(0)).get("id"));
-        assertEquals(0, ((Record)resultSet.get(1)).get("id"));
+        assertEquals(0, resultSet.get(0).get("id"));
+        assertEquals(0, resultSet.get(1).get("id"));
     }
     
     @Test
@@ -3425,7 +3425,7 @@ public class JavaProgramCompilerTest {
       Injector injector = Guice.createInjector(new JavaTestModule());
       YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
       CompiledProgram program = compiler.compile(programStr);
-      ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+      ProgramResult rez = program.run(ImmutableMap.of(), true);
       List<Record> f1 = rez.getResult("program_arguments").get().getResult();
       Assert.assertEquals((ArrayList)f1.get(0).get("query"), new ArrayList());
     }
@@ -3476,7 +3476,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id IN ('1', '', '3') OUTPUT AS out;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("", "", 0), new Person("3", "3", 3)));
 
         /*
@@ -3485,7 +3485,7 @@ public class JavaProgramCompilerTest {
         injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleStringKeySourceWithSkipEmptyOrZeroSetToTrue.class));
         compiler = injector.getInstance(YQLPlusCompiler.class);
         program = compiler.compile("SELECT * FROM source WHERE id IN ('1', '', '3') OUTPUT AS out;");
-        rez = program.run(ImmutableMap.<String, Object>of(), true);
+        rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("3", "3", 3)));
 
         /*
@@ -3494,7 +3494,7 @@ public class JavaProgramCompilerTest {
         injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleListOfStringKeySourceWithSkipEmptyOrZeroSetToTrue.class));
         compiler = injector.getInstance(YQLPlusCompiler.class);
         program = compiler.compile("SELECT * FROM source WHERE id IN ('1', '', '3') OUTPUT AS out;");
-        rez = program.run(ImmutableMap.<String, Object>of(), true);
+        rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("3", "3", 3)));
     }
 
@@ -3507,7 +3507,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id IN (1, 0, 3) OUTPUT AS out;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new IntegerPerson(Integer.valueOf(1), Integer.valueOf(1), 1),
                 new IntegerPerson(Integer.valueOf(3), Integer.valueOf(3), 3)));
     }
@@ -3520,7 +3520,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleIntegerKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id IN (1, 0, 3) OUTPUT AS out;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new IntegerPerson(Integer.valueOf(1), Integer.valueOf(1), 1),
                 new IntegerPerson(Integer.valueOf(0), Integer.valueOf(0), 0), new IntegerPerson(Integer.valueOf(3), Integer.valueOf(3), 3)));
     }
@@ -3534,7 +3534,7 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("some.id", SingleIntegerKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM some.id WHERE id=4 OUTPUT AS out;");
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of(), true);
         Assert.assertEquals(rez.getResult("out").get().getResult(), ImmutableList.of(new IntegerPerson(Integer.valueOf(4), Integer.valueOf(4), 4)));
     }
 
@@ -3544,7 +3544,7 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("CREATE TEMPORARY TABLE tmpPeople AS (SELECT people.* FROM people); " +
                 "SELECT m FROM tmpPeople m OUTPUT AS out;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         YQLResultSet yqlResultSet = programResult.getResult("out").get();
         List<Record> recordsList = yqlResultSet.getResult();
         Assert.assertEquals(recordsList.size(), 3);
@@ -3644,7 +3644,7 @@ public class JavaProgramCompilerTest {
                 "SELECT m1 FROM tmpPeople m1 OUTPUT AS out1;" +
                 "SELECT m2 FROM tmpPeople m2 OUTPUT AS out2;" +
                 "SELECT m3 FROM tmpPeople m3 OUTPUT AS out3;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         List<Record> recordsList = programResult.getResult("out1").get().getResult();
         assertEquals(3, recordsList.size());
         recordsList = programResult.getResult("out2").get().getResult();
@@ -3660,7 +3660,7 @@ public class JavaProgramCompilerTest {
             "Collection", CollectionFunctionsUdf.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT id, value FROM people | Collection.asArray OUTPUT AS peoples;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         List<Record> findLike = programResult.getResult("peoples").get().getResult();
         assertEquals(3, findLike.size());
         assertEquals("1", findLike.get(0).get("id"));
@@ -3677,10 +3677,10 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM people WHERE value LIKE '%joe%' OUTPUT AS peoples;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         List<Person> findLike = programResult.getResult("peoples").get().getResult();
         program = compiler.compile("SELECT * FROM people OUTPUT AS peoples;");
-        List<Person> wholeList = program.run(ImmutableMap.<String, Object>of(), true).getResult("peoples").get().getResult();        
+        List<Person> wholeList = program.run(ImmutableMap.of(), true).getResult("peoples").get().getResult();
         List<Person> expectedResult = Lists.newArrayList();
         for (Person person:wholeList) {
             if (likePattern.matcher(person.getValue()).find()) {
@@ -3696,10 +3696,10 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM people WHERE value MATCHES '.*joe.*' OUTPUT AS peoples;");
-        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult programResult = program.run(ImmutableMap.of(), true);
         List<Person> findMatch = programResult.getResult("peoples").get().getResult();
         program = compiler.compile("SELECT * FROM people OUTPUT AS peoples;");
-        List<Person> wholeList = program.run(ImmutableMap.<String, Object>of(), true).getResult("peoples").get().getResult();        
+        List<Person> wholeList = program.run(ImmutableMap.of(), true).getResult("peoples").get().getResult();
         List<Person> expectedResult = Lists.newArrayList();
         for (Person person:wholeList) {
             if (likePattern.matcher(person.getValue()).find()) {
@@ -3715,12 +3715,12 @@ public class JavaProgramCompilerTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         String exptectedBaseUrl = "https://ca.celebrity.yaHoo.com/";
         String programStr = "SELECT  baseUrl FROM  property.baseUrl WHERE baseUrL = '" + exptectedBaseUrl + "' OUTPUT AS  baseurl_from_property_list;";
-        List<Record> rez = compiler.compile(programStr).run(ImmutableMap.<String, Object>of(), true)
+        List<Record> rez = compiler.compile(programStr).run(ImmutableMap.of(), true)
                                         .getResult("baseurl_from_property_list").get().getResult();
         assertEquals(exptectedBaseUrl, rez.get(0).get("BASEUrL"));
         
         programStr = "SELECT  baseURL FROM  property.baseUrl WHERE baseUrl = '" + exptectedBaseUrl + "' OUTPUT AS  baseurl_from_property_list;";
-        rez = compiler.compile(programStr).run(ImmutableMap.<String, Object>of(), true)
+        rez = compiler.compile(programStr).run(ImmutableMap.of(), true)
             .getResult("baseurl_from_property_list").get().getResult();
         assertEquals(exptectedBaseUrl, rez.get(0).get("BaSEURL"));        
     }
@@ -3847,7 +3847,7 @@ public class JavaProgramCompilerTest {
                 " SELECT * FROM bbb WHERE ddd = 0 OUTPUT AS out; ";
       
         CompiledProgram program = compiler.compile(programStr);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of(), true);
         YQLResultSet result = myResult.getResult("out").get();
         List<IntSource.SampleId> list = result.getResult();
         Assert.assertEquals(list.size(), 1);

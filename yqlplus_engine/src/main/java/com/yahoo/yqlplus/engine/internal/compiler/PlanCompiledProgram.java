@@ -131,7 +131,7 @@ public final class PlanCompiledProgram implements CompiledProgram {
     }
 
     @Override
-    public ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope inputScope, long timeout, TimeUnit timeoutUnit) throws Exception {
+    public ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope inputScope, long timeout, TimeUnit timeoutUnit) {
         TimeoutTracker tracker = new TimeoutTracker(timeout, timeoutUnit, new RelativeTicker(Ticker.systemTicker()));
         ProgramTracer tracer = new ProgramTracer(Ticker.systemTicker(), debug, "program", name);
         scoper.enter(new ScopedObjects(inputScope));

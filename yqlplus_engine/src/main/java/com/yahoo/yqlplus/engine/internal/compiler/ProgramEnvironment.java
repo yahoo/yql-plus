@@ -69,10 +69,10 @@ public class ProgramEnvironment {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             classSource.dump(stream);
             byte[] dump = stream.toByteArray();
-            PlanCompiledProgram compiledProgram = new PlanCompiledProgram(name, program.getArgumentInfos(), program.getResultSetInfos(), ImmutableMap.<String, OperatorNode<SequenceOperator>>of(), plan, dump, programClazz);
+            PlanCompiledProgram compiledProgram = new PlanCompiledProgram(name, program.getArgumentInfos(), program.getResultSetInfos(), ImmutableMap.of(), plan, dump, programClazz);
             injector.injectMembers(compiledProgram);
             return compiledProgram;
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             classSource.trace(System.err);
             throw new ProgramCompileException(e);
         }

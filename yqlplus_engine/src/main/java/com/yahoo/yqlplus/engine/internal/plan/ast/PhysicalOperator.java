@@ -38,7 +38,7 @@ public enum PhysicalOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private PhysicalOperator(Object... types) {
+    PhysicalOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

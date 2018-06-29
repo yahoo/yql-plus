@@ -27,11 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 public interface CompiledProgram {
 
-    public enum ProgramStatement {
-        SELECT, INSERT, UPDATE, DELETE;
+    enum ProgramStatement {
+        SELECT, INSERT, UPDATE, DELETE
     }
 
-    public interface ArgumentInfo {
+    interface ArgumentInfo {
         String getName();
 
         Type getType();
@@ -43,7 +43,7 @@ public interface CompiledProgram {
         Object getDefaultValue();
     }
 
-    public interface ResultSetInfo {
+    interface ResultSetInfo {
         String getName();
 
         /**

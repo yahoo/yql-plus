@@ -76,7 +76,7 @@ public abstract class PlanChain {
                 return false;
             case AND:
             case OR:
-                return isRowDependentAny(filter.<List<OperatorNode<ExpressionOperator>>>getArgument(0));
+                return isRowDependentAny(filter.getArgument(0));
             // binary operations
             case EQ:
             case NEQ:
@@ -96,21 +96,21 @@ public abstract class PlanChain {
             case DIV:
             case MOD:
             case IN:
-                return isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(0)) || isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(1));
+                return isRowDependent(filter.getArgument(0)) || isRowDependent(filter.getArgument(1));
             // unary operations
             case IS_NULL:
             case IS_NOT_NULL:
             case NOT:
             case NEGATE:
-                return isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(0));
+                return isRowDependent(filter.getArgument(0));
             case MAP:
-                return isRowDependentAny(filter.<List<OperatorNode<ExpressionOperator>>>getArgument(1));
+                return isRowDependentAny(filter.getArgument(1));
             case ARRAY:
-                return isRowDependentAny(filter.<List<OperatorNode<ExpressionOperator>>>getArgument(0));
+                return isRowDependentAny(filter.getArgument(0));
             case INDEX:
-                return isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(0)) || isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(1));
+                return isRowDependent(filter.getArgument(0)) || isRowDependent(filter.getArgument(1));
             case PROPREF:
-                return isRowDependent(filter.<OperatorNode<ExpressionOperator>>getArgument(0));
+                return isRowDependent(filter.getArgument(0));
             case VARREF:
                 return false;
             case CALL:

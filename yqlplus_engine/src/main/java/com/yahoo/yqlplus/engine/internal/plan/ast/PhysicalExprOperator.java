@@ -108,7 +108,7 @@ public enum PhysicalExprOperator implements Operator {
     private final ArgumentsTypeChecker checker;
 
 
-    private PhysicalExprOperator(Object... types) {
+    PhysicalExprOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

@@ -73,11 +73,11 @@ public interface TypeWidget {
 
     UnificationAdapter getUnificationAdapter(ProgramValueTypeAdapter typeAdapter);
 
-    public interface UnificationAdapter {
+    interface UnificationAdapter {
         TypeWidget unify(TypeWidget other);
     }
 
-    public final class Coercion {
+    final class Coercion {
         public final int cost;
         public final BytecodeExpression expr;
 
