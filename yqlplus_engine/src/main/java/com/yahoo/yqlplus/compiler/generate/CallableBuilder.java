@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitTypes;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
 import com.yahoo.yqlplus.language.parser.Location;

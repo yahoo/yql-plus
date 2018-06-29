@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.util.List;

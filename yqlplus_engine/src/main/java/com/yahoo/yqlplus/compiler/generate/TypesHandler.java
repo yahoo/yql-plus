@@ -9,9 +9,11 @@ package com.yahoo.yqlplus.compiler.generate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitTypes;
 import com.yahoo.yqlplus.compiler.exprs.NullExpr;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.NotNullableTypeWidget;
 import com.yahoo.yqlplus.compiler.types.NullableTypeWidget;
@@ -26,7 +28,7 @@ public class TypesHandler implements GambitTypes {
     protected final ASMClassSource source;
 
     @Override
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return source.getValueTypeAdapter();
     }
 

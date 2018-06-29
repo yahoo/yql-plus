@@ -10,9 +10,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.IndexAdapter;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.PromiseAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.InvokeDynamicExpression;
@@ -187,7 +187,7 @@ public class AnyTypeWidget implements TypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(EngineValueTypeAdapter typeAdapter) {
         return new UnificationAdapter() {
             @Override
             public TypeWidget unify(TypeWidget other) {

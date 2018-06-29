@@ -8,9 +8,11 @@ package com.yahoo.yqlplus.compiler.generate;
 
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.LocalCodeChunk;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;

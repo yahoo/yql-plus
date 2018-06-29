@@ -9,6 +9,7 @@ package com.yahoo.yqlplus.compiler.generate;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.ChunkExpression;

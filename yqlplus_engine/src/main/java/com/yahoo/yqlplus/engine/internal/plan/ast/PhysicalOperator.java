@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
@@ -49,7 +49,7 @@ public enum PhysicalOperator implements Operator {
     }
 
 
-    public boolean hasResult(ProgramValueTypeAdapter typeAdapter, OperatorNode<PhysicalOperator> op) {
+    public boolean hasResult(EngineValueTypeAdapter typeAdapter, OperatorNode<PhysicalOperator> op) {
         switch (op.getOperator()) {
             case OUTPUT:
             case END:

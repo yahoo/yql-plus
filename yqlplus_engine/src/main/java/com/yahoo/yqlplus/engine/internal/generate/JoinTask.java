@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.code;
+package com.yahoo.yqlplus.engine.internal.generate;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

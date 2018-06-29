@@ -10,8 +10,7 @@ import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.MethodGenerator;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
 import com.yahoo.yqlplus.compiler.runtime.Dynamic;
@@ -30,7 +29,7 @@ public class DynamicBootstrapUnit extends UnitGenerator {
     }
 
     public void init() {
-        ProgramValueTypeAdapter types = environment.getValueTypeAdapter();
+        EngineValueTypeAdapter types = environment.getValueTypeAdapter();
         BytecodeExpression classSource = types.constant(getEnvironment());
         TypeWidget dynamicLinker = types.adaptInternal(DynamicLinker.class);
         FieldDefinition field = createField(dynamicLinker, "bootstrap");

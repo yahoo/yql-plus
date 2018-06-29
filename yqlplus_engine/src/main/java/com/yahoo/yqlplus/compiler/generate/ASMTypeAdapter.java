@@ -18,6 +18,8 @@ import com.yahoo.yqlplus.api.types.YQLMapType;
 import com.yahoo.yqlplus.api.types.YQLOptionalType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.types.ArrayTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.Result;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
@@ -26,7 +28,6 @@ import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.IndexAdapter;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
 import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
@@ -53,7 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ASMProgramTypeAdapter implements ProgramValueTypeAdapter {
+public class ASMTypeAdapter implements EngineValueTypeAdapter {
     private final ASMClassSource source;
     private final BaseTypeAdapter baseTypeAdapter;
     private final Map<YQLType, TypeWidget> resolved = Maps.newLinkedHashMap();
@@ -62,27 +63,22 @@ public class ASMProgramTypeAdapter implements ProgramValueTypeAdapter {
     private final Iterable<TypeAdaptingWidget> adapterChain;
     private final Map<TypeWidget, TypeWidget> resultTypes = Maps.newLinkedHashMap();
 
-    public ASMProgramTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultAdaptingWidget) {
+    public ASMTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultAdaptingWidget) {
         this.source = source;
         this.baseTypeAdapter = new BaseTypeAdapter();
         this.adapterChain = Iterables.concat(ImmutableList.of(new ArrayTypeAdapter()), adapters, ImmutableList.of(defaultAdaptingWidget));
     }
 
-    private ASMProgramTypeAdapter(ASMClassSource source, BaseTypeAdapter baseTypeAdapter, Iterable<TypeAdaptingWidget> adapterChain) {
+    private ASMTypeAdapter(ASMClassSource source, BaseTypeAdapter baseTypeAdapter, Iterable<TypeAdaptingWidget> adapterChain) {
         this.source = source;
         this.baseTypeAdapter = baseTypeAdapter;
         this.adapterChain = adapterChain;
     }
 
-    public ASMProgramTypeAdapter createChild(ASMClassSource parentSource) {
-        return new ASMProgramTypeAdapter(parentSource, baseTypeAdapter, adapterChain);
+    public ASMTypeAdapter createChild(ASMClassSource parentSource) {
+        return new ASMTypeAdapter(parentSource, baseTypeAdapter, adapterChain);
     }
 
-
-    @Override
-    public ASMClassSource getClassGenerator() {
-        return source;
-    }
 
     @Override
     public BytecodeExpression constant(TypeWidget type, Object value) {

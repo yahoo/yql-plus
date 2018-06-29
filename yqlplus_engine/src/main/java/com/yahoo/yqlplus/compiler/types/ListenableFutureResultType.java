@@ -4,14 +4,13 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.generate;
+package com.yahoo.yqlplus.compiler.types;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.PromiseAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.types.BaseTypeWidget;
 import org.objectweb.asm.Type;
 
 public class ListenableFutureResultType extends BaseTypeWidget {
@@ -45,7 +44,7 @@ public class ListenableFutureResultType extends BaseTypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(final ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(final EngineValueTypeAdapter typeAdapter) {
         return new UnificationAdapter() {
             @Override
             public TypeWidget unify(TypeWidget other) {

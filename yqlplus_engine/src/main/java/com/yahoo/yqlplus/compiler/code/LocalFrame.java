@@ -41,7 +41,7 @@ public final class LocalFrame {
         aliases.put(alias, get(name));
     }
 
-    LocalValue allocate(String name, TypeWidget type) {
+    public LocalValue allocate(String name, TypeWidget type) {
         Preconditions.checkState(!vars.containsKey(name), "variable name '%s' cannot already exist", name);
         int size = type.getJVMType().getSize();
         Preconditions.checkArgument(size > 0, "Do not allocate variables for void ('%s')", name);
@@ -51,7 +51,7 @@ public final class LocalFrame {
         return result;
     }
 
-    LocalValue get(String name) {
+    public LocalValue get(String name) {
         if (vars.containsKey(name)) {
             return vars.get(name);
         } else if (aliases.containsKey(name)) {

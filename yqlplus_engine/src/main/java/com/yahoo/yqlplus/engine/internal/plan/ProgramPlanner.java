@@ -15,6 +15,7 @@ import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLMapType;
 import com.yahoo.yqlplus.api.types.YQLOptionalType;
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
@@ -24,7 +25,6 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.tasks.Value;
@@ -320,7 +320,7 @@ public class ProgramPlanner implements ViewRegistry {
         throw new ProgramCompileException(typeNode.getLocation(), "Unknown TypeOperator %s", typeNode.getOperator());
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return adapter.getValueTypeAdapter();
     }
 

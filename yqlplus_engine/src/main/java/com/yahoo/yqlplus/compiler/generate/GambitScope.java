@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.compiler.code.GambitTypes;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.io.IOException;

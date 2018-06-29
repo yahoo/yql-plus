@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.generate;
+package com.yahoo.yqlplus.compiler.code;
 
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;

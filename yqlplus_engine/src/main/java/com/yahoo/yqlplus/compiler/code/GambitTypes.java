@@ -4,17 +4,18 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.generate;
+package com.yahoo.yqlplus.compiler.code;
 
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.generate.CallableInvocableBuilder;
+import com.yahoo.yqlplus.compiler.generate.InvocableBuilder;
+import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.generate.StructBuilder;
 
 import java.util.List;
 
 public interface GambitTypes {
-    ProgramValueTypeAdapter getValueTypeAdapter();
+    EngineValueTypeAdapter getValueTypeAdapter();
 
     StructBuilder createStruct();
 

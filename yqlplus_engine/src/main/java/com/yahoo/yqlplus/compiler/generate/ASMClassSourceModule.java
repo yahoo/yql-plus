@@ -10,15 +10,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.types.FutureResultType;
 import com.yahoo.yqlplus.compiler.types.JVMTypes;
 import com.yahoo.yqlplus.compiler.types.ListTypeWidget;
+import com.yahoo.yqlplus.compiler.types.ListenableFutureResultType;
 import com.yahoo.yqlplus.compiler.types.MapTypeWidget;
 import com.yahoo.yqlplus.compiler.types.RecordAdaptingWidget;
 import com.yahoo.yqlplus.compiler.types.ReflectiveJavaTypeWidget;
 import com.yahoo.yqlplus.compiler.types.ReflectiveTypeAdapter;
 import com.yahoo.yqlplus.compiler.types.TypeAdaptingWidget;
 import com.yahoo.yqlplus.compiler.types.TypeFieldAdaptingWidget;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Modifier;
@@ -40,7 +42,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 return typeAdapter.adaptInternal(JVMTypes.getRawType(type).getSuperclass());
             }
         });
@@ -51,7 +53,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 return new EnumTypeAdapter(JVMTypes.getRawType(type));
             }
         });
@@ -62,7 +64,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 TypeWidget valueType = typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0));
                 Class<?> rawType = JVMTypes.getRawType(type);
                 if(ListenableFuture.class.isAssignableFrom(rawType)) {
@@ -81,7 +83,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 return new MapTypeWidget(getPackageSafeRawType(type, Map.class), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0)), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 1)));
             }
         });
@@ -92,7 +94,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 return new ListTypeWidget(getPackageSafeRawType(type, List.class), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0)));
             }
         });
@@ -103,7 +105,7 @@ public class ASMClassSourceModule extends AbstractModule {
             }
 
             @Override
-            public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+            public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
                 return new ReflectiveJavaTypeWidget(typeAdapter, Provider.class);
             }
         });

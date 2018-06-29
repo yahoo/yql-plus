@@ -8,6 +8,8 @@ package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import org.objectweb.asm.Type;
 

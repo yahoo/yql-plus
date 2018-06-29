@@ -4,12 +4,14 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.code;
+package com.yahoo.yqlplus.compiler.generate;
 
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.FunctionGenerator;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.ReturnCode;
-import com.yahoo.yqlplus.compiler.generate.UnitGenerator;
-import com.yahoo.yqlplus.compiler.generate.ExactInvocation;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;

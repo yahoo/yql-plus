@@ -4,21 +4,21 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.code;
+package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.exprs.ReturnCode;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.generate.GambitScope;
 import com.yahoo.yqlplus.compiler.generate.InvocableBuilder;
 import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
-import com.yahoo.yqlplus.compiler.generate.ScopedBuilder;
-import com.yahoo.yqlplus.engine.internal.generate.CompiledResultSetInfo;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramGenerator;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;

@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.compiler.types;
 
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Type;
@@ -19,7 +19,7 @@ public class ReflectiveTypeAdapter implements TypeAdaptingWidget {
     }
 
     @Override
-    public TypeWidget adapt(ProgramValueTypeAdapter asmProgramTypeAdapter, Type type) {
+    public TypeWidget adapt(EngineValueTypeAdapter asmProgramTypeAdapter, Type type) {
         return new ReflectiveJavaTypeWidget(asmProgramTypeAdapter, TypeLiteral.get(type));
     }
 }

@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.compiler.types;
 
 
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import org.objectweb.asm.Type;
 
@@ -35,7 +35,7 @@ public class SetTypeWidget extends IterableTypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(final ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(final EngineValueTypeAdapter typeAdapter) {
         return new UnificationAdapter() {
             @Override
             public TypeWidget unify(TypeWidget other) {

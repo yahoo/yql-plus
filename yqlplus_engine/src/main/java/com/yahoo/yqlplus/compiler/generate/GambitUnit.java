@@ -8,9 +8,8 @@ package com.yahoo.yqlplus.compiler.generate;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.compiler.code.ConstructorGenerator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.LocalCodeChunk;
-import com.yahoo.yqlplus.compiler.code.MethodGenerator;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;

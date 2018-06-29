@@ -6,8 +6,8 @@
 
 package com.yahoo.yqlplus.compiler.types;
 
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Type;
@@ -20,7 +20,7 @@ public class RecordAdaptingWidget implements TypeAdaptingWidget {
     }
 
     @Override
-    public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+    public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
         Class<?> clazz = JVMTypes.getRawType(type);
         if(Map.class.isAssignableFrom(clazz)) {
             return new DynamicRecordWidget(org.objectweb.asm.Type.getType(clazz));

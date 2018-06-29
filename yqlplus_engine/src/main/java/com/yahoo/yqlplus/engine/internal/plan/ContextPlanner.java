@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.compiler.generate.GambitScope;
 import com.yahoo.yqlplus.compiler.runtime.Sequences;
@@ -19,7 +20,6 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.engine.rules.ReadFieldAliasAnnotate;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -307,7 +307,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return program.constant(value);
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return program.getValueTypeAdapter();
     }
 

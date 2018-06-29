@@ -8,11 +8,8 @@ package com.yahoo.yqlplus.compiler.code;
 
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
 
 public interface EngineValueTypeAdapter extends ValueTypeAdapter {
-    ASMClassSource getClassGenerator();
-
     BytecodeExpression constant(TypeWidget type, Object value);
 
     BytecodeExpression constant(Object value);
@@ -24,7 +21,6 @@ public interface EngineValueTypeAdapter extends ValueTypeAdapter {
     TypeWidget adapt(YQLType type);
 
     TypeWidget inferConstantType(Object constantValue);
-
 
     TypeWidget adaptInternal(TypeLiteral<?> typeLiteral, boolean nullable);
 }

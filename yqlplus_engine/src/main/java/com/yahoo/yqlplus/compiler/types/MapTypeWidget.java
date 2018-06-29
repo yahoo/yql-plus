@@ -11,9 +11,9 @@ import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.IndexAdapter;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.InvokeExpression;
 import org.objectweb.asm.Type;
@@ -77,7 +77,7 @@ public class MapTypeWidget extends BaseTypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(final ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(final EngineValueTypeAdapter typeAdapter) {
         // this is only called when the two types match their JVM type
         return new UnificationAdapter() {
             @Override

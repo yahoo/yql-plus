@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.compiler.types;
 
 
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Type;
@@ -15,5 +15,5 @@ import java.lang.reflect.Type;
 public interface TypeAdaptingWidget {
     boolean supports(Class<?> clazzType);
 
-    TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type);
+    TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type);
 }

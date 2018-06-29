@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.TypeAdaptingWidget;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -44,7 +44,7 @@ public class ASMClassSource {
     private final ClassLoader compoundClassLoader;
     private final GeneratedClassLoader generatedClassLoader;
     private final String uniqueElement;
-    private ASMProgramTypeAdapter types;
+    private ASMTypeAdapter types;
 
     private Set<String> usedNames = Sets.newHashSet();
     final List<UnitGenerator> units = Lists.newArrayList();
@@ -54,7 +54,7 @@ public class ASMClassSource {
     public ASMClassSource(Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultTypeAdapter) {
         this.uniqueElement = "gen" + ELEMENT_FACTORY.incrementAndGet();
         this.constantTable = new ConstantTable(this);
-        this.types = new ASMProgramTypeAdapter(this, adapters, defaultTypeAdapter);
+        this.types = new ASMTypeAdapter(this, adapters, defaultTypeAdapter);
         this.compoundClassLoader = new CompoundClassLoader();
         this.generatedClassLoader = new GeneratedClassLoader(compoundClassLoader);
     }
@@ -105,7 +105,7 @@ public class ASMClassSource {
         return Type.getType(clazz);
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return types;
     }
 

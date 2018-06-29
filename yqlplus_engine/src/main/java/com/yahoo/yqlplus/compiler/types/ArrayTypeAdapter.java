@@ -6,7 +6,7 @@
 
 package com.yahoo.yqlplus.compiler.types;
 
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Type;
@@ -18,7 +18,7 @@ public class ArrayTypeAdapter implements TypeAdaptingWidget {
     }
 
     @Override
-    public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+    public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
         Class<?> arrayType = JVMTypes.getRawType(type);
         Class<?> componentType = arrayType.getComponentType();
         TypeWidget componentAdapted = typeAdapter.adaptInternal(componentType);

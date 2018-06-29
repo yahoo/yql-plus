@@ -7,11 +7,11 @@
 package com.yahoo.yqlplus.compiler.types;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.IndexAdapter;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.PromiseAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import org.objectweb.asm.Type;
@@ -163,7 +163,7 @@ public class NullableTypeWidget implements TypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(EngineValueTypeAdapter typeAdapter) {
         return target.getUnificationAdapter(typeAdapter);
     }
 

@@ -13,7 +13,7 @@ import com.yahoo.yqlplus.compiler.runtime.FieldWriter;
 import com.yahoo.yqlplus.compiler.exprs.ReturnCode;
 import com.yahoo.yqlplus.compiler.generate.UnitGenerator;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.MethodGenerator;
+import com.yahoo.yqlplus.compiler.generate.MethodGenerator;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;

@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.compiler.code;
 
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.compiler.exprs.EvaluatedExpression;
+import com.yahoo.yqlplus.compiler.exprs.LocalValueExpression;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;
 

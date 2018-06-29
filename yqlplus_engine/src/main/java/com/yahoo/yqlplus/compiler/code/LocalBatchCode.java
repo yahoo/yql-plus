@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.compiler.code;
 
 import com.google.common.base.Preconditions;
-import com.yahoo.yqlplus.compiler.generate.PopSequence;
 import org.objectweb.asm.Label;
 
 import java.util.Stack;

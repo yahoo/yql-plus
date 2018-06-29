@@ -12,9 +12,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.IndexAdapter;
 import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.InvokeDynamicExpression;
 import com.yahoo.yqlplus.compiler.runtime.Dynamic;
@@ -25,18 +25,18 @@ import org.objectweb.asm.Type;
 import java.util.List;
 
 public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
-    private final ProgramValueTypeAdapter adapter;
+    private final EngineValueTypeAdapter adapter;
     private final Type type;
     private final TypeLiteral<?> typeLiteral;
     private final Class<?> clazz;
     private final MethodDispatcher dispatcher;
     private PropertyAdapter propertyAdapter;
 
-    public ReflectiveJavaTypeWidget(ProgramValueTypeAdapter adapter, Class<?> clazz) {
+    public ReflectiveJavaTypeWidget(EngineValueTypeAdapter adapter, Class<?> clazz) {
         this(adapter, TypeLiteral.get(clazz));
     }
 
-    public ReflectiveJavaTypeWidget(ProgramValueTypeAdapter adapter, TypeLiteral<?> typeLiteral) {
+    public ReflectiveJavaTypeWidget(EngineValueTypeAdapter adapter, TypeLiteral<?> typeLiteral) {
         super(Type.getType(typeLiteral.getRawType()));
         this.clazz = typeLiteral.getRawType();
         Preconditions.checkArgument(!clazz.isPrimitive(), "ReflectiveTypeWidget used on primitive: %s", clazz.getName());

@@ -22,8 +22,6 @@ public interface TypeWidget {
 
     BytecodeExpression construct(BytecodeExpression... arguments);
 
-    // a field-based deserialize?
-
     Coercion coerceTo(BytecodeExpression source, TypeWidget target);
 
     TypeWidget boxed();
@@ -68,7 +66,7 @@ public interface TypeWidget {
 
     boolean hasUnificationAdapter();
 
-    UnificationAdapter getUnificationAdapter(ProgramValueTypeAdapter typeAdapter);
+    UnificationAdapter getUnificationAdapter(EngineValueTypeAdapter typeAdapter);
 
     interface UnificationAdapter {
         TypeWidget unify(TypeWidget other);

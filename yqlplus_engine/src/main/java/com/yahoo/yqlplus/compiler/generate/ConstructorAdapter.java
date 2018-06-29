@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.ConstructorGenerator;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;

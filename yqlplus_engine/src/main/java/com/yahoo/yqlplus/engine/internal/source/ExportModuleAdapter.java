@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;

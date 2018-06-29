@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.compiler.exprs.ReturnCode;
-import com.yahoo.yqlplus.compiler.code.MethodGenerator;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.BytecodeCastExpression;

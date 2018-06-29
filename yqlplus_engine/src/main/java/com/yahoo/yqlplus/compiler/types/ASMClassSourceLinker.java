@@ -7,8 +7,8 @@
 package com.yahoo.yqlplus.compiler.types;
 
 import com.google.common.collect.Maps;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import org.dynalang.dynalink.CallSiteDescriptor;
 import org.dynalang.dynalink.linker.GuardedInvocation;
@@ -70,7 +70,7 @@ public class ASMClassSourceLinker implements GuardingDynamicLinker {
 
     private RuntimeLinker generateRuntimeLinker(Class<?> clazz) {
         ASMClassSource childEnvironment = classSource.createChildSource(clazz.getClassLoader());
-        ProgramValueTypeAdapter typeAdapter = childEnvironment.getValueTypeAdapter();
+        EngineValueTypeAdapter typeAdapter = childEnvironment.getValueTypeAdapter();
         TypeWidget widget = getTypeWidget(clazz);
         if (widget == null) {
             widget = typeAdapter.adaptInternal(clazz);

@@ -4,16 +4,18 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.code;
+package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.generate.GambitScope;
 import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.generate.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;

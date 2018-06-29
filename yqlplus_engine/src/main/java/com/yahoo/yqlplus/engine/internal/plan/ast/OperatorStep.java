@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.engine.internal.plan.ast;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.types.Annotations;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.tasks.Step;
 import com.yahoo.yqlplus.engine.internal.tasks.Value;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -19,7 +19,7 @@ import com.yahoo.yqlplus.language.parser.Location;
 import java.util.Set;
 
 public final class OperatorStep implements Step {
-    public static OperatorValue create(ProgramValueTypeAdapter typeAdapter, Location loc, PhysicalOperator operator, Object... arguments) {
+    public static OperatorValue create(EngineValueTypeAdapter typeAdapter, Location loc, PhysicalOperator operator, Object... arguments) {
         OperatorNode<PhysicalOperator> compute = OperatorNode.create(loc, operator, arguments);
         OperatorValue value = new OperatorValue(operator.hasResult(typeAdapter, compute), Annotations.EMPTY);
         // sets step on value
@@ -27,7 +27,7 @@ public final class OperatorStep implements Step {
         return value;
     }
 
-    public static OperatorValue create(ProgramValueTypeAdapter typeAdapter, PhysicalOperator operator, Object... arguments) {
+    public static OperatorValue create(EngineValueTypeAdapter typeAdapter, PhysicalOperator operator, Object... arguments) {
         OperatorNode<PhysicalOperator> compute = OperatorNode.create(operator, arguments);
         OperatorValue value = new OperatorValue(operator.hasResult(typeAdapter, compute), Annotations.EMPTY);
         // sets step on value

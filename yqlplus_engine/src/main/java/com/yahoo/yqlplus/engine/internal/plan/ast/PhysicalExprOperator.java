@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.engine.internal.plan.ast;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;

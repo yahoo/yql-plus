@@ -17,7 +17,7 @@ import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.exprs.InvokeDynamicExpression;
 import com.yahoo.yqlplus.compiler.runtime.Dynamic;
@@ -26,8 +26,6 @@ import com.yahoo.yqlplus.compiler.types.ClosedPropertyAdapter;
 import com.yahoo.yqlplus.compiler.types.PropertyAdapter;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.ConstructorGenerator;
-import com.yahoo.yqlplus.compiler.code.MethodGenerator;
 import org.objectweb.asm.*;
 
 import java.io.OutputStream;
@@ -175,7 +173,7 @@ public class UnitGenerator {
         return typeWidget;
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return environment.getValueTypeAdapter();
     }
 

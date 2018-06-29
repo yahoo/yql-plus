@@ -7,7 +7,6 @@
 package com.yahoo.yqlplus.compiler.exprs;
 
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.LocalValueExpression;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 public class LocalVarExpr extends LocalValueExpression {

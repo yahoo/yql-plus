@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.engine.internal.source;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
 import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;

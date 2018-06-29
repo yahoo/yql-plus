@@ -9,10 +9,10 @@ package com.yahoo.yqlplus.compiler.types;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.inject.TypeLiteral;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Field;
@@ -29,7 +29,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
         this.properties = properties;
     }
 
-    public static PropertyAdapter create(TypeWidget typeWidget, ProgramValueTypeAdapter adapter, TypeLiteral<?> typeLiteral) {
+    public static PropertyAdapter create(TypeWidget typeWidget, EngineValueTypeAdapter adapter, TypeLiteral<?> typeLiteral) {
         Map<String,PropertyReader> properties = readProperties(typeLiteral, adapter);
         ImmutableList.Builder<Property> propertyBuilder = ImmutableList.builder();
         for (PropertyReader reader : properties.values()) {
@@ -40,7 +40,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
     }
 
 
-    private static Map<String, PropertyReader> readProperties(TypeLiteral<?> typeLiteral, ProgramValueTypeAdapter adapter) {
+    private static Map<String, PropertyReader> readProperties(TypeLiteral<?> typeLiteral, EngineValueTypeAdapter adapter) {
         Map<String, PropertyReader> builder = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
         for (Method method : typeLiteral.getRawType().getMethods()) {
             if (Object.class.equals(method.getDeclaringClass())) {

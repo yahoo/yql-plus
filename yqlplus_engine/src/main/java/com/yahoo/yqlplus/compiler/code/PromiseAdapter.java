@@ -6,20 +6,9 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import com.yahoo.yqlplus.compiler.generate.ScopedBuilder;
-
 public interface PromiseAdapter {
     TypeWidget getResultType();
 
-    //    public interface PromiseChain extends ScopedBuilder {
-//        BytecodeExpression getIsSuccess();
-//        BytecodeExpression getFailure();
-//        BytecodeExpression getResult();
-//        BytecodeExpression resolve();
-//
-//        BytecodeExpression build();
-//    }
-//
     BytecodeExpression resolve(ScopedBuilder scope, BytecodeExpression timeout, BytecodeExpression target);
 }
 

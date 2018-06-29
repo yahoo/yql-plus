@@ -6,6 +6,7 @@
 
 package com.yahoo.yqlplus.compiler.generate;
 
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.exprs.ChunkExpression;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.LocalCodeChunk;

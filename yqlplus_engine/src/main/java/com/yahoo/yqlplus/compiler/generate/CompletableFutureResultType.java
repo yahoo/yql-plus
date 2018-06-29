@@ -7,10 +7,11 @@
 package com.yahoo.yqlplus.compiler.generate;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.PromiseAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.BaseTypeWidget;
+import com.yahoo.yqlplus.compiler.types.FuturePromiseAdapter;
 import org.objectweb.asm.Type;
 
 import java.util.concurrent.CompletableFuture;
@@ -45,7 +46,7 @@ public class CompletableFutureResultType extends BaseTypeWidget {
     }
 
     @Override
-    public UnificationAdapter getUnificationAdapter(final ProgramValueTypeAdapter typeAdapter) {
+    public UnificationAdapter getUnificationAdapter(final EngineValueTypeAdapter typeAdapter) {
         return new UnificationAdapter() {
             @Override
             public TypeWidget unify(TypeWidget other) {

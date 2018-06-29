@@ -4,13 +4,13 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.generate;
+package com.yahoo.yqlplus.compiler.types;
 
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.PromiseAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.generate.ExactInvocation;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.compiler.exprs.BytecodeCastExpression;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;

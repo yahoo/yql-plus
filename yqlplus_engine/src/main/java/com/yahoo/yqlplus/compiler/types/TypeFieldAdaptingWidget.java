@@ -6,7 +6,7 @@
 
 package com.yahoo.yqlplus.compiler.types;
 
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 import java.lang.reflect.Field;
@@ -27,7 +27,7 @@ public class TypeFieldAdaptingWidget implements TypeAdaptingWidget {
     }
 
     @Override
-    public TypeWidget adapt(ProgramValueTypeAdapter typeAdapter, Type type) {
+    public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
         final Class<?> clazzType = JVMTypes.getRawType(type);
         try {
             Field fld = clazzType.getField("$TYPE$");

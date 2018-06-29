@@ -4,14 +4,11 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.generate;
+package com.yahoo.yqlplus.compiler.code;
 
+import com.yahoo.yqlplus.compiler.generate.CallableInvocable;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;

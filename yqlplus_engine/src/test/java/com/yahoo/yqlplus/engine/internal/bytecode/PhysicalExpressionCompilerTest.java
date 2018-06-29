@@ -9,10 +9,10 @@ package com.yahoo.yqlplus.engine.internal.bytecode;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.compiler.runtime.Comparisons;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
 import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
@@ -145,7 +145,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
                 new Hat()
         };
         setUp();
-        ProgramValueTypeAdapter adapter = source.getValueTypeAdapter();
+        EngineValueTypeAdapter adapter = source.getValueTypeAdapter();
         List<Object[]> items = Lists.newArrayList();
         for (int i = 0; i < inputs.length; ++i) {
             Object leftValue = inputs[i];
@@ -189,7 +189,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     @Test
     public void requireUpconvertDouble() throws Exception {
         Object leftValue = 1;
-        ProgramValueTypeAdapter adapter = source.getValueTypeAdapter();
+        EngineValueTypeAdapter adapter = source.getValueTypeAdapter();
         TypeWidget leftType = adapter.inferConstantType(leftValue);
         OperatorNode<PhysicalExprOperator> leftExpr = OperatorNode.create(PhysicalExprOperator.CONSTANT, leftType, leftValue);
         Object rightValue = 1.1;

@@ -4,10 +4,9 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.compiler.code;
+package com.yahoo.yqlplus.compiler.exprs;
 
-import com.yahoo.yqlplus.compiler.exprs.EvaluatedExpression;
-import com.yahoo.yqlplus.compiler.exprs.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 public abstract class LocalValueExpression extends BaseTypeExpression implements EvaluatedExpression {
     public LocalValueExpression(TypeWidget type) {
