@@ -6,15 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.plan.ast;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
-import com.yahoo.yqlplus.engine.internal.operations.ArithmeticOperation;
-import com.yahoo.yqlplus.engine.internal.operations.BinaryComparison;
+import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
+import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;

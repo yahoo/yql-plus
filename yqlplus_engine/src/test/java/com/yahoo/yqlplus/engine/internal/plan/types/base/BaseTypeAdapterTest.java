@@ -6,6 +6,7 @@
 
 package com.yahoo.yqlplus.engine.internal.plan.types.base;
 
+import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

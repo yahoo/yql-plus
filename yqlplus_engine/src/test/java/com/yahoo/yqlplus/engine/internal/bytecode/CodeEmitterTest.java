@@ -6,13 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
-import com.yahoo.yqlplus.engine.internal.bytecode.exprs.NullExpr;
-import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
-import com.yahoo.yqlplus.engine.internal.compiler.MethodGenerator;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.exprs.NullExpr;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.MethodGenerator;
+import com.yahoo.yqlplus.compiler.generate.UnitGenerator;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.testng.Assert;

@@ -19,6 +19,7 @@ import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.yqlplus.api.Source;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
@@ -30,13 +31,12 @@ import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
 import com.yahoo.yqlplus.engine.guice.ProgramTracerModule;
 import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
 import com.yahoo.yqlplus.engine.guice.SourceApiModule;
-import com.yahoo.yqlplus.engine.internal.bytecode.exprs.NullExpr;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.CallableInvocableBuilder;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.exprs.NullExpr;
+import com.yahoo.yqlplus.compiler.generate.CallableInvocableBuilder;
+import com.yahoo.yqlplus.compiler.generate.GambitScope;
+import com.yahoo.yqlplus.compiler.generate.GambitSource;
+import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.PhysicalExprOperatorCompiler;
-import com.yahoo.yqlplus.engine.internal.generate.NativeSerialization;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEnvironment;
@@ -49,8 +49,8 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.streams.SequenceBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.types.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.engine.java.JavaTestModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
@@ -162,10 +162,6 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
 
                 }
 
-                @Override
-                protected NativeSerialization getNativeSerializer() {
-                    throw new UnsupportedOperationException();
-                }
             });
         } catch (VerifyError e) {
             source.trace(System.err);

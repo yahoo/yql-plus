@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.google.common.base.Ticker;
 import com.yahoo.yqlplus.api.trace.*;
+import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
 import com.yahoo.yqlplus.engine.scope.MapExecutionScope;
 import org.testng.Assert;
 import org.testng.annotations.Test;

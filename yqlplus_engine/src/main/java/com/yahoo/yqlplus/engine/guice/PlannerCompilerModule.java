@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSourceModule;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.internal.compiler.PlanProgramCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.PlanScopedModule;
 

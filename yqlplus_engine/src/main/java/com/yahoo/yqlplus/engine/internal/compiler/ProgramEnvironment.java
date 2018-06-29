@@ -10,23 +10,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Injector;
+import com.yahoo.yqlplus.compiler.code.JoinGenerator;
+import com.yahoo.yqlplus.compiler.code.TaskGenerator;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
+import com.yahoo.yqlplus.compiler.generate.GambitScope;
+import com.yahoo.yqlplus.compiler.generate.GambitSource;
+import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.generate.ScopedBuilder;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +41,7 @@ public class ProgramEnvironment {
 
     private OperatorNode<TaskOperator> plan;
 
-    ProgramEnvironment(String name, ASMClassSource source) {
+    public ProgramEnvironment(String name, ASMClassSource source) {
         this.classSource = source;
         this.scope = new GambitSource(classSource);
         this.program = new ProgramGenerator(scope);

@@ -18,9 +18,9 @@ import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitRuntime;
+import com.yahoo.yqlplus.compiler.generate.GambitRuntime;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
-import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutHandler;
+import com.yahoo.yqlplus.compiler.runtime.TimeoutHandler;
 import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
 
 import javax.inject.Named;
@@ -174,7 +174,6 @@ public abstract class ProgramInvocation {
     }
 
     protected abstract void run() throws Exception;
-    protected abstract NativeSerialization getNativeSerializer();
 
     public final Injector getInjector() {
         return injector;

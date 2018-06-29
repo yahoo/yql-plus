@@ -8,13 +8,13 @@ package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ExactInvocation;
+import com.yahoo.yqlplus.compiler.generate.ExactInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.SinkOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.ListTypeWidget;
+import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.types.ListTypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
 import org.objectweb.asm.Opcodes;

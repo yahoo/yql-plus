@@ -6,8 +6,8 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 
 
 public interface ResultAdapter {

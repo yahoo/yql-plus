@@ -7,8 +7,9 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
 import com.google.inject.Guice;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSourceModule;
+import com.yahoo.yqlplus.compiler.generate.GambitSource;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSourceModule;
 import org.testng.annotations.BeforeMethod;
 
 public class GambitSourceTestBase {

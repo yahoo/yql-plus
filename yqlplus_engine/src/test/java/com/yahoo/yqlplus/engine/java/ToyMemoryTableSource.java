@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.JVMTypes;
+import com.yahoo.yqlplus.compiler.types.JVMTypes;
 
 import java.io.IOException;
 import java.io.InputStream;

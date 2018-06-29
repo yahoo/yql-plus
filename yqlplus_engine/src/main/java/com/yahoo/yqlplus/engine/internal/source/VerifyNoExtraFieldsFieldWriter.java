@@ -6,7 +6,7 @@
 
 package com.yahoo.yqlplus.engine.internal.source;
 
-import com.yahoo.yqlplus.engine.internal.plan.types.base.FieldWriter;
+import com.yahoo.yqlplus.compiler.runtime.FieldWriter;
 
 import java.util.Set;
 

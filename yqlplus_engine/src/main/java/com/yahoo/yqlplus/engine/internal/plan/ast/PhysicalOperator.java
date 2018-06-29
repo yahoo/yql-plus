@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.ProgramValueTypeAdapter;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;

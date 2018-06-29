@@ -19,7 +19,7 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.JVMTypes;
+import com.yahoo.yqlplus.compiler.types.JVMTypes;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

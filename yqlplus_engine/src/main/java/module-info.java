@@ -23,8 +23,4 @@ module com.yahoo.yqlplus.engine {
     exports com.yahoo.yqlplus.engine.tools;
     exports com.yahoo.yqlplus.engine.guice;
     exports com.yahoo.yqlplus.engine.rules;
-
-    // guice and modules do not get along so well. generated code also.
-    opens com.yahoo.yqlplus.engine.internal.bytecode;
-    exports com.yahoo.yqlplus.engine.internal.bytecode;
 }

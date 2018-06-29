@@ -16,9 +16,8 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.internal.java.runtime.ProgramTracer;
+import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
 import com.yahoo.yqlplus.engine.internal.scope.ExecutionScoper;
-import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 
 import java.util.Collection;
 import java.util.Collections;

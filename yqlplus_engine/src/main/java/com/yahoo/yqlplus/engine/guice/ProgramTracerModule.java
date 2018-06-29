@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
 import com.yahoo.yqlplus.api.trace.RequestTracer;
-import com.yahoo.yqlplus.engine.internal.java.runtime.ProgramTracer;
+import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
 
 public class ProgramTracerModule extends AbstractModule {
     @Override

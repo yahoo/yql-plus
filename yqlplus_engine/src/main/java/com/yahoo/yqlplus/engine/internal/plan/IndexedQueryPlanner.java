@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.internal.java.backends.java.Chooser;
+import com.yahoo.yqlplus.compiler.runtime.Chooser;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.rules.IndexMatchOperatorTransform;
 import com.yahoo.yqlplus.engine.rules.PushAndTransform;

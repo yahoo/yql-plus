@@ -7,7 +7,9 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.generate.GambitCreator;
+import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
 import org.testng.annotations.Test;

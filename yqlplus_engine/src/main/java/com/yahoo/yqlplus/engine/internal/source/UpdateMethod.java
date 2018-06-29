@@ -8,13 +8,12 @@ package com.yahoo.yqlplus.engine.internal.source;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.types.YQLNamePair;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
+import com.yahoo.yqlplus.compiler.generate.GambitCreator;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
 import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
@@ -23,16 +22,14 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
 import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.MapTypeWidget;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.types.MapTypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class UpdateMethod extends IndexedMethod {

@@ -13,26 +13,25 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
-import com.yahoo.yqlplus.engine.internal.compiler.ConstructorGenerator;
-import com.yahoo.yqlplus.engine.internal.compiler.MethodGenerator;
-import com.yahoo.yqlplus.engine.internal.plan.types.AssignableValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.ConstructorGenerator;
+import com.yahoo.yqlplus.compiler.code.MethodGenerator;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSource;
+import com.yahoo.yqlplus.compiler.generate.ASMClassSourceModule;
+import com.yahoo.yqlplus.compiler.generate.FieldDefinition;
+import com.yahoo.yqlplus.compiler.generate.UnitGenerator;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.exprs.BaseTypeExpression;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
 public class ASMClassSourceTest {
