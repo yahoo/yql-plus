@@ -6,8 +6,6 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import com.yahoo.yqlplus.compiler.generate.Annotatable;
-import com.yahoo.yqlplus.compiler.generate.UnitGenerator;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;

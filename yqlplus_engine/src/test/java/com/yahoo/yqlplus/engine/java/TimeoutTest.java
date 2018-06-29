@@ -13,7 +13,7 @@ import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
+import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.sources.TimeoutSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;

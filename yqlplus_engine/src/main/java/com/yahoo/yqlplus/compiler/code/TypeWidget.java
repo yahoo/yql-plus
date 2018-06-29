@@ -7,9 +7,6 @@
 package com.yahoo.yqlplus.compiler.code;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ResultAdapter;
-import com.yahoo.yqlplus.compiler.types.ComparisonAdapter;
-import com.yahoo.yqlplus.compiler.types.PropertyAdapter;
 import org.objectweb.asm.Type;
 
 import java.util.List;

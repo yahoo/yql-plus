@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.compiler.generate.GambitScope;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
 import com.yahoo.yqlplus.compiler.runtime.Sequences;
 import com.yahoo.yqlplus.engine.internal.plan.ast.ExprScope;
 import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;

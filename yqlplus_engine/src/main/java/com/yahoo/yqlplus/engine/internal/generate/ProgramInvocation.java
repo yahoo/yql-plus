@@ -18,8 +18,8 @@ import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.compiler.generate.GambitRuntime;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.YQLRuntimeException;
+import com.yahoo.yqlplus.compiler.code.GambitRuntime;
+import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
 import com.yahoo.yqlplus.compiler.runtime.TimeoutHandler;
 import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
 
@@ -167,10 +167,6 @@ public abstract class ProgramInvocation {
 
     public final void fail(Throwable t) {
         resultHandler.fail(extractCause(t));
-    }
-
-    public final void notComparable(Object target, int line, int offset) {
-        throw new YQLTypeException("L" + line + ":" + offset + ": unable to compare " + target);
     }
 
     protected abstract void run() throws Exception;

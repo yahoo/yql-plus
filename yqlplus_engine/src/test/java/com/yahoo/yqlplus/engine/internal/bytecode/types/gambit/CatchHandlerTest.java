@@ -7,10 +7,10 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.generate.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.types.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
 import org.testng.annotations.Test;

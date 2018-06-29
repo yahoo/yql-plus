@@ -172,12 +172,12 @@ public class LocalBatchCode implements LocalCodeChunk {
 
     @Override
     public Label getStart() {
-        return head.frame.startFrame;
+        return head.frame.getStartFrame();
     }
 
     @Override
     public Label getEnd() {
-        return head.frame.endFrame;
+        return head.frame.getEndFrame();
     }
 
     @Override

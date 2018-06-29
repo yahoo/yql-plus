@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class LocalFrame {
-    Label startFrame;
-    Label endFrame;
+    private Label startFrame;
+    private Label endFrame;
     final LocalFrame parent;
     final Map<String, LocalValue> vars = Maps.newLinkedHashMap();
     final Map<String, LocalValue> aliases = Maps.newLinkedHashMap();
@@ -37,7 +37,7 @@ public final class LocalFrame {
         endFrame = new Label();
     }
 
-    void alias(String name, String alias) {
+    public void alias(String name, String alias) {
         aliases.put(alias, get(name));
     }
 
@@ -64,8 +64,8 @@ public final class LocalFrame {
 
     public void replaceFrom(LocalFrame locals) {
         top = parent.top;
-        startFrame = locals.startFrame;
-        endFrame = locals.endFrame;
+        startFrame = locals.getStartFrame();
+        endFrame = locals.getEndFrame();
         vars.clear();
         aliases.clear();
         for (Map.Entry<String, LocalValue> o : locals.vars.entrySet()) {
@@ -77,15 +77,15 @@ public final class LocalFrame {
     }
 
     public void startFrame(CodeEmitter codeEmitter) {
-        codeEmitter.getMethodVisitor().visitLabel(startFrame);
+        codeEmitter.getMethodVisitor().visitLabel(getStartFrame());
     }
 
     public void endFrame(CodeEmitter codeEmitter) {
-        codeEmitter.getMethodVisitor().visitLabel(endFrame);
+        codeEmitter.getMethodVisitor().visitLabel(getEndFrame());
         for (Map.Entry<String, LocalValue> o : vars.entrySet()) {
             codeEmitter.getMethodVisitor()
                     .visitLocalVariable(o.getKey(),
-                            o.getValue().getType().getJVMType().getDescriptor(), null, startFrame, endFrame, o.getValue().start);
+                            o.getValue().getType().getJVMType().getDescriptor(), null, getStartFrame(), getEndFrame(), o.getValue().getStart());
         }
     }
 
@@ -119,5 +119,13 @@ public final class LocalFrame {
                 throw new IllegalStateException("LocalValue is not valid for use within frame");
             }
         }
+    }
+
+    public Label getStartFrame() {
+        return startFrame;
+    }
+
+    public Label getEndFrame() {
+        return endFrame;
     }
 }

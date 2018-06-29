@@ -7,8 +7,6 @@
 package com.yahoo.yqlplus.compiler.code;
 
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.compiler.exprs.EvaluatedExpression;
-import com.yahoo.yqlplus.compiler.exprs.LocalValueExpression;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;
 
@@ -73,5 +71,9 @@ public class LocalValue implements AssignableValue, BytecodeExpression, Evaluate
     @Override
     public void generate(CodeEmitter code) {
         read().generate(code);
+    }
+
+    public int getStart() {
+        return start;
     }
 }
