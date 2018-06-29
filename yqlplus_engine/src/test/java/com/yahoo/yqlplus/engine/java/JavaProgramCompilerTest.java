@@ -3852,6 +3852,96 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(list.size(), 1);
     }
     
+    @Test
+    public void testSimpleLeftJoinOnCondition() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(),
+                new SourceBindingModule("source", new IntSource())
+        );
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = 
+                " CREATE TEMP TABLE aaa as ( " +
+                "   SELECT 1 AS A1 "+
+                " ); " +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   LEFT JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (2,3) AND false AND true OUTPUT AS out;";
+      
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        Assert.assertEquals(((List)myResult.getResult("out").get().getResult()).size(), 0);
+    }
+    
+    @Test
+    public void testLeftJoinOnCondition() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(),
+                new SourceBindingModule("source", new IntSource(), "stringUtilUDF", StringUtilUDF.class)
+        );
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = 
+                " CREATE TEMP TABLE aaa as ( " +
+                "   SELECT 1 AS A1 "+
+                " ); " +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   LEFT JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND stringUtilUDF.compareStr('a', 'b')   OUTPUT AS out01;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   LEFT JOIN aaa a on a.A1 = c.id " +
+                "   WHERE stringUtilUDF.compareStr('a', 'b') AND c.id IN (1,2)   OUTPUT AS out02;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   LEFT JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND false  OUTPUT AS out03;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   LEFT JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND stringUtilUDF.compareStr('a', 'a')  OUTPUT AS out2;";
+      
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        Assert.assertEquals(((List)myResult.getResult("out2").get().getResult()).size(), 2);
+        Assert.assertEquals(((List)myResult.getResult("out01").get().getResult()).size(), 0);
+        Assert.assertEquals(((List)myResult.getResult("out02").get().getResult()).size(), 0);
+        Assert.assertEquals(((List)myResult.getResult("out03").get().getResult()).size(), 0);
+    }
+    
+    @Test
+    public void testJoinOnCondition() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(),
+                    new SourceBindingModule("source", new IntSource(), "stringUtilUDF", StringUtilUDF.class)
+        );
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = 
+                " CREATE TEMP TABLE aaa as ( " +
+                "   SELECT 1 AS A1 "+
+                " ); " +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND stringUtilUDF.compareStr('a', 'b')   OUTPUT AS out01;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   JOIN aaa a on a.A1 = c.id " +
+                "   WHERE stringUtilUDF.compareStr('a', 'b') AND c.id IN (1,2)   OUTPUT AS out02;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND false  OUTPUT AS out03;" +
+                "   SELECT  * " +
+                "   FROM source c " +
+                "   JOIN aaa a on a.A1 = c.id " +
+                "   WHERE c.id IN (1,2) AND stringUtilUDF.compareStr('a', 'a')  OUTPUT AS out2;";
+      
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        Assert.assertEquals(((List)myResult.getResult("out2").get().getResult()).size(), 1);
+        Assert.assertEquals(((List)myResult.getResult("out01").get().getResult()).size(), 0);
+        Assert.assertEquals(((List)myResult.getResult("out02").get().getResult()).size(), 0);
+        Assert.assertEquals(((List)myResult.getResult("out03").get().getResult()).size(), 0);
+    }
+    
     public static class BaseUDF implements Exports {
         @Export
         public static <T> T getWithDefault(final T input1, final T input2) {

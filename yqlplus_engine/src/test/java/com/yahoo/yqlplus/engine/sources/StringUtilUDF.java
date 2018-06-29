@@ -15,4 +15,13 @@ public class StringUtilUDF implements Exports {
     public String toUpperCase(String input) {
         return input.toUpperCase();
     }
+    
+    @Export
+    public boolean compareStr(String s1, String s2) {
+        if (s1 != null) {
+            return s1.equals(s2);
+        } else {
+            return s2 == null;
+        }
+    }
 }
