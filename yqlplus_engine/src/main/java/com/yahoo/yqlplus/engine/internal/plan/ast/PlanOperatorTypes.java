@@ -12,8 +12,6 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import java.util.List;
 
 public final class PlanOperatorTypes {
-    public static final TypeLiteral<List<OperatorNode<StreamOperator>>> STREAM_OPERATORS = new TypeLiteral<List<OperatorNode<StreamOperator>>>() {
-    };
 
     private PlanOperatorTypes() {
     }
