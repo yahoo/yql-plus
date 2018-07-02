@@ -36,6 +36,7 @@ public class ASMClassSource {
     private Set<ClassLoader> loaders = Sets.newIdentityHashSet();
 
     private final ConstantTable constantTable;
+    private final UnitGenerator invocableUnit;
     private final ClassLoader loader = getClass().getClassLoader();
     private final ClassLoader compoundClassLoader;
     private final GeneratedClassLoader generatedClassLoader;
@@ -46,6 +47,13 @@ public class ASMClassSource {
     final List<UnitGenerator> units = Lists.newArrayList();
     boolean built = false;
 
+    static class InvocableUnit extends UnitGenerator {
+        InvocableUnit(String name, ASMClassSource environment) {
+            super(name, environment);
+        }
+    }
+
+
     @Inject
     public ASMClassSource(Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultTypeAdapter) {
         this.uniqueElement = "gen" + ELEMENT_FACTORY.incrementAndGet();
@@ -53,6 +61,7 @@ public class ASMClassSource {
         this.types = new ASMTypeAdapter(this, adapters, defaultTypeAdapter);
         this.compoundClassLoader = new CompoundClassLoader();
         this.generatedClassLoader = new GeneratedClassLoader(compoundClassLoader);
+        this.invocableUnit = new InvocableUnit("invocables_" + generateUniqueElement(), this);
     }
 
     public ASMClassSource(ClassLoader parentClassloader) {
@@ -60,6 +69,11 @@ public class ASMClassSource {
         this.constantTable = new ConstantTable(this);
         this.compoundClassLoader = new CompoundClassLoader(parentClassloader);
         this.generatedClassLoader = new GeneratedClassLoader(compoundClassLoader);
+        this.invocableUnit = new InvocableUnit("invocables_" + generateUniqueElement(), this);
+    }
+
+    public UnitGenerator getInvocableUnit() {
+        return invocableUnit;
     }
 
     public ASMClassSource createChildSource() {
