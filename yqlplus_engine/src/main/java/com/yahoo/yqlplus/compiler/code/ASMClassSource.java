@@ -12,10 +12,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.util.TraceClassVisitor;
@@ -24,11 +28,20 @@ import javax.inject.Inject;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static java.lang.invoke.MethodType.methodType;
 
 public class ASMClassSource {
     private static final AtomicLong ELEMENT_FACTORY = new AtomicLong(0);
@@ -46,6 +59,71 @@ public class ASMClassSource {
     private Set<String> usedNames = Sets.newHashSet();
     final List<UnitGenerator> units = Lists.newArrayList();
     boolean built = false;
+
+    public MethodHandle getInvocableHandle(MethodGenerator generator) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
+        Class<?> clazz = getGeneratedClass(invocableUnit);
+        return MethodHandles.lookup().findStatic(clazz, generator.name, MethodType.fromMethodDescriptorString(generator.createMethodDescriptor(), compoundClassLoader));
+    }
+
+    private static final Handle H_LAMBDA = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
+
+    class LambdaFactoryCallable extends BytecodeInvocable {
+        final MethodGenerator method;
+        final String name;
+        final MethodType methodType;
+
+        public LambdaFactoryCallable(MethodGenerator method, TypeWidget returnType, String name, MethodType methodType) {
+            super(returnType, method.getArgumentTypes());
+            this.method = method;
+            this.name = name;
+            this.methodType = methodType;
+        }
+
+        @Override
+        protected void generate(Location loc, CodeEmitter code, List<BytecodeExpression> args) {
+            Preconditions.checkArgument(args.size() == getArgumentTypes().size(), "lambdaInvoker argument length mismatch: %s != expected %s", args.size(), getArgumentTypes().size());
+            for (BytecodeExpression arg : args) {
+                code.exec(arg);
+            }
+            MethodVisitor mv = code.getMethodVisitor();
+            List<TypeWidget> a = method.getArgumentTypes();
+            Type[] argumentTypes = new Type[a.size()];
+            for(int i = 0; i < argumentTypes.length; i++) {
+                argumentTypes[i] = a.get(i).getJVMType();
+            }
+            Type implementMethodType = Type.getType(methodType.toMethodDescriptorString());
+            mv.visitInvokeDynamicInsn(name,
+                    Type.getMethodDescriptor(getReturnType().getJVMType(), argumentTypes),
+                    H_LAMBDA,
+                    implementMethodType,
+                    method.getHandle(),
+                    implementMethodType);
+        }
+
+        public MethodHandle invoker() throws Throwable {
+            MethodHandle handle = getInvocableHandle(method);
+            List<TypeWidget> a = method.getArgumentTypes();
+            Type[] argumentTypes = new Type[a.size()];
+            for(int i = 0; i < argumentTypes.length; i++) {
+                argumentTypes[i] = a.get(i).getJVMType();
+            }
+            CallSite site = LambdaMetafactory.metafactory (MethodHandles.privateLookupIn(getGeneratedClass(invocableUnit), MethodHandles.lookup()),
+                    name,
+                    MethodType.fromMethodDescriptorString(Type.getMethodDescriptor(getReturnType().getJVMType(), argumentTypes), generatedClassLoader),
+                    methodType,
+                    handle,
+                    methodType);
+            return site.getTarget();
+        }
+    }
+
+    public GambitCreator.Invocable callLambdaFactory(MethodGenerator invocable, Class<?> clazz, String name, MethodType methodType) {
+        return new LambdaFactoryCallable(invocable, adaptInternal(clazz), name, methodType);
+    }
+
+    public MethodHandle getLambdaFactory(MethodGenerator generator, Class<?> clazz, String name, MethodType methodType) throws Throwable {
+        return new LambdaFactoryCallable(generator, adaptInternal(clazz), name, methodType).invoker();
+    }
 
     static class InvocableUnit extends UnitGenerator {
         InvocableUnit(String name, ASMClassSource environment) {
@@ -72,8 +150,10 @@ public class ASMClassSource {
         this.invocableUnit = new InvocableUnit("invocables_" + generateUniqueElement(), this);
     }
 
-    public UnitGenerator getInvocableUnit() {
-        return invocableUnit;
+    public MethodGenerator createInvocableMethod(String prefix) {
+        MethodGenerator gen = invocableUnit.createStaticMethod(prefix + "_" + generateUniqueElement());
+        gen.addModifier(Modifier.PUBLIC);
+        return gen;
     }
 
     public ASMClassSource createChildSource() {

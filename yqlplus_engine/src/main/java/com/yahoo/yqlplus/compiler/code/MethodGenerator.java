@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.compiler.code;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -76,5 +77,13 @@ public class MethodGenerator extends FunctionGenerator {
             op = Opcodes.INVOKESTATIC;
         }
         return ExactInvocation.exactInvoke(op, name, unit.getType(), getReturnType(), getArgumentTypes());
+    }
+
+    public Handle getHandle() {
+        int h = Opcodes.H_INVOKEVIRTUAL;
+        if(Modifier.isStatic(modifiers)) {
+            h = Opcodes.H_INVOKESTATIC;
+        }
+        return new Handle(h, unit.internalName, name, createMethodDescriptor(), false);
     }
 }

@@ -8,40 +8,37 @@ package com.yahoo.yqlplus.compiler.code;
 
 import com.yahoo.yqlplus.language.parser.Location;
 
+import java.lang.invoke.MethodHandle;
 import java.util.concurrent.Callable;
 
-public class CallableBuilder extends ExpressionHandler implements CallableInvocableBuilder {
-    private ObjectBuilder.MethodBuilder call;
-    private ObjectBuilder unit;
+import static java.lang.invoke.MethodType.methodType;
 
-    public CallableBuilder(ASMClassSource source, GambitTypes scope) {
+public class CallableBuilder extends ExpressionHandler implements CallableInvocableBuilder {
+    private MethodGenerator generator;
+    private ObjectBuilder.MethodBuilder call;
+
+    public CallableBuilder(ASMClassSource source) {
         super(source);
-        this.unit = scope.createObject();
-        this.unit.implement(Callable.class);
-        this.call = unit.method("call");
+        this.generator = source.createInvocableMethod("call");
+        this.call = new MethodAdapter(source, generator);
         body = call.getCode().block();
     }
 
     @Override
     public BytecodeExpression addArgument(String name, TypeWidget type) {
-        unit.addParameter(name, type);
-        return body.getLocal(name);
+        return this.call.addArgument(name, type);
     }
 
     @Override
     public CallableInvocable complete(BytecodeExpression result) {
         call.exit(call.cast(Location.NONE, AnyTypeWidget.getInstance(), result));
-        return new ConstructingCallableInvocable(result.getType(), CallableBuilder.this.unit.getConstructor().invoker());
+        return new ConstructingCallableInvocable(result.getType(), source.callLambdaFactory(generator, Callable.class, "call", methodType(Object.class)));
     }
 
     @Override
-    public ObjectBuilder builder() {
-        return unit;
+    public MethodHandle getFactory() throws Throwable {
+        return source.getLambdaFactory(generator, Callable.class, "call", methodType(Object.class));
     }
 
-    @Override
-    public TypeWidget type() {
-        return unit.type();
-    }
 
 }

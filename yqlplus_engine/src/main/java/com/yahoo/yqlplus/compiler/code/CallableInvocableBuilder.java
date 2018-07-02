@@ -6,10 +6,12 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-public interface CallableInvocableBuilder extends InvocableBuilder {
-    ObjectBuilder builder();
+import java.lang.invoke.LambdaConversionException;
+import java.lang.invoke.MethodHandle;
+import java.util.concurrent.Callable;
 
-    TypeWidget type();
+public interface CallableInvocableBuilder extends InvocableBuilder {
+    MethodHandle getFactory() throws Throwable;
 
     @Override
     CallableInvocable complete(BytecodeExpression result);

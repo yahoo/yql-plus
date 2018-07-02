@@ -12,8 +12,7 @@ public class ByteInvocableBuilder extends ExpressionHandler implements Invocable
 
     public ByteInvocableBuilder(ASMClassSource source) {
         super(source);
-        UnitGenerator unit = source.getInvocableUnit();
-        this.generator = unit.createStaticMethod("invoke_" + source.generateUniqueElement());
+        this.generator = source.createInvocableMethod("invoke");
         // this isn't going to work when child expressions use things from outer scopes
         body = generator.block();
     }

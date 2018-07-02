@@ -147,11 +147,8 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(callable);
         callable.complete(compiler.evaluateExpression(callable.local("$program"), new NullExpr(AnyTypeWidget.getInstance()), expr));
         scope.build();
-        ObjectBuilder builder = callable.builder();
-        Class<Callable<Object>> clazz = (Class<Callable<Object>>) scope.getObjectClass(builder);
-
         try {
-            return clazz.getConstructor(ProgramInvocation.class).newInstance(new ProgramInvocation() {
+            return (Callable<Object>) callable.getFactory().invokeWithArguments(new ProgramInvocation() {
                 @Override
                 public void readArguments(Map<String, Object> arguments) {
 
@@ -169,6 +166,8 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         } catch (InstantiationException e) {
             source.dump(System.err);
             throw e;
+        } catch(Throwable t) {
+            throw new RuntimeException(t);
         }
     }
 

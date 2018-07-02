@@ -31,7 +31,7 @@ public class TypesHandler implements GambitTypes {
 
     @Override
     public CallableInvocableBuilder createInvocableCallable() {
-        return new CallableBuilder(source, this);
+        return new CallableBuilder(source);
     }
 
     public TypesHandler(ASMClassSource source) {
