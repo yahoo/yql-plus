@@ -6,13 +6,13 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import java.lang.invoke.LambdaConversionException;
 import java.lang.invoke.MethodHandle;
-import java.util.concurrent.Callable;
 
-public interface CallableInvocableBuilder extends InvocableBuilder {
+public interface LambdaFactoryBuilder extends InvocableBuilder {
     MethodHandle getFactory() throws Throwable;
 
+    BytecodeExpression addLambdaArgument(String name, TypeWidget type);
+
     @Override
-    CallableInvocable complete(BytecodeExpression result);
+    LambdaInvocable complete(BytecodeExpression result);
 }

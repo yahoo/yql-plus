@@ -38,10 +38,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.invoke.MethodType.methodType;
 
 public class ASMClassSource {
     private static final AtomicLong ELEMENT_FACTORY = new AtomicLong(0);
@@ -67,16 +65,27 @@ public class ASMClassSource {
 
     private static final Handle H_LAMBDA = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
 
+
+    private static Type[] toJVMTypes(List<TypeWidget> argTypes) {
+        Type[] argumentTypes = new Type[argTypes.size()];
+        for(int i = 0; i < argumentTypes.length; i++) {
+            argumentTypes[i] = argTypes.get(i).getJVMType();
+        }
+        return argumentTypes;
+    }
+
     class LambdaFactoryCallable extends BytecodeInvocable {
         final MethodGenerator method;
         final String name;
-        final MethodType methodType;
+        final Type implementMethodType;
+        final Type factoryMethodType;
 
-        public LambdaFactoryCallable(MethodGenerator method, TypeWidget returnType, String name, MethodType methodType) {
-            super(returnType, method.getArgumentTypes());
-            this.method = method;
-            this.name = name;
-            this.methodType = methodType;
+        public LambdaFactoryCallable(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {
+            super(functionInterface, factoryArguments);
+            this.method = generator;
+            this.name = methodName;
+            this.implementMethodType = Type.getMethodType(methodResult.getJVMType(), toJVMTypes(arguments));
+            this.factoryMethodType = Type.getMethodType(functionInterface.getJVMType(), toJVMTypes(factoryArguments));
         }
 
         @Override
@@ -86,14 +95,8 @@ public class ASMClassSource {
                 code.exec(arg);
             }
             MethodVisitor mv = code.getMethodVisitor();
-            List<TypeWidget> a = method.getArgumentTypes();
-            Type[] argumentTypes = new Type[a.size()];
-            for(int i = 0; i < argumentTypes.length; i++) {
-                argumentTypes[i] = a.get(i).getJVMType();
-            }
-            Type implementMethodType = Type.getType(methodType.toMethodDescriptorString());
             mv.visitInvokeDynamicInsn(name,
-                    Type.getMethodDescriptor(getReturnType().getJVMType(), argumentTypes),
+                    factoryMethodType.getDescriptor(),
                     H_LAMBDA,
                     implementMethodType,
                     method.getHandle(),
@@ -102,27 +105,19 @@ public class ASMClassSource {
 
         public MethodHandle invoker() throws Throwable {
             MethodHandle handle = getInvocableHandle(method);
-            List<TypeWidget> a = method.getArgumentTypes();
-            Type[] argumentTypes = new Type[a.size()];
-            for(int i = 0; i < argumentTypes.length; i++) {
-                argumentTypes[i] = a.get(i).getJVMType();
-            }
+            MethodType implType = MethodType.fromMethodDescriptorString(implementMethodType.getDescriptor(), generatedClassLoader);
+            MethodType factoryType = MethodType.fromMethodDescriptorString(factoryMethodType.getDescriptor(), generatedClassLoader);
             CallSite site = LambdaMetafactory.metafactory (MethodHandles.privateLookupIn(getGeneratedClass(invocableUnit), MethodHandles.lookup()),
                     name,
-                    MethodType.fromMethodDescriptorString(Type.getMethodDescriptor(getReturnType().getJVMType(), argumentTypes), generatedClassLoader),
-                    methodType,
+                    factoryType,
+                    implType,
                     handle,
-                    methodType);
+                    implType);
             return site.getTarget();
         }
     }
-
-    public GambitCreator.Invocable callLambdaFactory(MethodGenerator invocable, Class<?> clazz, String name, MethodType methodType) {
-        return new LambdaFactoryCallable(invocable, adaptInternal(clazz), name, methodType);
-    }
-
-    public MethodHandle getLambdaFactory(MethodGenerator generator, Class<?> clazz, String name, MethodType methodType) throws Throwable {
-        return new LambdaFactoryCallable(generator, adaptInternal(clazz), name, methodType).invoker();
+    public LambdaFactoryCallable createLambdaFactory(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {
+        return new LambdaFactoryCallable(generator, factoryArguments, functionInterface, methodResult, methodName, arguments);
     }
 
     static class InvocableUnit extends UnitGenerator {

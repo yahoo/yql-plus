@@ -21,7 +21,8 @@ public interface GambitTypes {
 
     InvocableBuilder createInvocable();
 
-    CallableInvocableBuilder createInvocableCallable();
+    LambdaFactoryBuilder createInvocableCallable();
+    LambdaFactoryBuilder createLambdaBuilder(Class<?> functionInterface, String methodName, Class<?> resultType);
 
     TypeWidget adapt(YQLType type);
 

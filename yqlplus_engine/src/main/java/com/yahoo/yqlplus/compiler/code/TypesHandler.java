@@ -14,6 +14,7 @@ import org.objectweb.asm.Opcodes;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 
 public class TypesHandler implements GambitTypes {
@@ -30,8 +31,13 @@ public class TypesHandler implements GambitTypes {
     }
 
     @Override
-    public CallableInvocableBuilder createInvocableCallable() {
-        return new CallableBuilder(source);
+    public LambdaFactoryBuilder createInvocableCallable() {
+        return new LambdaBuilder(source, getValueTypeAdapter().adaptInternal(Callable.class, false), "call", AnyTypeWidget.getInstance());
+    }
+
+    @Override
+    public LambdaFactoryBuilder createLambdaBuilder(Class<?> functionInterface, String methodName, Class<?> resultType) {
+        return new LambdaBuilder(source, getValueTypeAdapter().adaptInternal(functionInterface, false), methodName, getValueTypeAdapter().adaptInternal(resultType, false));
     }
 
     public TypesHandler(ASMClassSource source) {

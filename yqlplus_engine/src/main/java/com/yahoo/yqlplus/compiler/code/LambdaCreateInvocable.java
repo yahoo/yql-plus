@@ -10,11 +10,11 @@ import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
 
-class ConstructingCallableInvocable implements CallableInvocable {
+class LambdaCreateInvocable implements LambdaInvocable {
     private final TypeWidget resultType;
     private final GambitCreator.Invocable parent;
 
-    ConstructingCallableInvocable(TypeWidget resultType, GambitCreator.Invocable parent) {
+    LambdaCreateInvocable(TypeWidget resultType, GambitCreator.Invocable parent) {
         this.resultType = resultType;
         this.parent = parent;
     }
@@ -35,13 +35,13 @@ class ConstructingCallableInvocable implements CallableInvocable {
     }
 
     @Override
-    public CallableInvocable prefix(BytecodeExpression... arguments) {
-        return new ConstructingCallableInvocable(resultType, parent.prefix(arguments));
+    public LambdaInvocable prefix(BytecodeExpression... arguments) {
+        return new LambdaCreateInvocable(resultType, parent.prefix(arguments));
     }
 
     @Override
-    public CallableInvocable prefix(List<BytecodeExpression> arguments) {
-        return new ConstructingCallableInvocable(resultType, parent.prefix(arguments));
+    public LambdaInvocable prefix(List<BytecodeExpression> arguments) {
+        return new LambdaCreateInvocable(resultType, parent.prefix(arguments));
     }
 
     @Override

@@ -8,12 +8,12 @@ package com.yahoo.yqlplus.compiler.code;
 
 import java.util.List;
 
-public interface CallableInvocable extends GambitCreator.Invocable {
+public interface LambdaInvocable extends GambitCreator.Invocable {
     @Override
-    CallableInvocable prefix(BytecodeExpression... arguments);
+    LambdaInvocable prefix(BytecodeExpression... arguments);
 
     @Override
-    CallableInvocable prefix(List<BytecodeExpression> arguments);
+    LambdaInvocable prefix(List<BytecodeExpression> arguments);
 
     TypeWidget getResultType();
 }

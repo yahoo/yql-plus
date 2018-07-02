@@ -13,44 +13,44 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.yqlplus.compiler.code.CallableInvocable;
-import com.yahoo.yqlplus.compiler.code.CallableInvocableBuilder;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.ExactInvocation;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.GambitRuntime;
 import com.yahoo.yqlplus.compiler.code.GambitTypes;
 import com.yahoo.yqlplus.compiler.code.InvocableBuilder;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
+import com.yahoo.yqlplus.compiler.code.IterateAdapter;
+import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.compiler.code.LambdaInvocable;
+import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
 import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
-import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
-import com.yahoo.yqlplus.compiler.runtime.RecordAccumulator;
+import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
+import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
+import com.yahoo.yqlplus.compiler.runtime.RecordAccumulator;
+import com.yahoo.yqlplus.engine.TaskContext;
+import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalProjectOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.SinkOperator;
 import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
-import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -205,7 +205,7 @@ public class PhysicalExprOperatorCompiler {
                     localExprs.add(arg);
                     types.add(arg.getType());
                 }
-                CallableInvocable invocation = compileCallable(program.getType(), context.getType(), types,
+                LambdaInvocable invocation = compileCallable(program.getType(), context.getType(), types,
                         OperatorNode.create(FunctionOperator.FUNCTION, localNames, expr.getArgument(0)));
                 final BytecodeExpression timeout = getTimeout(context, expr.getLocation());
                 return scope.resolve(expr.getLocation(), timeout, scope.fork(expr.getLocation(), getRuntime(scope, program, context), invocation, localExprs));
@@ -493,10 +493,10 @@ public class PhysicalExprOperatorCompiler {
         return out.complete(result);
     }
 
-    private CallableInvocable compileCallable(TypeWidget programType, TypeWidget contextType, List<TypeWidget> argumentTypes, OperatorNode<FunctionOperator> function) {
+    private LambdaInvocable compileCallable(TypeWidget programType, TypeWidget contextType, List<TypeWidget> argumentTypes, OperatorNode<FunctionOperator> function) {
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
-        CallableInvocableBuilder builder = this.scope.createInvocableCallable();
+        LambdaFactoryBuilder builder = this.scope.createInvocableCallable();
         builder.addArgument("$program", programType);
         builder.addArgument("$context", contextType);
         for (int i = 0; i < argumentNames.size(); ++i) {
@@ -507,25 +507,23 @@ public class PhysicalExprOperatorCompiler {
         return builder.complete(result);
     }
 
-    private TypeWidget compileComparator(TypeWidget programType, TypeWidget contextType, TypeWidget itemType, OperatorNode<FunctionOperator> function) {
+    private LambdaInvocable compileComparator(TypeWidget programType, TypeWidget contextType, TypeWidget itemType, OperatorNode<FunctionOperator> function) {
         // TODO Comparator.class - int compare(Object left, Object right);
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
-        ObjectBuilder builder = this.scope.createObject();
-        builder.implement(Comparator.class);
-        builder.addParameter("$program", programType);
-        builder.addParameter("$context", contextType);
-        ObjectBuilder.MethodBuilder compareMethod = builder.method("compare");
-        BytecodeExpression leftExpr = compareMethod.addArgument("left", AnyTypeWidget.getInstance());
-        BytecodeExpression rightExpr = compareMethod.addArgument("right", AnyTypeWidget.getInstance());
-        compareMethod.evaluateInto(argumentNames.get(0),
-                compareMethod.cast(function.getLocation(), itemType, leftExpr));
-        compareMethod.evaluateInto(argumentNames.get(1),
-                compareMethod.cast(function.getLocation(), itemType, rightExpr));
-        PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(compareMethod);
-        BytecodeExpression result = compiler.evaluateExpression(compareMethod.local("$program"), compareMethod.local("$context"), functionBody);
-        compareMethod.exit(result);
-        return builder.type();
+
+        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Comparator.class, "compare", int.class);
+        BytecodeExpression programExpr = builder.addArgument("$program", programType);
+        BytecodeExpression contextExpr = builder.addArgument("$context", contextType);
+        BytecodeExpression leftExpr = builder.addLambdaArgument("left", AnyTypeWidget.getInstance());
+        BytecodeExpression rightExpr = builder.addLambdaArgument("right", AnyTypeWidget.getInstance());
+        builder.evaluateInto(argumentNames.get(0),
+                builder.cast(function.getLocation(), itemType, leftExpr));
+        builder.evaluateInto(argumentNames.get(1),
+                builder.cast(function.getLocation(), itemType, rightExpr));
+        PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(builder);
+        BytecodeExpression result = compiler.evaluateExpression(programExpr, contextExpr, functionBody);
+        return builder.complete(result);
     }
 
 
@@ -925,7 +923,7 @@ public class PhysicalExprOperatorCompiler {
             }
             IterateAdapter it = cursorType.getIterableAdapter();
             TypeWidget valueType = it.getValue();
-            CallableInvocableBuilder functor = scope.createInvocableCallable();
+            LambdaFactoryBuilder functor = scope.createInvocableCallable();
             BytecodeExpression programArgument = functor.addArgument("$program", program.getType());
             BytecodeExpression ctxArgument = functor.addArgument("$context", ctxExpr.getType());
             List<String> names = function.getArgument(0);
@@ -936,7 +934,7 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.ScopeBuilder funcBody = functor.scope();
             PhysicalExprOperatorCompiler functionCompiler = new PhysicalExprOperatorCompiler(funcBody);
             BytecodeExpression scatterValue = funcBody.complete(functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
-            CallableInvocable scatterFunction = functor.complete(scatterValue).prefix(program, ctxExpr);
+            LambdaInvocable scatterFunction = functor.complete(scatterValue).prefix(program, ctxExpr);
             BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxExpr, "timeout");
             return scope.resolve(function.getLocation(), timeout, scope.scatter(function.getLocation(), getRuntime(scope, program, ctxExpr), output, scatterFunction));
         }
@@ -955,9 +953,9 @@ public class PhysicalExprOperatorCompiler {
             TypeWidget cursorType = output.getType();
             IterateAdapter it = cursorType.getIterableAdapter();
             TypeWidget valueType = it.getValue();
-            TypeWidget comparatorType = compileComparator(program.getType(), ctxExpr.getType(), valueType, comparator);
+            LambdaInvocable comparatorType = compileComparator(program.getType(), ctxExpr.getType(), valueType, comparator);
             BytecodeExpression comparatorInstance = scope.invoke(comparator.getLocation(),
-                    scope.constructor(comparatorType, program.getType(), ctxExpr.getType()), program, ctxExpr);
+                    comparatorType, program, ctxExpr);
             BytecodeExpression sorted = scope.invokeExact(comparator.getLocation(), "sort", ProgramInvocation.class, output.getType(),
                     program,
                     output,

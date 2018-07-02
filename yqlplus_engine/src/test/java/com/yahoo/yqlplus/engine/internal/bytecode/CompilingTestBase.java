@@ -20,6 +20,12 @@ import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.GambitSource;
+import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.compiler.code.NullExpr;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
@@ -31,11 +37,6 @@ import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
 import com.yahoo.yqlplus.engine.guice.ProgramTracerModule;
 import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
 import com.yahoo.yqlplus.engine.guice.SourceApiModule;
-import com.yahoo.yqlplus.compiler.code.NullExpr;
-import com.yahoo.yqlplus.compiler.code.CallableInvocableBuilder;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.GambitSource;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
@@ -45,12 +46,10 @@ import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.SourceType;
+import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.engine.java.JavaTestModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
@@ -142,7 +141,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     }
 
     protected Callable<Object> compileExpression(OperatorNode<PhysicalExprOperator> expr) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
-        CallableInvocableBuilder callable = scope.createInvocableCallable();
+        LambdaFactoryBuilder callable = scope.createInvocableCallable();
         callable.addArgument("$program", scope.adapt(ProgramInvocation.class, false));
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(callable);
         callable.complete(compiler.evaluateExpression(callable.local("$program"), new NullExpr(AnyTypeWidget.getInstance()), expr));

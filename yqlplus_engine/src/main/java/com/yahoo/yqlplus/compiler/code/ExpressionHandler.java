@@ -582,7 +582,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
-    public BytecodeExpression scatter(Location location, BytecodeExpression runtime, BytecodeExpression iterable, CallableInvocable function) {
+    public BytecodeExpression scatter(Location location, BytecodeExpression runtime, BytecodeExpression iterable, LambdaInvocable function) {
         BytecodeExpression callables = transform(location, iterable, function);
         TypeWidget resultType;
         boolean async = false;
@@ -600,12 +600,12 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
-    public BytecodeExpression fork(Location location, BytecodeExpression runtime, CallableInvocable function, BytecodeExpression... arguments) {
+    public BytecodeExpression fork(Location location, BytecodeExpression runtime, LambdaInvocable function, BytecodeExpression... arguments) {
         return fork(location, runtime, function, arguments == null ? ImmutableList.of() : Arrays.asList(arguments));
     }
 
     @Override
-    public BytecodeExpression fork(Location location, BytecodeExpression runtime, CallableInvocable function, List<BytecodeExpression> arguments) {
+    public BytecodeExpression fork(Location location, BytecodeExpression runtime, LambdaInvocable function, List<BytecodeExpression> arguments) {
         TypeWidget resultType;
         boolean async = false;
         if (function.getResultType().isPromise()) {
