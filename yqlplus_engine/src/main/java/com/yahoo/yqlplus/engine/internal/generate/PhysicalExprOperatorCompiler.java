@@ -13,32 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.ExactInvocation;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitRuntime;
-import com.yahoo.yqlplus.compiler.code.GambitTypes;
-import com.yahoo.yqlplus.compiler.code.InvocableBuilder;
-import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
-import com.yahoo.yqlplus.compiler.code.LambdaInvocable;
-import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
-import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
@@ -65,6 +40,9 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 public class PhysicalExprOperatorCompiler {
     public static final MetricDimension EMPTY_DIMENSION = new MetricDimension();
@@ -205,10 +183,11 @@ public class PhysicalExprOperatorCompiler {
                     localExprs.add(arg);
                     types.add(arg.getType());
                 }
-                LambdaInvocable invocation = compileCallable(program.getType(), context.getType(), types,
+                LambdaInvocable invocation = compileSupplier(program.getType(), context.getType(), types,
                         OperatorNode.create(FunctionOperator.FUNCTION, localNames, expr.getArgument(0)));
-                final BytecodeExpression timeout = getTimeout(context, expr.getLocation());
-                return scope.resolve(expr.getLocation(), timeout, scope.fork(expr.getLocation(), getRuntime(scope, program, context), invocation, localExprs));
+                BytecodeExpression supplier = invocation.invoke(expr.getLocation(), program, context);
+                GambitCreator.Invocable timeoutInvocation = ExactInvocation.exactInvoke(Opcodes.INVOKEVIRTUAL, "runTimeout", scope.adapt(TaskContext.class, false), new CompletableFutureResultType(invocation.getResultType()), invocation.getReturnType());
+                return scope.cast(invocation.getResultType(), timeoutInvocation.invoke(expr.getLocation(), supplier));
             }
             case LOCAL: {
                 String localName = expr.getArgument(0);
@@ -497,6 +476,20 @@ public class PhysicalExprOperatorCompiler {
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
         LambdaFactoryBuilder builder = this.scope.createInvocableCallable();
+        builder.addArgument("$program", programType);
+        builder.addArgument("$context", contextType);
+        for (int i = 0; i < argumentNames.size(); ++i) {
+            builder.addArgument(argumentNames.get(i), argumentTypes.get(i));
+        }
+        PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(builder);
+        BytecodeExpression result = compiler.evaluateExpression(builder.local("$program"), builder.local("$context"), functionBody);
+        return builder.complete(result);
+    }
+
+    private LambdaInvocable compileSupplier(TypeWidget programType, TypeWidget contextType, List<TypeWidget> argumentTypes, OperatorNode<FunctionOperator> function) {
+        List<String> argumentNames = function.getArgument(0);
+        OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
+        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Supplier.class, "get", Object.class);
         builder.addArgument("$program", programType);
         builder.addArgument("$context", contextType);
         for (int i = 0; i < argumentNames.size(); ++i) {

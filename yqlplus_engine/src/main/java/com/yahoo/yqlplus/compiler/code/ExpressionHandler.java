@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -579,46 +578,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             throw new ProgramCompileException(location, "Argument to length not indexable: %s", inputExpr.getType().getTypeName());
         }
         return inputExpr.getType().getIndexAdapter().length(inputExpr);
-    }
-
-    @Override
-    public BytecodeExpression scatter(Location location, BytecodeExpression iterable, LambdaInvocable function) {
-        BytecodeExpression callables = transform(location, iterable, function);
-        TypeWidget resultType;
-        boolean async = false;
-        if (function.getResultType().isPromise()) {
-            async = true;
-            resultType = new ListTypeWidget(function.getResultType().getPromiseAdapter().getResultType());
-        } else {
-            resultType = new ListTypeWidget(function.getResultType());
-        }
-        ListenableFutureResultType futureResultType = new ListenableFutureResultType(resultType);
-        return ExactInvocation.boundInvoke(Opcodes.INVOKEINTERFACE, async ? "scatterAsync" : "scatter", adapt(GambitRuntime.class, false),
-                futureResultType,
-                runtime,
-                callables).invoke(location);
-    }
-
-    @Override
-    public BytecodeExpression fork(Location location, LambdaInvocable function, BytecodeExpression... arguments) {
-        return fork(location, function, arguments == null ? ImmutableList.of() : Arrays.asList(arguments));
-    }
-
-    @Override
-    public BytecodeExpression fork(Location location, LambdaInvocable function, List<BytecodeExpression> arguments) {
-        TypeWidget resultType;
-        boolean async = false;
-        if (function.getResultType().isPromise()) {
-            async = true;
-            resultType = function.getResultType().getPromiseAdapter().getResultType();
-        } else {
-            resultType = function.getResultType();
-        }
-        ListenableFutureResultType futureResultType = new ListenableFutureResultType(resultType);
-        return ExactInvocation.boundInvoke(Opcodes.INVOKEINTERFACE, async ? "forkAsync" : "fork", adapt(GambitRuntime.class, false),
-                futureResultType,
-                runtime,
-                cast(adapt(Callable.class, false), function.invoke(location, arguments))).invoke(location);
     }
 
     @Override

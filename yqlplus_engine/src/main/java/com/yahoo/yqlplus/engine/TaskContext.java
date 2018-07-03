@@ -11,18 +11,27 @@ import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.trace.Tracer;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
-public class TaskContext {
+public final class TaskContext {
     public final TaskMetricEmitter metricEmitter;
     public final Tracer tracer;
     public final Timeout timeout;
+    public final ForkJoinPool pool;
 
     public TaskContext(TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout) {
         this.metricEmitter = metricEmitter;
         this.tracer = tracer;
         this.timeout = timeout;
+        // TODO: give container control over this
+        this.pool = ForkJoinPool.commonPool();
+    }
+
+    public final <T> T runTimeout(Supplier<T> work) throws ExecutionException, InterruptedException {
+        CompletableFuture<T> f = CompletableFuture.supplyAsync(work, pool);
+        f.orTimeout(timeout.remainingTicks(), timeout.getTickUnits());
+        return f.get();
     }
 
     public TaskContext start(MetricDimension ctx) {
