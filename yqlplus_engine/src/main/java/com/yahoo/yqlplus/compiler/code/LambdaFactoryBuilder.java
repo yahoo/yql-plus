@@ -11,8 +11,6 @@ import java.lang.invoke.MethodHandle;
 public interface LambdaFactoryBuilder extends InvocableBuilder {
     MethodHandle getFactory() throws Throwable;
 
-    BytecodeExpression addLambdaArgument(String name, TypeWidget type);
-
     @Override
     LambdaInvocable complete(BytecodeExpression result);
 

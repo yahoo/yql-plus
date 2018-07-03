@@ -22,13 +22,11 @@ public interface GambitTypes {
     InvocableBuilder createInvocable();
 
     LambdaFactoryBuilder createInvocableCallable();
-    LambdaFactoryBuilder createLambdaBuilder(Class<?> functionInterface, String methodName, Class<?> resultType);
+    LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes);
 
     TypeWidget adapt(YQLType type);
 
     TypeWidget adapt(java.lang.reflect.Type type, boolean nullable);
-
-    TypeWidget adapt(Class<?> type, boolean nullable, TypeWidget... typeArguments);
 
     TypeWidget unify(List<? extends TypeWidget> types);
 

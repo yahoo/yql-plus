@@ -76,18 +76,16 @@ public class ASMClassSource {
 
     class LambdaFactoryCallable extends BytecodeInvocable implements LambdaInvocable {
         final MethodGenerator method;
-        final String name;
+        final FunctionalInterfaceContract contract;
         final Type implementMethodType;
         final Type factoryMethodType;
-        final TypeWidget methodResult;
 
-        public LambdaFactoryCallable(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {
-            super(functionInterface, factoryArguments);
+        public LambdaFactoryCallable(MethodGenerator generator, FunctionalInterfaceContract contract) {
+            super(contract.interfaceType, contract.deriveFactoryArguments(generator.getArgumentTypes()));
             this.method = generator;
-            this.name = methodName;
-            this.methodResult = methodResult;
-            this.implementMethodType = Type.getMethodType(methodResult.getJVMType(), toJVMTypes(arguments));
-            this.factoryMethodType = Type.getMethodType(functionInterface.getJVMType(), toJVMTypes(factoryArguments));
+            this.contract = contract;
+            this.implementMethodType = Type.getMethodType(contract.returnType.getJVMType(), toJVMTypes(contract.methodArgumentTypes));
+            this.factoryMethodType = Type.getMethodType(contract.interfaceType.getJVMType(), toJVMTypes(getArgumentTypes()));
         }
 
         @Override
@@ -97,7 +95,7 @@ public class ASMClassSource {
                 code.exec(arg);
             }
             MethodVisitor mv = code.getMethodVisitor();
-            mv.visitInvokeDynamicInsn(name,
+            mv.visitInvokeDynamicInsn(contract.methodName,
                     factoryMethodType.getDescriptor(),
                     H_LAMBDA,
                     implementMethodType,
@@ -110,7 +108,7 @@ public class ASMClassSource {
             MethodType implType = MethodType.fromMethodDescriptorString(implementMethodType.getDescriptor(), generatedClassLoader);
             MethodType factoryType = MethodType.fromMethodDescriptorString(factoryMethodType.getDescriptor(), generatedClassLoader);
             CallSite site = LambdaMetafactory.metafactory (MethodHandles.privateLookupIn(getGeneratedClass(invocableUnit), MethodHandles.lookup()),
-                    name,
+                    contract.methodName,
                     factoryType,
                     implType,
                     handle,
@@ -120,11 +118,16 @@ public class ASMClassSource {
 
         @Override
         public TypeWidget getResultType() {
-            return methodResult;
+            return method.getReturnType();
+        }
+
+        @Override
+        public FunctionalInterfaceContract getContract() {
+            return contract;
         }
     }
-    public LambdaFactoryCallable createLambdaFactory(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {
-        return new LambdaFactoryCallable(generator, factoryArguments, functionInterface, methodResult, methodName, arguments);
+    public LambdaFactoryCallable createLambdaFactory(MethodGenerator generator, FunctionalInterfaceContract contract) {
+        return new LambdaFactoryCallable(generator, contract);
     }
 
     static class InvocableUnit extends UnitGenerator {

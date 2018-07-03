@@ -189,7 +189,7 @@ public class JavaProgramCompilerTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTrace() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule());
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);

@@ -30,14 +30,25 @@ public class TypesHandler implements GambitTypes {
         return new ByteInvocableBuilder(source);
     }
 
-    @Override
-    public LambdaFactoryBuilder createInvocableCallable() {
-        return new LambdaBuilder(source, getValueTypeAdapter().adaptInternal(Callable.class, false), "call", AnyTypeWidget.getInstance());
+    private FunctionalInterfaceContract functional(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes) {
+        List<TypeWidget> arguments = Lists.newArrayListWithExpectedSize(argumentTypes == null ? 0 : argumentTypes.length);
+        if(argumentTypes != null) {
+            for(Class<?> argType : argumentTypes) {
+                arguments.add(adapt(argType, true));
+            }
+        }
+        return new FunctionalInterfaceContract(adapt(clazz, false), methodName, adapt(returnType, nullable), arguments);
     }
 
     @Override
-    public LambdaFactoryBuilder createLambdaBuilder(Class<?> functionInterface, String methodName, Class<?> resultType) {
-        return new LambdaBuilder(source, getValueTypeAdapter().adaptInternal(functionInterface, false), methodName, getValueTypeAdapter().adaptInternal(resultType, false));
+    public LambdaFactoryBuilder createInvocableCallable() {
+        return new LambdaBuilder(source, functional(Callable.class, "call", Object.class, true));
+    }
+
+    @Override
+    public LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes) {
+        FunctionalInterfaceContract contract = functional(clazz, methodName, returnType, nullable, argumentTypes);
+        return new LambdaBuilder(source, contract);
     }
 
     public TypesHandler(ASMClassSource source) {
@@ -49,14 +60,6 @@ public class TypesHandler implements GambitTypes {
     }
 
     public TypeWidget adapt(Type type, boolean nullable) {
-        TypeWidget result = source.adaptInternal(type);
-        if (!nullable) {
-            return NotNullableTypeWidget.create(result);
-        }
-        return result;
-    }
-
-    public TypeWidget adapt(Class<?> type, boolean nullable, TypeWidget... typeArguments) {
         TypeWidget result = source.adaptInternal(type);
         if (!nullable) {
             return NotNullableTypeWidget.create(result);

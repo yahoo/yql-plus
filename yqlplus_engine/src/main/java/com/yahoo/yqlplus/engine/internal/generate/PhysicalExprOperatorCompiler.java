@@ -208,7 +208,7 @@ public class PhysicalExprOperatorCompiler {
                 LambdaInvocable invocation = compileSupplier(program.getType(), context.getType(), types,
                         OperatorNode.create(FunctionOperator.FUNCTION, localNames, expr.getArgument(0)));
                 BytecodeExpression supplier = invocation.invoke(expr.getLocation(), program, context);
-                GambitCreator.Invocable timeoutInvocation = scope.findExactInvoker(TaskContext.class, "runTimeout", invocation.getResultType(), Supplier.class);
+                GambitCreator.Invocable timeoutInvocation = scope.findExactInvoker(TaskContext.class, "runTimeout", AnyTypeWidget.getInstance(), Supplier.class);
                 return scope.cast(invocation.getResultType(), timeoutInvocation.invoke(expr.getLocation(), context, supplier));
             }
             case LOCAL: {
@@ -494,24 +494,10 @@ public class PhysicalExprOperatorCompiler {
         return out.complete(result);
     }
 
-    private LambdaInvocable compileCallable(TypeWidget programType, TypeWidget contextType, List<TypeWidget> argumentTypes, OperatorNode<FunctionOperator> function) {
-        List<String> argumentNames = function.getArgument(0);
-        OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
-        LambdaFactoryBuilder builder = this.scope.createInvocableCallable();
-        builder.addArgument("$program", programType);
-        builder.addArgument("$context", contextType);
-        for (int i = 0; i < argumentNames.size(); ++i) {
-            builder.addArgument(argumentNames.get(i), argumentTypes.get(i));
-        }
-        PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(builder);
-        BytecodeExpression result = compiler.evaluateExpression(builder.local("$program"), builder.local("$context"), functionBody);
-        return builder.complete(result);
-    }
-
     private LambdaInvocable compileSupplier(TypeWidget programType, TypeWidget contextType, List<TypeWidget> argumentTypes, OperatorNode<FunctionOperator> function) {
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
-        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Supplier.class, "get", Object.class);
+        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Supplier.class, "get", Object.class, true);
         builder.addArgument("$program", programType);
         builder.addArgument("$context", contextType);
         for (int i = 0; i < argumentNames.size(); ++i) {
@@ -527,11 +513,11 @@ public class PhysicalExprOperatorCompiler {
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
 
-        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Comparator.class, "compare", int.class);
+        LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Comparator.class, "compare", int.class, false, Object.class, Object.class);
         BytecodeExpression programExpr = builder.addArgument("$program", programType);
         BytecodeExpression contextExpr = builder.addArgument("$context", contextType);
-        BytecodeExpression leftExpr = builder.addLambdaArgument("left", AnyTypeWidget.getInstance());
-        BytecodeExpression rightExpr = builder.addLambdaArgument("right", AnyTypeWidget.getInstance());
+        BytecodeExpression leftExpr = builder.addArgument("left", AnyTypeWidget.getInstance());
+        BytecodeExpression rightExpr = builder.addArgument("right", AnyTypeWidget.getInstance());
         builder.evaluateInto(argumentNames.get(0),
                 builder.cast(function.getLocation(), itemType, leftExpr));
         builder.evaluateInto(argumentNames.get(1),
@@ -934,7 +920,7 @@ public class PhysicalExprOperatorCompiler {
             }
             IterateAdapter it = cursorType.getIterableAdapter();
             TypeWidget valueType = it.getValue();
-            LambdaFactoryBuilder functor = scope.createLambdaBuilder(Supplier.class, "get", Object.class);
+            LambdaFactoryBuilder functor = scope.createLambdaBuilder(Supplier.class, "get", Object.class, true);
             BytecodeExpression programArgument = functor.addArgument("$program", program.getType());
             BytecodeExpression ctxArgument = functor.addArgument("$context", ctxExpr.getType());
             List<String> names = function.getArgument(0);
@@ -946,10 +932,11 @@ public class PhysicalExprOperatorCompiler {
             BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxExpr, "timeout");
             BytecodeExpression outputValue =  scope.resolve(function.getLocation(),  timeout, functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
             BytecodeExpression scatterValue = funcBody.complete(outputValue);
-            GambitCreator.Invocable scatterFunction = functor.complete(scatterValue).prefix(program, ctxExpr);
+            LambdaInvocable invocable = functor.complete(scatterValue);
+            GambitCreator.Invocable scatterFunction = invocable.prefix(program, ctxExpr);
             BytecodeExpression tasks = scope.transform(function.getLocation(), output, scatterFunction);
             GambitCreator.Invocable work = scope.findExactInvoker(TaskContext.class, "scatter", new ListTypeWidget(scatterValue.getType()), List.class);
-            return work.invoke(function.getLocation(), ctxExpr, tasks);
+            return scope.cast(new ListTypeWidget(invocable.getResultType()), work.invoke(function.getLocation(), ctxExpr, tasks));
         }
     }
 
