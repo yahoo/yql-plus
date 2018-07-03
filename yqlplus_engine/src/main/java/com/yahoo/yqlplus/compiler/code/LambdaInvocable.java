@@ -6,14 +6,6 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import java.util.List;
-
 public interface LambdaInvocable extends GambitCreator.Invocable {
-    @Override
-    LambdaInvocable prefix(BytecodeExpression... arguments);
-
-    @Override
-    LambdaInvocable prefix(List<BytecodeExpression> arguments);
-
     TypeWidget getResultType();
 }

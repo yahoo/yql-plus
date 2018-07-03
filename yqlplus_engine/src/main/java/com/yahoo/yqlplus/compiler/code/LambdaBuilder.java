@@ -51,8 +51,12 @@ public class LambdaBuilder extends ExpressionHandler implements LambdaFactoryBui
     @Override
     public LambdaInvocable complete(BytecodeExpression result) {
         call.exit(call.cast(Location.NONE, this.methodResult, result));
-        ASMClassSource.LambdaFactoryCallable factory = source.createLambdaFactory(generator,  factoryArguments, functionInterface, methodResult, methodName, arguments);
-        return new LambdaCreateInvocable(result.getType(), factory);
+        return  source.createLambdaFactory(generator,  factoryArguments, functionInterface, methodResult, methodName, arguments);
+    }
+
+    @Override
+    public LambdaInvocable exit() {
+        return source.createLambdaFactory(generator,  factoryArguments, functionInterface, methodResult, methodName, arguments);
     }
 
     @Override

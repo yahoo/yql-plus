@@ -74,16 +74,18 @@ public class ASMClassSource {
         return argumentTypes;
     }
 
-    class LambdaFactoryCallable extends BytecodeInvocable {
+    class LambdaFactoryCallable extends BytecodeInvocable implements LambdaInvocable {
         final MethodGenerator method;
         final String name;
         final Type implementMethodType;
         final Type factoryMethodType;
+        final TypeWidget methodResult;
 
         public LambdaFactoryCallable(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {
             super(functionInterface, factoryArguments);
             this.method = generator;
             this.name = methodName;
+            this.methodResult = methodResult;
             this.implementMethodType = Type.getMethodType(methodResult.getJVMType(), toJVMTypes(arguments));
             this.factoryMethodType = Type.getMethodType(functionInterface.getJVMType(), toJVMTypes(factoryArguments));
         }
@@ -114,6 +116,11 @@ public class ASMClassSource {
                     handle,
                     implType);
             return site.getTarget();
+        }
+
+        @Override
+        public TypeWidget getResultType() {
+            return methodResult;
         }
     }
     public LambdaFactoryCallable createLambdaFactory(MethodGenerator generator, List<TypeWidget> factoryArguments, TypeWidget functionInterface, TypeWidget methodResult, String methodName, List<TypeWidget> arguments) {

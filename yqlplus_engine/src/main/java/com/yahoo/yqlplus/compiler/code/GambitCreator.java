@@ -185,11 +185,11 @@ public interface GambitCreator extends GambitTypes {
 
     BytecodeExpression transform(Location location, BytecodeExpression iterable, Invocable function);
 
-    BytecodeExpression scatter(Location location, BytecodeExpression runtime, BytecodeExpression iterable, LambdaInvocable function);
+    BytecodeExpression scatter(Location location, BytecodeExpression iterable, LambdaInvocable function);
 
-    BytecodeExpression fork(Location location, BytecodeExpression runtime, LambdaInvocable function, BytecodeExpression... arguments);
+    BytecodeExpression fork(Location location, LambdaInvocable function, BytecodeExpression... arguments);
 
-    BytecodeExpression fork(Location location, BytecodeExpression runtime, LambdaInvocable function, List<BytecodeExpression> arguments);
+    BytecodeExpression fork(Location location, LambdaInvocable function, List<BytecodeExpression> arguments);
 
     BytecodeExpression propertyValue(Location loc, BytecodeExpression target, String propertyName);
 

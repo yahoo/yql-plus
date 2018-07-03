@@ -565,10 +565,6 @@ public class PhysicalExprOperatorCompiler {
         return output;
     }
 
-    private static BytecodeExpression getRuntime(ScopedBuilder scope, BytecodeExpression program, BytecodeExpression context) {
-        return ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "getRuntime", scope.adapt(ProgramInvocation.class, false), scope.adapt(GambitRuntime.class, false), program, context).invoke(Location.NONE);
-    }
-
     private BytecodeExpression getInjector(BytecodeExpression program, BytecodeExpression context) {
         return ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "getInjector", scope.adapt(ProgramInvocation.class, false), scope.adapt(Injector.class, false), program).invoke(Location.NONE);
     }
@@ -934,7 +930,7 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.ScopeBuilder funcBody = functor.scope();
             PhysicalExprOperatorCompiler functionCompiler = new PhysicalExprOperatorCompiler(funcBody);
             BytecodeExpression scatterValue = funcBody.complete(functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
-            LambdaInvocable scatterFunction = functor.complete(scatterValue).prefix(program, ctxExpr);
+            GambitCreator.Invocable scatterFunction = functor.complete(scatterValue).prefix(program, ctxExpr);
             BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxExpr, "timeout");
             return scope.resolve(function.getLocation(), timeout, scope.scatter(function.getLocation(), getRuntime(scope, program, ctxExpr), output, scatterFunction));
         }

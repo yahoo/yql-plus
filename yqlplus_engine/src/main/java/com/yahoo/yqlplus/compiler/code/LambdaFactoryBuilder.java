@@ -15,4 +15,6 @@ public interface LambdaFactoryBuilder extends InvocableBuilder {
 
     @Override
     LambdaInvocable complete(BytecodeExpression result);
+
+    LambdaInvocable exit();
 }

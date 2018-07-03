@@ -169,39 +169,4 @@ public abstract class ProgramInvocation {
     public final Injector getInjector() {
         return injector;
     }
-
-    public final GambitRuntime getRuntime(TaskContext context) {
-        final ListeningExecutorService tasks = ((ScopedTracingExecutor) this.tasks).createSubExecutor(context);
-        return new GambitRuntime() {
-            @Override
-            public ListenableFuture<List<Object>> scatter(List<Callable<Object>> targets) {
-                List<ListenableFuture<Object>> resultList = Lists.newArrayListWithExpectedSize(targets.size());
-                for (Callable<Object> out : targets) {
-                    resultList.add(fork(out));
-                }
-                return Futures.allAsList(resultList);
-            }
-
-            @Override
-            public ListenableFuture<List<Object>> scatterAsync(List<Callable<ListenableFuture<Object>>> targets) {
-                List<ListenableFuture<Object>> resultList = Lists.newArrayListWithExpectedSize(targets.size());
-                for (Callable<ListenableFuture<Object>> out : targets) {
-                    resultList.add(forkAsync(out));
-                }
-                return Futures.allAsList(resultList);
-            }
-
-            @Override
-            public ListenableFuture<Object> fork(Callable<Object> target) {
-                return tasks.submit(target);
-            }
-
-            @Override
-            public ListenableFuture<Object> forkAsync(Callable<ListenableFuture<Object>> target) {
-                SettableFuture<Object> result = SettableFuture.create();
-                result.setFuture(tasks.submit(target));
-                return result;
-            }
-        };
-    }
 }
