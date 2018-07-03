@@ -84,7 +84,6 @@ public enum PhysicalExprOperator implements Operator {
     NULL(TypeWidget.class),
 
     FOREACH(PhysicalExprOperator.class, FunctionOperator.FUNCTION),
-    //LET(FunctionOperator.FUNCTION, PlanOperatorTypes.EXPRS),
     CONCAT(PlanOperatorTypes.EXPRS),
 
     GENERATE_KEYS(TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
@@ -99,9 +98,7 @@ public enum PhysicalExprOperator implements Operator {
     INJECT_MEMBERS(PhysicalExprOperator.class),
     FIRST(PhysicalExprOperator.class),
     LENGTH(PhysicalExprOperator.class),
-    SINGLETON(PhysicalExprOperator.class),
-    SERIALIZE(PhysicalExprOperator.class, PhysicalExprOperator.class),
-    DESERIALIZE(PhysicalExprOperator.class, PhysicalExprOperator.class);
+    SINGLETON(PhysicalExprOperator.class);
 
     private final ArgumentsTypeChecker checker;
 
@@ -184,8 +181,6 @@ public enum PhysicalExprOperator implements Operator {
                         case STREAM_CREATE:
                         case WITH_CONTEXT:
                         case CURRENT_CONTEXT:
-                        case SERIALIZE:
-                        case DESERIALIZE:
                             return;
                         case ENFORCE_TIMEOUT:
                         case STREAM_COMPLETE:
