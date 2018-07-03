@@ -6,7 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.scope;
 
-import com.google.common.util.concurrent.*;
+import com.google.common.util.concurrent.ForwardingListenableFuture;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.yahoo.cloud.metrics.api.MetricDimension;
@@ -15,12 +22,21 @@ import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.scope.ExecutionScope;
+import com.yahoo.yqlplus.engine.scope.MapExecutionScope;
 import com.yahoo.yqlplus.engine.scope.WrapScope;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ScopedTracingExecutor extends AbstractExecutorService implements ListeningExecutorService {
@@ -36,7 +52,6 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
     private final AtomicInteger threadIdSource;
 
     public ScopedTracingExecutor(ScheduledExecutorService timers, ExecutorService work, ExecutionScoper scoper, TaskMetricEmitter task, Tracer tracer, Timeout timeout, ExecutionScope scope) {
-        this.rootContext = new TaskContext(task, tracer, timeout);
         this.timers = timers;
         this.work = work;
         this.scoper = scoper;
@@ -44,12 +59,14 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
         this.timeout = timeout;
         this.currentTask = new ThreadLocal<>();
         this.currentTracer = new ThreadLocal<>();
-        this.scope = new ScopedObjects(new WrapScope(scope)
+        MapExecutionScope wrapped = new WrapScope(scope)
                 .bind(Key.get(ListeningExecutorService.class, Names.named("programExecutor")), this)
                 .bind(Key.get(ScheduledExecutorService.class, Names.named("programTimeout")), timers)
                 .bind(Key.get(TaskMetricEmitter.class, Names.named("task")), new CurrentThreadTaskMetricEmitter(currentTask))
-                .bind(Tracer.class, new CurrentThreadTracer(currentTracer))
-                .bind(Key.get(TaskContext.class, Names.named("rootContext")), new TaskContext(task, tracer, timeout)));
+                .bind(Tracer.class, new CurrentThreadTracer(currentTracer));
+        this.scope = new ScopedObjects(wrapped);
+        this.rootContext = new TaskContext(task, tracer, timeout, scoper, this.scope);
+        wrapped.bind(Key.get(TaskContext.class, Names.named("rootContext")), rootContext);
         this.threadIdSource = new AtomicInteger(0);
     }
 

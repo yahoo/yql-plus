@@ -13,15 +13,15 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
+import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
+import com.yahoo.yqlplus.compiler.runtime.RelativeTicker;
+import com.yahoo.yqlplus.compiler.runtime.TimeoutTracker;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 import com.yahoo.yqlplus.engine.internal.code.CodeOutput;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
-import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
-import com.yahoo.yqlplus.compiler.runtime.RelativeTicker;
-import com.yahoo.yqlplus.compiler.runtime.TimeoutTracker;
 import com.yahoo.yqlplus.engine.internal.plan.PlanPrinter;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
 import com.yahoo.yqlplus.engine.internal.scope.ExecutionScoper;
@@ -116,23 +116,21 @@ public final class PlanCompiledProgram implements CompiledProgram {
         return run(arguments, debug, new EmptyExecutionScope());
     }
     
-    @Override
     public ProgramResult run(final Map<String, Object> arguments, final boolean debug, ExecutionScope inputScope) throws Exception {
         return run(arguments, debug, inputScope, 30L, TimeUnit.SECONDS);
     }
-    
+
     @Override
     public ProgramResult run(Map<String, Object> arguments, boolean debug, long timeout, TimeUnit timeoutUnit) throws Exception {
         return run(arguments, debug, new EmptyExecutionScope(), timeout, timeoutUnit);
     }
 
-    @Override
     public ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope inputScope, long timeout, TimeUnit timeoutUnit) {
         TimeoutTracker tracker = new TimeoutTracker(timeout, timeoutUnit, new RelativeTicker(Ticker.systemTicker()));
         ProgramTracer tracer = new ProgramTracer(Ticker.systemTicker(), debug, "program", name);
         scoper.enter(new ScopedObjects(inputScope));
         TaskMetricEmitter requestEmitter = injector.getInstance(TaskMetricEmitter.class);
-        TaskContext context = new TaskContext(requestEmitter, tracer, tracker);
+        TaskContext context = new TaskContext(requestEmitter, tracer, tracker, new ExecutionScoper(), new ScopedObjects(inputScope));
         PlanProgramResultAdapter adapter = new PlanProgramResultAdapter(tracer, resultSetInfos, scoper);
         invoke(adapter, arguments, inputScope, context);
         requestEmitter.end();
