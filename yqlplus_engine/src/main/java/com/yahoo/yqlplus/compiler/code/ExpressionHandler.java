@@ -11,8 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
-import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.compiler.runtime.MapFieldWriter;
 import com.yahoo.yqlplus.compiler.runtime.RecordMapWrapper;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
@@ -28,8 +26,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class ExpressionHandler extends TypesHandler implements ScopedBuilder {
     protected LocalCodeChunk body;
@@ -120,84 +116,13 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
-    public LoopBuilder loop(BytecodeExpression test, BytecodeExpression result) {
-        return new LoopAdapter(source, body, test, result);
-    }
-
-    @Override
     public IterateBuilder iterate(BytecodeExpression iterable) {
         return new IterateBuilderAdapter(source, body, iterable);
     }
 
     @Override
-    public CaseBuilder createSwitch(BytecodeExpression expr) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public CaseBuilder createCase() {
         return new CaseAdapter(source, body);
-    }
-
-    @Override
-    public IfBuilder createIf() {
-        return new IfAdapter(source, body);
-    }
-
-    @Override
-    public BytecodeExpression and(Location loc, BytecodeExpression... inputs) {
-        return and(loc, Arrays.asList(inputs));
-    }
-
-    @Override
-    public BytecodeExpression and(Location loc, final List<BytecodeExpression> inputs) {
-        return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-            @Override
-            public void generate(CodeEmitter code) {
-                MethodVisitor mv = code.getMethodVisitor();
-                Label done = new Label();
-                Label isFalse = new Label();
-                for (BytecodeExpression input : inputs) {
-                    Label isTrue = new Label();
-                    code.exec(input);
-                    input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
-                    mv.visitLabel(isTrue);
-                }
-                code.emitBooleanConstant(true);
-                mv.visitJumpInsn(Opcodes.GOTO, done);
-                mv.visitLabel(isFalse);
-                code.emitBooleanConstant(false);
-                mv.visitLabel(done);
-            }
-        };
-    }
-
-    @Override
-    public BytecodeExpression or(Location loc, BytecodeExpression... inputs) {
-        return or(loc, Arrays.asList(inputs));
-    }
-
-    @Override
-    public BytecodeExpression or(Location loc, final List<BytecodeExpression> inputs) {
-        return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-            @Override
-            public void generate(CodeEmitter code) {
-                MethodVisitor mv = code.getMethodVisitor();
-                Label done = new Label();
-                Label isTrue = new Label();
-                for (BytecodeExpression input : inputs) {
-                    Label isFalse = new Label();
-                    code.exec(input);
-                    input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
-                    mv.visitLabel(isFalse);
-                }
-                code.emitBooleanConstant(false);
-                mv.visitJumpInsn(Opcodes.GOTO, done);
-                mv.visitLabel(isTrue);
-                code.emitBooleanConstant(true);
-                mv.visitLabel(done);
-            }
-        };
     }
 
     @Override
@@ -217,31 +142,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
                 mv.visitLabel(isTrue);
                 code.emitBooleanConstant(false);
                 mv.visitLabel(done);
-            }
-        };
-    }
-
-    @Override
-    public BytecodeExpression bool(Location loc, final BytecodeExpression input) {
-        return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-            @Override
-            public void generate(CodeEmitter code) {
-                if (input.getType() == BaseTypeAdapter.BOOLEAN) {
-                    code.exec(input);
-                } else {
-                    MethodVisitor mv = code.getMethodVisitor();
-                    Label done = new Label();
-                    Label isTrue = new Label();
-                    Label isFalse = new Label();
-                    code.exec(input);
-                    input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
-                    mv.visitLabel(isFalse);
-                    code.emitBooleanConstant(false);
-                    mv.visitJumpInsn(Opcodes.GOTO, done);
-                    mv.visitLabel(isTrue);
-                    code.emitBooleanConstant(true);
-                    mv.visitLabel(done);
-                }
             }
         };
     }
@@ -329,11 +229,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
-    public BytecodeExpression list(Location loc, BytecodeExpression... args) {
-        return list(loc, Arrays.asList(args));
-    }
-
-    @Override
     public BytecodeExpression list(Location loc, final List<BytecodeExpression> args) {
         List<TypeWidget> types = Lists.newArrayList();
         for (BytecodeExpression e : args) {
@@ -367,7 +262,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         };
     }
 
-    @Override
     public BytecodeExpression newArray(Location loc, final TypeWidget elementType, final BytecodeExpression count) {
         return new BaseTypeExpression(NotNullableTypeWidget.create(new ArrayTypeWidget(Type.getType("[" + elementType.getJVMType().getDescriptor()), elementType))) {
             @Override
@@ -375,11 +269,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
                 code.emitNewArray(elementType, count);
             }
         };
-    }
-
-    @Override
-    public BytecodeExpression array(Location loc, TypeWidget elementType, BytecodeExpression... args) {
-        return array(loc, elementType, Arrays.asList(args));
     }
 
     @Override
@@ -406,37 +295,9 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         return invokeExact(loc, methodName, owner, returnType, args == null ? ImmutableList.of() : Arrays.asList(args));
     }
 
-    @Override
     public BytecodeExpression invokeExact(Location loc, String methodName, Class<?> owner, TypeWidget returnType, List<BytecodeExpression> args) {
         return ExactInvocation.boundInvoke(owner.isInterface() ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
                 methodName, adapt(owner, false), returnType, args).invoke(loc);
-    }
-
-    @Override
-    public BytecodeExpression invokeStatic(Location loc, String methodName, Class<?> owner, TypeWidget returnType, BytecodeExpression... args) {
-        return invokeStatic(loc, methodName, owner, returnType, args == null ? ImmutableList.of() : Arrays.asList(args));
-    }
-
-    @Override
-    public BytecodeExpression invokeStatic(Location loc, String methodName, Class<?> owner, TypeWidget returnType, List<BytecodeExpression> args) {
-        return invoke(loc, ExactInvocation.boundInvoke(Opcodes.INVOKESTATIC, methodName, adapt(owner, false), returnType, args), ImmutableList.of());
-    }
-
-    @Override
-    public BytecodeExpression invoke(Location loc, BytecodeExpression target, String operationName, BytecodeExpression... args) {
-        return invoke(loc, target, operationName, args != null ? Arrays.asList(args) : ImmutableList.of());
-    }
-
-    @Override
-    public BytecodeExpression invoke(Location loc, BytecodeExpression target, String operationName, List<BytecodeExpression> args) {
-        TypeWidget widget = target.getType();
-        return widget.invoke(target, operationName, args);
-    }
-
-    @Override
-    public BytecodeExpression call(Location location, TypeWidget outputType, String name, List<BytecodeExpression> argumentExprs) {
-        TypeWidget widget = argumentExprs.get(0).getType();
-        return widget.invoke(argumentExprs.get(0), outputType, name, argumentExprs.subList(1, argumentExprs.size()));
     }
 
     @Override
@@ -469,115 +330,12 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         return invocable.invoke(loc, castArgs);
     }
 
-    @Override
-    public BytecodeExpression negate(Location loc, BytecodeExpression input) {
-        return new BytecodeNegateExpression(loc, input);
-    }
-
-    @Override
-    public BytecodeExpression arithmetic(Location loc, ArithmeticOperation op, BytecodeExpression left, BytecodeExpression right) {
-        // a bit of a hack; should not need to go to dynamic invocation for this unless one arg is ANY
-        TypeWidget unified = source.getValueTypeAdapter().unifyTypes(ImmutableList.of(left.getType(), right.getType()));
-        // TODO: move type unification here!
-        return new BytecodeArithmeticExpression(loc, unified, op, left, right);
-    }
-
-    @Override
-    public BytecodeExpression contains(Location loc, BytecodeExpression left, BytecodeExpression right) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BytecodeExpression matches(Location loc, final BytecodeExpression left, final BytecodeExpression right) {
-        return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-            @Override
-            public void generate(CodeEmitter code) {
-                Label done = new Label();
-                Label anyIsNull = new Label();
-                CodeEmitter.BinaryCoercion coerce = code.binaryCoercion(right, Pattern.class, left, CharSequence.class, anyIsNull, anyIsNull, anyIsNull);
-                MethodVisitor mv = code.getMethodVisitor();
-                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Pattern.class), "matcher",
-                        Type.getMethodDescriptor(Type.getType(Matcher.class), Type.getType(CharSequence.class)), false);
-                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Matcher.class), "matches",
-                        Type.getMethodDescriptor(Type.BOOLEAN_TYPE), false);
-                if (coerce.leftNullable || coerce.rightNullable) {
-                    mv.visitJumpInsn(Opcodes.GOTO, done);
-                    mv.visitLabel(anyIsNull);
-                    mv.visitInsn(Opcodes.ICONST_0);
-                    mv.visitLabel(done);
-                }
-            }
-        };
-    }
-
-    @Override
-    public BytecodeExpression in(Location loc, final BytecodeExpression left, final BytecodeExpression right) {
-        return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-            @Override
-            public void generate(CodeEmitter code) {
-                Label done = new Label();
-                Label anyIsNull = new Label();
-                CodeEmitter.BinaryCoercion coerce = code.binaryCoercion(right, Collection.class, left, Object.class, anyIsNull, anyIsNull, anyIsNull);
-                MethodVisitor mv = code.getMethodVisitor();
-                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.getInternalName(Collection.class), "contains",
-                        Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getType(Object.class)), true);
-                if (coerce.leftNullable || coerce.rightNullable) {
-                    mv.visitJumpInsn(Opcodes.GOTO, done);
-                    mv.visitLabel(anyIsNull);
-                    mv.visitInsn(Opcodes.ICONST_0);
-                    mv.visitLabel(done);
-                }
-            }
-        };
-    }
-
-    @Override
-    public BytecodeExpression eq(Location loc, BytecodeExpression left, BytecodeExpression right) {
-        return new EqualsExpression(loc, left, right, false);
-    }
-
-    @Override
-    public BytecodeExpression neq(Location loc, BytecodeExpression left, BytecodeExpression right) {
-        return new EqualsExpression(loc, left, right, true);
-    }
-
-    @Override
-    public BytecodeExpression compare(Location loc, BytecodeExpression left, BytecodeExpression right) {
-        return new CompareExpression(loc, left, right);
-    }
-
-    @Override
-    public BytecodeExpression compare(Location loc, BinaryComparison booleanComparison, BytecodeExpression left, BytecodeExpression right) {
-        return new BooleanCompareExpression(loc, left, right, booleanComparison);
-    }
-
-    @Override
-    public BytecodeExpression composeCompare(List<BytecodeExpression> compares) {
-        return new MulticompareExpression(compares);
-    }
-
     public BytecodeExpression transform(Location location, BytecodeExpression iterable, Invocable function) {
         ScopeBuilder scope = scope();
         IterateBuilder it = scope.iterate(iterable);
         BytecodeExpression list = scope.evaluateInto(list(function.getReturnType()));
         it.exec(it.findExactInvoker(Collection.class, "add", BaseTypeAdapter.BOOLEAN, AnyTypeWidget.getInstance()).invoke(location, list, it.invoke(location, function, it.getItem())));
         return scope.complete(it.build(list));
-    }
-
-    @Override
-    public BytecodeExpression first(Location location, BytecodeExpression inputExpr) {
-        if (!inputExpr.getType().isIterable()) {
-            throw new ProgramCompileException(location, "Unable to iterate argument to first: %s", inputExpr.getType().getTypeName());
-        }
-        return inputExpr.getType().getIterableAdapter().first(inputExpr);
-    }
-
-    @Override
-    public BytecodeExpression length(Location location, BytecodeExpression inputExpr) {
-        if (!inputExpr.getType().isIndexable()) {
-            throw new ProgramCompileException(location, "Argument to length not indexable: %s", inputExpr.getType().getTypeName());
-        }
-        return inputExpr.getType().getIndexAdapter().length(inputExpr);
     }
 
     @Override
@@ -621,82 +379,12 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
-    public BytecodeExpression guarded(final BytecodeExpression target, final BytecodeExpression ifTargetIsNotNull, final BytecodeExpression ifTargetIsNull) {
-        if (!target.getType().isNullable()) {
-            return ifTargetIsNotNull;
-        }
-        return new BaseTypeExpression(unify(ifTargetIsNotNull.getType(), ifTargetIsNull.getType())) {
-            @Override
-            public void generate(CodeEmitter code) {
-                final MethodVisitor mv = code.getMethodVisitor();
-                Label isNull = new Label();
-                Label done = new Label();
-                code.exec(target);
-                code.nullTest(target.getType(), isNull);
-                code.pop(target.getType());
-                code.exec(ifTargetIsNotNull);
-                code.cast(getType(), ifTargetIsNotNull.getType(), isNull);
-                mv.visitJumpInsn(Opcodes.GOTO, done);
-                mv.visitLabel(isNull);
-                code.exec(ifTargetIsNull);
-                code.cast(getType(), ifTargetIsNull.getType());
-                mv.visitLabel(done);
-            }
-        };
-    }
-
-    @Override
-    public AssignableValue propertyRef(Location loc, BytecodeExpression target, String propertyName) {
-        if (!target.getType().hasProperties()) {
-            throw new ProgramCompileException(loc, "Cannot reference %s.%s", target.getType().getJVMType(), propertyName);
-        }
-        return target.getType().getPropertyAdapter().property(target, propertyName);
-    }
-
-    @Override
-    public AssignableValue indexRef(Location loc, BytecodeExpression target, BytecodeExpression index) {
-        return target.getType().getIndexAdapter().index(target, index);
-    }
-
-    @Override
     public BytecodeExpression cast(Location loc, TypeWidget type, BytecodeExpression input) {
         return new BytecodeCastExpression(type, input);
     }
 
     public BytecodeExpression cast(TypeWidget type, BytecodeExpression input) {
         return new BytecodeCastExpression(type, input);
-    }
-
-    @Override
-    public BytecodeExpression fallback(Location loc, final BytecodeExpression primary, final BytecodeExpression caught) {
-        TypeWidget unified = unify(primary.getType(), caught.getType());
-        return new BaseTypeExpression(unified) {
-            @Override
-            public void generate(CodeEmitter code) {
-                MethodVisitor mv = code.getMethodVisitor();
-                final Label start = new Label();
-                final Label endCatch = new Label();
-                final Label handler = new Label();
-                Label done = new Label();
-                // this probably should not be catching throwable and instead should be catching Exception
-                // or permit certain Errors through only
-                mv.visitTryCatchBlock(start, endCatch, handler, "java/lang/Throwable");
-                mv.visitLabel(start);
-                code.exec(primary);
-                Label isNull = new Label();
-                boolean maybeNull = code.cast(getType(), primary.getType(), isNull);
-                mv.visitJumpInsn(Opcodes.GOTO, done);
-                mv.visitLabel(endCatch);
-                mv.visitLabel(handler);
-                mv.visitInsn(Opcodes.POP);
-                if (maybeNull) {
-                    mv.visitLabel(isNull);
-                }
-                code.exec(caught);
-                code.cast(getType(), caught.getType());
-                mv.visitLabel(done);
-            }
-        };
     }
 
     @Override
@@ -708,16 +396,6 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         } else {
             return promise;
         }
-    }
-
-    @Override
-    public BytecodeExpression resolveLater(Location loc, BytecodeExpression timeout, BytecodeExpression promise, Invocable callback) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BytecodeExpression resolveLater(Location loc, BytecodeExpression timeout, BytecodeExpression promise, Invocable success, Invocable failure) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

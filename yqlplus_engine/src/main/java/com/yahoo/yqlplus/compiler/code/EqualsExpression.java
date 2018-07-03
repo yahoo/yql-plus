@@ -18,6 +18,13 @@ public class EqualsExpression implements BytecodeExpression {
     private BytecodeExpression rightExpr;
     private final boolean negate;
 
+    public EqualsExpression(Location loc, BytecodeExpression leftExpr, BytecodeExpression rightExpr) {
+        this.loc = loc;
+        this.leftExpr = leftExpr;
+        this.rightExpr = rightExpr;
+        this.negate = false;
+    }
+
     public EqualsExpression(Location loc, BytecodeExpression leftExpr, BytecodeExpression rightExpr, boolean negate) {
         this.loc = loc;
         this.leftExpr = leftExpr;

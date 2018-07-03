@@ -18,9 +18,14 @@ import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
 import com.yahoo.yqlplus.compiler.code.AssignableValue;
 import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.BooleanCompareExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeArithmeticExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeNegateExpression;
 import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.CompareExpression;
+import com.yahoo.yqlplus.compiler.code.EqualsExpression;
 import com.yahoo.yqlplus.compiler.code.ExactInvocation;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.compiler.code.GambitTypes;
@@ -31,6 +36,7 @@ import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
 import com.yahoo.yqlplus.compiler.code.LambdaInvocable;
 import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
 import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.compiler.code.MulticompareExpression;
 import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
 import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
 import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
@@ -53,6 +59,8 @@ import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
@@ -65,6 +73,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PhysicalExprOperatorCompiler {
     public static final MetricDimension EMPTY_DIMENSION = new MetricDimension();
@@ -93,7 +103,8 @@ public class PhysicalExprOperatorCompiler {
                 String name = expr.getArgument(1);
                 List<OperatorNode<PhysicalExprOperator>> arguments = expr.getArgument(2);
                 List<BytecodeExpression> argumentExprs = evaluateExpressions(program, context, arguments);
-                return scope.call(expr.getLocation(), outputType, name, argumentExprs);
+                TypeWidget widget = argumentExprs.get(0).getType();
+                return widget.invoke(argumentExprs.get(0), outputType, name, argumentExprs.subList(1, argumentExprs.size()));
             }
             case CONSTANT: {
                 TypeWidget t = expr.getArgument(0);
@@ -148,7 +159,10 @@ public class PhysicalExprOperatorCompiler {
             }
             case FIRST: {
                 BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
-                return scope.first(expr.getLocation(), inputExpr);
+                if (!inputExpr.getType().isIterable()) {
+                    throw new ProgramCompileException(expr.getLocation(), "Unable to iterate argument to first: %s", inputExpr.getType().getTypeName());
+                }
+                return inputExpr.getType().getIterableAdapter().first(inputExpr);
             }
             case SINGLETON: {
                 OperatorNode<PhysicalExprOperator> value = expr.getArgument(0);
@@ -157,7 +171,10 @@ public class PhysicalExprOperatorCompiler {
             }
             case LENGTH: {
                 BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
-                return scope.length(expr.getLocation(), inputExpr);
+                if (!inputExpr.getType().isIndexable()) {
+                    throw new ProgramCompileException(expr.getLocation(), "Argument to length not indexable: %s", inputExpr.getType().getTypeName());
+                }
+                return inputExpr.getType().getIndexAdapter().length(inputExpr);
             }
             case PROPREF: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
@@ -221,8 +238,7 @@ public class PhysicalExprOperatorCompiler {
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(1);
                 final BytecodeExpression leftExpr = evaluateExpression(program, context, left);
                 final BytecodeExpression rightExpr = evaluateExpression(program, context, right);
-                return expr.getOperator() == PhysicalExprOperator.EQ ? scope.eq(expr.getLocation(), leftExpr, rightExpr)
-                        : scope.neq(expr.getLocation(), leftExpr, rightExpr);
+                return new EqualsExpression(expr.getLocation(), leftExpr, rightExpr, expr.getOperator() == PhysicalExprOperator.NEQ);
             }
             case BOOLEAN_COMPARE: {
                 final BinaryComparison booleanComparison = expr.getArgument(0);
@@ -230,7 +246,7 @@ public class PhysicalExprOperatorCompiler {
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(2);
                 final BytecodeExpression leftExpr = evaluateExpression(program, context, left);
                 final BytecodeExpression rightExpr = evaluateExpression(program, context, right);
-                return scope.compare(expr.getLocation(), booleanComparison, leftExpr, rightExpr);
+                return new BooleanCompareExpression(expr.getLocation(), leftExpr, rightExpr, booleanComparison);
             }
 
             case BINARY_MATH: {
@@ -239,19 +255,22 @@ public class PhysicalExprOperatorCompiler {
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(2);
                 final BytecodeExpression leftExpr = evaluateExpression(program, context, left);
                 final BytecodeExpression rightExpr = evaluateExpression(program, context, right);
-                return scope.arithmetic(expr.getLocation(), arithmeticOperation, leftExpr, rightExpr);
+                // a bit of a hack; should not need to go to dynamic invocation for this unless one arg is ANY
+                TypeWidget unified = scope.getValueTypeAdapter().unifyTypes(ImmutableList.of(leftExpr.getType(), rightExpr.getType()));
+                // TODO: move type unification here!
+                return new BytecodeArithmeticExpression(expr.getLocation(), unified, arithmeticOperation, leftExpr, rightExpr);
             }
             case COMPARE: {
                 OperatorNode<PhysicalExprOperator> left = expr.getArgument(0);
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(1);
                 final BytecodeExpression leftExpr = evaluateExpression(program, context, left);
                 final BytecodeExpression rightExpr = evaluateExpression(program, context, right);
-                return scope.compare(expr.getLocation(), leftExpr, rightExpr);
+                return new CompareExpression(expr.getLocation(), leftExpr, rightExpr);
             }
             case MULTICOMPARE: {
                 List<OperatorNode<PhysicalExprOperator>> exprs = expr.getArgument(0);
                 List<BytecodeExpression> expressions = evaluateExpressions(program, context, exprs);
-                return scope.composeCompare(expressions);
+                return new MulticompareExpression(expressions);
             }
             case COALESCE: {
                 List<OperatorNode<PhysicalExprOperator>> exprs = expr.getArgument(0);
@@ -353,32 +372,64 @@ public class PhysicalExprOperatorCompiler {
             }
             case OR: {
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(0);
-                return scope.or(expr.getLocation(), evaluateExpressions(program, context, args));
+                List<BytecodeExpression> inputs = evaluateExpressions(program, context, args);
+                return new BooleanOrExpression(inputs);
             }
             case AND: {
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(0);
-                return scope.and(expr.getLocation(), evaluateExpressions(program, context, args));
+                List<BytecodeExpression> inputs = evaluateExpressions(program, context, args);
+                return new BooleanAndExpression(inputs);
             }
             case IN: {
                 OperatorNode<PhysicalExprOperator> left = expr.getArgument(0);
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(1);
-                return scope.in(expr.getLocation(),
-                        evaluateExpression(program, context, left),
-                        evaluateExpression(program, context, right));
+                BytecodeExpression leftExpr = evaluateExpression(program, context, left);
+                BytecodeExpression rightExpr = evaluateExpression(program, context, right);
+                return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
+                    @Override
+                    public void generate(CodeEmitter code) {
+                        Label done = new Label();
+                        Label anyIsNull = new Label();
+                        CodeEmitter.BinaryCoercion coerce = code.binaryCoercion(rightExpr, Collection.class, leftExpr, Object.class, anyIsNull, anyIsNull, anyIsNull);
+                        MethodVisitor mv = code.getMethodVisitor();
+                        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.getInternalName(Collection.class), "contains",
+                                Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getType(Object.class)), true);
+                        if (coerce.leftNullable || coerce.rightNullable) {
+                            mv.visitJumpInsn(Opcodes.GOTO, done);
+                            mv.visitLabel(anyIsNull);
+                            mv.visitInsn(Opcodes.ICONST_0);
+                            mv.visitLabel(done);
+                        }
+                    }
+                };
             }
             case CONTAINS: {
-                OperatorNode<PhysicalExprOperator> left = expr.getArgument(0);
-                OperatorNode<PhysicalExprOperator> right = expr.getArgument(1);
-                return scope.contains(expr.getLocation(),
-                        evaluateExpression(program, context, left),
-                        evaluateExpression(program, context, right));
+                throw new UnsupportedOperationException();
             }
             case MATCHES: {
                 OperatorNode<PhysicalExprOperator> left = expr.getArgument(0);
                 OperatorNode<PhysicalExprOperator> right = expr.getArgument(1);
-                return scope.matches(expr.getLocation(),
-                        evaluateExpression(program, context, left),
-                        evaluateExpression(program, context, right));
+                BytecodeExpression leftExpr = evaluateExpression(program, context, left);
+                BytecodeExpression rightExpr = evaluateExpression(program, context, right);
+                return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
+                    @Override
+                    public void generate(CodeEmitter code) {
+                        Label done = new Label();
+                        Label anyIsNull = new Label();
+                        CodeEmitter.BinaryCoercion coerce = code.binaryCoercion(rightExpr, Pattern.class, leftExpr, CharSequence.class, anyIsNull, anyIsNull, anyIsNull);
+                        MethodVisitor mv = code.getMethodVisitor();
+                        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Pattern.class), "matcher",
+                                Type.getMethodDescriptor(Type.getType(Matcher.class), Type.getType(CharSequence.class)), false);
+                        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Matcher.class), "matches",
+                                Type.getMethodDescriptor(Type.BOOLEAN_TYPE), false);
+                        if (coerce.leftNullable || coerce.rightNullable) {
+                            mv.visitJumpInsn(Opcodes.GOTO, done);
+                            mv.visitLabel(anyIsNull);
+                            mv.visitInsn(Opcodes.ICONST_0);
+                            mv.visitLabel(done);
+                        }
+                    }
+                };
             }
             case NOT: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
@@ -386,7 +437,7 @@ public class PhysicalExprOperatorCompiler {
             }
             case NEGATE: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
-                return scope.negate(expr.getLocation(), evaluateExpression(program, context, target));
+                return new BytecodeNegateExpression(expr.getLocation(), evaluateExpression(program, context, target));
             }
             case IS_NULL: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
@@ -394,18 +445,44 @@ public class PhysicalExprOperatorCompiler {
             }
             case BOOL: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
-                return scope.bool(expr.getLocation(), evaluateExpression(program, context, target));
+                BytecodeExpression input =  evaluateExpression(program, context, target);
+                return new BooleanCoerceExpression(input);
             }
             case ARRAY: {
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(0);
                 return scope.list(expr.getLocation(), evaluateExpressions(program, context, args));
             }
             case CATCH: {
-                OperatorNode<PhysicalExprOperator> primary = expr.getArgument(0);
-                OperatorNode<PhysicalExprOperator> fallback = expr.getArgument(1);
-                return scope.fallback(expr.getLocation(),
-                        evaluateExpression(program, context, primary),
-                        evaluateExpression(program, context, fallback));
+                BytecodeExpression primary = evaluateExpression(program, context, expr.getArgument(0));
+                BytecodeExpression fallback = evaluateExpression(program, context, expr.getArgument(1));
+                TypeWidget unified = scope.unify(primary.getType(), fallback.getType());
+                return new BaseTypeExpression(unified) {
+                    @Override
+                    public void generate(CodeEmitter code) {
+                        MethodVisitor mv = code.getMethodVisitor();
+                        final Label start = new Label();
+                        final Label endCatch = new Label();
+                        final Label handler = new Label();
+                        Label done = new Label();
+                        // this probably should not be catching throwable and instead should be catching Exception
+                        // or permit certain Errors through only
+                        mv.visitTryCatchBlock(start, endCatch, handler, "java/lang/Throwable");
+                        mv.visitLabel(start);
+                        code.exec(primary);
+                        Label isNull = new Label();
+                        boolean maybeNull = code.cast(getType(), primary.getType(), isNull);
+                        mv.visitJumpInsn(Opcodes.GOTO, done);
+                        mv.visitLabel(endCatch);
+                        mv.visitLabel(handler);
+                        mv.visitInsn(Opcodes.POP);
+                        if (maybeNull) {
+                            mv.visitLabel(isNull);
+                        }
+                        code.exec(fallback);
+                        code.cast(getType(), fallback.getType());
+                        mv.visitLabel(done);
+                    }
+                };
             }
             case NEW: {
                 TypeWidget type = expr.getArgument(0);
@@ -612,6 +689,89 @@ public class PhysicalExprOperatorCompiler {
         void item(GambitCreator.IterateBuilder loop, BytecodeExpression item);
 
         BytecodeExpression end(GambitCreator.ScopeBuilder scope, GambitCreator.IterateBuilder loop);
+    }
+
+    private static class BooleanAndExpression extends BaseTypeExpression {
+        private final List<BytecodeExpression> inputs;
+
+        public BooleanAndExpression(List<BytecodeExpression> inputs) {
+            super(BaseTypeAdapter.BOOLEAN);
+            this.inputs = inputs;
+        }
+
+        @Override
+        public void generate(CodeEmitter code) {
+            MethodVisitor mv = code.getMethodVisitor();
+            Label done = new Label();
+            Label isFalse = new Label();
+            for (BytecodeExpression input : inputs) {
+                Label isTrue = new Label();
+                code.exec(input);
+                input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
+                mv.visitLabel(isTrue);
+            }
+            code.emitBooleanConstant(true);
+            mv.visitJumpInsn(Opcodes.GOTO, done);
+            mv.visitLabel(isFalse);
+            code.emitBooleanConstant(false);
+            mv.visitLabel(done);
+        }
+    }
+
+    private static class BooleanOrExpression extends BaseTypeExpression {
+        private final List<BytecodeExpression> inputs;
+
+        public BooleanOrExpression(List<BytecodeExpression> inputs) {
+            super(BaseTypeAdapter.BOOLEAN);
+            this.inputs = inputs;
+        }
+
+        @Override
+        public void generate(CodeEmitter code) {
+            MethodVisitor mv = code.getMethodVisitor();
+            Label done = new Label();
+            Label isTrue = new Label();
+            for (BytecodeExpression input : inputs) {
+                Label isFalse = new Label();
+                code.exec(input);
+                input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
+                mv.visitLabel(isFalse);
+            }
+            code.emitBooleanConstant(false);
+            mv.visitJumpInsn(Opcodes.GOTO, done);
+            mv.visitLabel(isTrue);
+            code.emitBooleanConstant(true);
+            mv.visitLabel(done);
+        }
+    }
+
+    private static class BooleanCoerceExpression extends BaseTypeExpression {
+        private final BytecodeExpression input;
+
+        public BooleanCoerceExpression(BytecodeExpression input) {
+            super(BaseTypeAdapter.BOOLEAN);
+            this.input = input;
+        }
+
+        @Override
+        public void generate(CodeEmitter code) {
+            if (input.getType() == BaseTypeAdapter.BOOLEAN) {
+                code.exec(input);
+            } else {
+                MethodVisitor mv = code.getMethodVisitor();
+                Label done = new Label();
+                Label isTrue = new Label();
+                Label isFalse = new Label();
+                code.exec(input);
+                input.getType().getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
+                mv.visitLabel(isFalse);
+                code.emitBooleanConstant(false);
+                mv.visitJumpInsn(Opcodes.GOTO, done);
+                mv.visitLabel(isTrue);
+                code.emitBooleanConstant(true);
+                mv.visitLabel(done);
+            }
+        }
     }
 
     abstract class BaseStreamSink implements StreamSink {
@@ -1181,10 +1341,11 @@ public class PhysicalExprOperatorCompiler {
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
             if (offset != null) {
                 loop.inc(off, -1);
-                loop.next(loop.compare(offset.getLocation(), BinaryComparison.GTEQ, off, loop.constant(0)));
+
+                loop.next(new BooleanCompareExpression(offset.getLocation(), off, loop.constant(0), BinaryComparison.GTEQ));
             }
             if (limit != null) {
-                loop.abort(loop.compare(limit.getLocation(), BinaryComparison.LT, lmt, loop.constant(1)));
+                loop.abort(new BooleanCompareExpression(limit.getLocation(),lmt, loop.constant(1),  BinaryComparison.LT));
                 loop.inc(lmt, -1);
             }
             super.item(loop, item);

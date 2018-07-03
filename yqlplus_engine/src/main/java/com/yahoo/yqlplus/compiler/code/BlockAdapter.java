@@ -6,10 +6,6 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-
 public class BlockAdapter extends ExpressionHandler implements GambitCreator.ScopeBuilder {
     public BlockAdapter(ASMClassSource source, LocalCodeChunk body) {
         super(source);
@@ -27,23 +23,4 @@ public class BlockAdapter extends ExpressionHandler implements GambitCreator.Sco
         };
     }
 
-    @Override
-    public void jump(BytecodeExpression test, final BytecodeExpression result) {
-        final BytecodeExpression testExpr = test;
-        final TypeWidget type = testExpr.getType();
-        body.add(new BytecodeSequence() {
-            @Override
-            public void generate(CodeEmitter code) {
-                code.exec(testExpr);
-                Label isTrue = new Label();
-                Label isFalse = new Label();
-                type.getComparisionAdapter().coerceBoolean(code, isTrue, isFalse, isFalse);
-                MethodVisitor mv = code.getMethodVisitor();
-                mv.visitLabel(isTrue);
-                code.exec(result);
-                mv.visitJumpInsn(Opcodes.GOTO, body.getEnd());
-                mv.visitLabel(isFalse);
-            }
-        });
-    }
 }
