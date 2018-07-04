@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableMap;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;

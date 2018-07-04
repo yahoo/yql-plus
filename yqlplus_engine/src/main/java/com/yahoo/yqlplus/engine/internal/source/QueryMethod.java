@@ -10,18 +10,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
 import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ExprScope;
-import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamValue;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import com.yahoo.yqlplus.operator.*;
 
 import java.util.List;
 

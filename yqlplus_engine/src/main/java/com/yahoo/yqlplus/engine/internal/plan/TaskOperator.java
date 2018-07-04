@@ -6,16 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.plan;
 
-import com.google.common.base.Predicate;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PlanOperatorTypes;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.PlanOperatorTypes;
 
 import java.util.List;
 

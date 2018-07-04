@@ -9,14 +9,12 @@ package com.yahoo.yqlplus.engine.internal.plan;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.yahoo.yqlplus.engine.internal.plan.ast.*;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamValue;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.ProjectOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.logical.SortOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.operator.*;
 
 import java.util.List;
 import java.util.Set;

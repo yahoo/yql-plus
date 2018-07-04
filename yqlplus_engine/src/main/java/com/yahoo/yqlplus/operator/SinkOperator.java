@@ -4,20 +4,26 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
+import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.language.parser.Location;
 
-public enum PhysicalProjectOperator implements Operator {
-    FIELD(PhysicalExprOperator.class, String.class),  // FIELD expr name
-    MERGE(PhysicalExprOperator.class);                // MERGE_RECORD name (alias of record to merge)
 
+public enum SinkOperator implements Operator {
+    ACCUMULATE(),
+    STREAM(PhysicalExprOperator.class);
+
+    public static OperatorNode<SinkOperator> create(Location loc, SinkOperator operator, Object... arguments) {
+        return OperatorNode.create(loc, operator, arguments);
+    }
 
     private final ArgumentsTypeChecker checker;
 
-    PhysicalProjectOperator(Object... types) {
+    SinkOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 
@@ -26,5 +32,4 @@ public enum PhysicalProjectOperator implements Operator {
     public void checkArguments(Object... args) {
         checker.check(args);
     }
-
 }

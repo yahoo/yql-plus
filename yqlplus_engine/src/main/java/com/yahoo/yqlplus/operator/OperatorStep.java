@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -38,13 +38,11 @@ public final class OperatorStep implements Step {
 
     private final OperatorNode<PhysicalOperator> compute;
     private final OperatorValue value;
-    private final boolean async;
     private Set<Value> before = ImmutableSet.of();
 
     private OperatorStep(OperatorNode<PhysicalOperator> compute, OperatorValue value) {
         this.compute = compute;
         this.value = value;
-        this.async = compute.getOperator().asyncFor(compute);
         value.setStep(this);
     }
 
@@ -74,10 +72,5 @@ public final class OperatorStep implements Step {
     @Override
     public OperatorValue getOutput() {
         return value;
-    }
-
-    @Override
-    public boolean isAsync() {
-        return async;
     }
 }

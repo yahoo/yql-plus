@@ -13,65 +13,23 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
-import com.yahoo.yqlplus.compiler.code.BooleanCompareExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeArithmeticExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.BytecodeNegateExpression;
-import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.CompareExpression;
-import com.yahoo.yqlplus.compiler.code.EqualsExpression;
-import com.yahoo.yqlplus.compiler.code.ExactInvocation;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitTypes;
-import com.yahoo.yqlplus.compiler.code.InvocableBuilder;
-import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
-import com.yahoo.yqlplus.compiler.code.LambdaInvocable;
-import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
-import com.yahoo.yqlplus.compiler.code.MulticompareExpression;
-import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
-import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
 import com.yahoo.yqlplus.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalProjectOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.SinkOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import com.yahoo.yqlplus.operator.*;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,16 +45,12 @@ public class PhysicalExprOperatorCompiler {
 
     public BytecodeExpression evaluateExpression(final BytecodeExpression program, final BytecodeExpression context, final OperatorNode<PhysicalExprOperator> expr) {
         switch (expr.getOperator()) {
-            case ASYNC_INVOKE:
             case INVOKE: {
                 GambitCreator.Invocable invocable = expr.getArgument(0);
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(1);
                 List<BytecodeExpression> arguments = evaluateExpressions(program, context, args);
                 BytecodeExpression result = scope.invoke(expr.getLocation(), invocable, arguments);
-                if (expr.getOperator() == PhysicalExprOperator.ASYNC_INVOKE) {
-                    return scope.resolve(expr.getLocation(), getTimeout(context, expr.getLocation()), result);
-                }
-                return result;
+                return scope.resolve(expr.getLocation(), getTimeout(context, expr.getLocation()), result);
             }
             case CALL: {
                 TypeWidget outputType = expr.getArgument(0);

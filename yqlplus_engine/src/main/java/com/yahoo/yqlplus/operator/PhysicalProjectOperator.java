@@ -4,19 +4,20 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
 
-public enum FunctionOperator implements Operator {
-    FUNCTION(TypeCheckers.LIST_OF_STRING, PhysicalExprOperator.class);
+public enum PhysicalProjectOperator implements Operator {
+    FIELD(PhysicalExprOperator.class, String.class),  // FIELD expr name
+    MERGE(PhysicalExprOperator.class);                // MERGE_RECORD name (alias of record to merge)
 
 
     private final ArgumentsTypeChecker checker;
 
-    FunctionOperator(Object... types) {
+    PhysicalProjectOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 
@@ -25,4 +26,5 @@ public enum FunctionOperator implements Operator {
     public void checkArguments(Object... args) {
         checker.check(args);
     }
+
 }

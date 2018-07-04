@@ -10,14 +10,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
+import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.operator.OperatorValue;
 import org.objectweb.asm.Opcodes;
 
 import java.util.List;

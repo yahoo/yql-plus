@@ -4,15 +4,15 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
@@ -76,7 +76,6 @@ public enum PhysicalExprOperator implements Operator {
 
     CALL(TypeWidget.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKE(GambitCreator.Invocable.class, PlanOperatorTypes.EXPRS),
-    ASYNC_INVOKE(GambitCreator.Invocable.class, PlanOperatorTypes.EXPRS),
 
     VALUE(OperatorValue.class),
     LOCAL(String.class),
@@ -113,88 +112,6 @@ public enum PhysicalExprOperator implements Operator {
         checker.check(args);
     }
 
-
-    public boolean asyncFor(OperatorNode<PhysicalExprOperator> node) {
-        final boolean[] result = new boolean[]{false};
-        node.visitNode(new OperatorNodeVisitor() {
-            @Override
-            public void visit(Object arg) {
-
-            }
-
-            @Override
-            public <T extends Operator> boolean enter(OperatorNode<T> node) {
-                return !result[0];
-            }
-
-            @Override
-            public <T extends Operator> void exit(OperatorNode<T> node) {
-                if (node.getOperator() instanceof PhysicalExprOperator) {
-                    OperatorNode<PhysicalExprOperator> expr = (OperatorNode<PhysicalExprOperator>) node;
-                    switch (expr.getOperator()) {
-                        case ROOT_CONTEXT:
-                        case TIMEOUT_MAX:
-                        case TRACE_CONTEXT:
-                        case END_CONTEXT:
-                        case NEW:
-                        case AND:
-                        case OR:
-                        case EQ:
-                        case FIRST:
-                        case SINGLETON:
-                        case LENGTH:
-                        case NEQ:
-                        case BOOLEAN_COMPARE:
-                        case IN:
-                        case IS_NULL:
-                        case MATCHES:
-                        case CONTAINS:
-                        case BINARY_MATH:
-                        case COMPARE:
-                        case MULTICOMPARE:
-                        case COALESCE:
-                        case IF:
-                        case NEGATE:
-                        case NOT:
-                        case RECORD:
-                        case PROJECT:
-                        case RECORD_AS:
-                        case ARRAY:
-                        case INDEX:
-                        case PROPREF:
-                        case CALL:
-                        case INVOKE:
-                        case VALUE:
-                        case LOCAL:
-                        case CONSTANT:
-                        case NULL:
-                        case FOREACH:
-                        case INJECT_MEMBERS:
-                        case CONCAT:
-                        case GENERATE_KEYS:
-                        case BOOL:
-
-                        case CATCH:
-                        case TIMEOUT_GUARD:
-                        case CAST:
-                        case STREAM_EXECUTE:
-                        case STREAM_CREATE:
-                        case WITH_CONTEXT:
-                        case CURRENT_CONTEXT:
-                            return;
-                        case ENFORCE_TIMEOUT:
-                        case STREAM_COMPLETE:
-                        case ASYNC_INVOKE:
-                            result[0] = true;
-                            break;
-                        default:
-                            throw new IllegalArgumentException("unknown PhysicalExprOperator: " + node.getOperator());
-                    }
-                }
-            }
-        });
-        return result[0];
-    }
 
     public List<String> localsFor(OperatorNode<PhysicalExprOperator> node) {
         final Set<String> result = Sets.newHashSet();

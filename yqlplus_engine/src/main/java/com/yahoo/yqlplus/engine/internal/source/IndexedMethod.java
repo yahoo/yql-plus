@@ -9,14 +9,14 @@ package com.yahoo.yqlplus.engine.internal.source;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.StreamValue;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +65,7 @@ public class IndexedMethod {
         }
         callArgs.addAll(moreArguments);
         OperatorNode<PhysicalExprOperator> invocation = OperatorNode.create(location,
-                invoker.getReturnType().isPromise() ? PhysicalExprOperator.ASYNC_INVOKE : PhysicalExprOperator.INVOKE,
+                PhysicalExprOperator.INVOKE,
                 invoker,
                 callArgs);
         if (minimumBudget > 0 || maximumBudget > 0) {

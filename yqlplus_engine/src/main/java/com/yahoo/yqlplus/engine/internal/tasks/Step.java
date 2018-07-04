@@ -12,6 +12,4 @@ public interface Step {
     Set<? extends Value> getInputs();
 
     Value getOutput();
-
-    boolean isAsync();
 }

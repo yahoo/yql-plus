@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.language.operator.OperatorNode;

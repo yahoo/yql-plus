@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.operator;
 
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
@@ -65,25 +65,6 @@ public enum PhysicalOperator implements Operator {
             }
             case EXECUTE:
                 return false;
-            default:
-                throw new IllegalArgumentException("unknown PhysicalOperator: " + op);
-        }
-    }
-
-    public boolean asyncFor(OperatorNode<PhysicalOperator> op) {
-        switch (op.getOperator()) {
-            case OUTPUT:
-            case END:
-            case REQUIRED_ARGUMENT:
-            case OPTIONAL_ARGUMENT:
-                return false;
-            case EXECUTE:
-            case EVALUATE: {
-                OperatorNode<PhysicalExprOperator> expr = op.getArgument(1);
-                return expr.getOperator().asyncFor(expr);
-            }
-            case EVALUATE_GUARD:
-                return true;
             default:
                 throw new IllegalArgumentException("unknown PhysicalOperator: " + op);
         }
