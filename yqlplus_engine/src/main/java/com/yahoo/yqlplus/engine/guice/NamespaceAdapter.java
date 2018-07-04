@@ -12,14 +12,10 @@ import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.api.Namespace;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.SourceType;
-import com.yahoo.yqlplus.engine.internal.source.ExportUnitGenerator;
-import com.yahoo.yqlplus.engine.internal.source.SourceUnitGenerator;
+import com.yahoo.yqlplus.engine.internal.plan.*;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.source.ExportUnitGenerator;
+import com.yahoo.yqlplus.source.SourceUnitGenerator;
 
 import java.util.List;
 

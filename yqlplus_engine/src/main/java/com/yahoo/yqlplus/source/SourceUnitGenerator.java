@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.source;
+package com.yahoo.yqlplus.source;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -16,41 +16,22 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.api.annotations.CompoundKey;
-import com.yahoo.yqlplus.api.annotations.DefaultValue;
-import com.yahoo.yqlplus.api.annotations.Delete;
-import com.yahoo.yqlplus.api.annotations.Insert;
-import com.yahoo.yqlplus.api.annotations.Key;
-import com.yahoo.yqlplus.api.annotations.Query;
+import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.annotations.Set;
-import com.yahoo.yqlplus.api.annotations.TimeoutBudget;
-import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLNamePair;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
+import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.runtime.FieldWriter;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.compiler.code.StructBuilder;
 import com.yahoo.yqlplus.engine.internal.plan.DispatchSourceTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.plan.SourceType;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.runtime.FieldWriter;
-import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.objectweb.asm.Opcodes;
@@ -58,12 +39,7 @@ import org.objectweb.asm.Opcodes;
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Generated one or more classes adapting Source-API equipped classes.

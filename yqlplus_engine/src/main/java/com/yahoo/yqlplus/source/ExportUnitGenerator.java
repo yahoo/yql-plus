@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.source;
+package com.yahoo.yqlplus.source;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -18,23 +18,14 @@ import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.annotations.Set;
 import com.yahoo.yqlplus.api.trace.Tracer;
-import com.yahoo.yqlplus.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.source;
+package com.yahoo.yqlplus.source;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

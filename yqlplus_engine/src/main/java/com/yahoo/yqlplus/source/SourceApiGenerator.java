@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.source;
+package com.yahoo.yqlplus.source;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -17,15 +17,7 @@ import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.GambitTypes;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.lang.annotation.Annotation;

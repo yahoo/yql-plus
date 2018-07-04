@@ -4,14 +4,14 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.source;
+package com.yahoo.yqlplus.source;
 
-import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
 import com.yahoo.yqlplus.compiler.code.TypeWidget;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class MissingRequiredFieldExpr implements BytecodeExpression {
     private final String className;

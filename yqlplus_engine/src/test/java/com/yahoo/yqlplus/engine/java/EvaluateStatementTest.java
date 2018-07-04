@@ -17,8 +17,8 @@ import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.internal.bytecode.CompilingTestBase;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.engine.internal.source.ExportUnitGenerator;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.source.ExportUnitGenerator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
