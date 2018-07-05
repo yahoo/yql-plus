@@ -6,22 +6,13 @@
 
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
-import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.cloud.metrics.api.MetricType;
-import com.yahoo.cloud.metrics.api.RequestEvent;
-import com.yahoo.cloud.metrics.api.RequestMetric;
-import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
-import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
+import com.yahoo.cloud.metrics.api.*;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.ExecuteScoped;
@@ -41,84 +32,28 @@ import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.java.JavaTestModule.MetricModule;
 import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 import com.yahoo.yqlplus.engine.scope.MapExecutionScope;
-import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource;
+import com.yahoo.yqlplus.engine.sources.*;
 import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource.ArraySyntaxTestRecord;
-import com.yahoo.yqlplus.engine.sources.AsyncInsertMovieSource;
-import com.yahoo.yqlplus.engine.sources.AsyncUpdateMovieSource;
-import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
-import com.yahoo.yqlplus.engine.sources.BatchKeySource;
-import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
-import com.yahoo.yqlplus.engine.sources.BulkResponse;
-import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
-import com.yahoo.yqlplus.engine.sources.ErrorSource;
-import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
-import com.yahoo.yqlplus.engine.sources.FRSource;
-import com.yahoo.yqlplus.engine.sources.InjectedArgumentSource;
-import com.yahoo.yqlplus.engine.sources.InsertMovieSourceSingleField;
-import com.yahoo.yqlplus.engine.sources.InsertSourceMissingSetAnnotation;
-import com.yahoo.yqlplus.engine.sources.InsertSourceWithDuplicateSetParameters;
-import com.yahoo.yqlplus.engine.sources.InsertSourceWithMultipleInsertMethods;
-import com.yahoo.yqlplus.engine.sources.IntSource;
-import com.yahoo.yqlplus.engine.sources.JsonArraySource;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource1;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource2;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource3;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource4;
-import com.yahoo.yqlplus.engine.sources.KeyedSource;
 import com.yahoo.yqlplus.engine.sources.KeyedSource.IntegerKeyed;
-import com.yahoo.yqlplus.engine.sources.ListOfMapSource;
-import com.yahoo.yqlplus.engine.sources.LongDoubleMovieSource;
-import com.yahoo.yqlplus.engine.sources.LongMovie;
-import com.yahoo.yqlplus.engine.sources.LongSource;
-import com.yahoo.yqlplus.engine.sources.MapSource;
 import com.yahoo.yqlplus.engine.sources.MapSource.SampleId;
-import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource;
 import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource.MapSyntaxTestRecord;
-import com.yahoo.yqlplus.engine.sources.MethodTracingSource;
-import com.yahoo.yqlplus.engine.sources.MetricEmitterSource;
-import com.yahoo.yqlplus.engine.sources.Movie;
-import com.yahoo.yqlplus.engine.sources.MovieSource;
-import com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet;
-import com.yahoo.yqlplus.engine.sources.MovieSourceWithLongUuid;
-import com.yahoo.yqlplus.engine.sources.MovieSourceWithMetricEmitter;
-import com.yahoo.yqlplus.engine.sources.MovieUDF;
-import com.yahoo.yqlplus.engine.sources.NestedMapSource;
-import com.yahoo.yqlplus.engine.sources.NestedSource;
-import com.yahoo.yqlplus.engine.sources.PersonMakerSource;
-import com.yahoo.yqlplus.engine.sources.Sample;
-import com.yahoo.yqlplus.engine.sources.SampleListSource;
-import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
-import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
-import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
-import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.SingleKeySource;
-import com.yahoo.yqlplus.engine.sources.SingleListOfStringKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.SingleStringKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.StatusSource;
-import com.yahoo.yqlplus.engine.sources.StringUtilUDF;
-import com.yahoo.yqlplus.engine.sources.UnrulyRequestSource;
 import com.yahoo.yqlplus.engine.sources.UnrulyRequestSource.UnrulyRequestHandle;
 import com.yahoo.yqlplus.engine.sources.UnrulyRequestSource.UnrulyRequestRecord;
-import com.yahoo.yqlplus.engine.sources.UpdateMovieSource;
-import com.yahoo.yqlplus.engine.sources.UpdateMovieSourceWithUnsortedParameters;
 import com.yahoo.yqlplus.engine.tools.TraceFormatter;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.*;
 
 @Test()
 public class JavaProgramCompilerTest {
@@ -382,19 +317,6 @@ public class JavaProgramCompilerTest {
         // Get the Foo instance contained in the map of ExecuteScoped objects exposed by the program result
         Assert.assertTrue(programResult.getExecuteScopedObjects().contains(fooResult),
                 "Collection of ExecuteScoped objects exposed by ProgramResult does not contain Foo instance");
-    }
-
-    @Test
-    public void testInjectedParameters() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new UnrulyRequestModule(), new SourceBindingModule("iasource", InjectedArgumentSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("SELECT * from iasource(10) OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of(), true, createUnrulyScope(100));
-        Assert.assertEquals(myResult.getResult("foo").get().getResult(), ImmutableList.of(new UnrulyRequestRecord(10)));
-
-        program = compiler.compile("SELECT * from iasource OUTPUT as foo;");
-        myResult = program.run(ImmutableMap.of(), true, createUnrulyScope(100));
-        Assert.assertEquals(myResult.getResult("foo").get().getResult(), ImmutableList.of(new UnrulyRequestRecord(100)));
     }
 
     @Test

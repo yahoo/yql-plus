@@ -6,11 +6,7 @@
 
 package com.yahoo.yqlplus.source;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.BindingAnnotation;
-import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.yqlplus.api.annotations.*;
@@ -60,23 +56,6 @@ public class SourceApiGenerator {
         throw new YQLTypeException(String.format("method error: %s.%s: %s", method.getDeclaringClass().getName(), method.getName(), message));
     }
 
-    private ObjectBuilder.FieldBuilder createInjectedField(ObjectBuilder target, GambitTypes gambitScope, java.lang.reflect.Type genericType, Annotation[] annotation) {
-        TypeLiteral<?> genericParam = TypeLiteral.get(genericType);
-        ObjectBuilder.FieldBuilder injectedField = target.field(gensym("inject$"), gambitScope.adapt(genericParam.getRawType(), false));
-        injectedField.annotate(Inject.class);
-        Annotation bindingAnnotation = null;
-        for (Annotation ann : annotation) {
-            if (ann.getClass().isAnnotationPresent(BindingAnnotation.class)) {
-                Preconditions.checkArgument(bindingAnnotation == null, "Already found a binding annotation %s and now found another %s: that's too many", bindingAnnotation, ann);
-                bindingAnnotation = ann;
-            }
-        }
-        if (bindingAnnotation != null) {
-            injectedField.annotate(bindingAnnotation);
-        }
-        return injectedField;
-    }
-
     protected void visitMethodArguments(ObjectBuilder target, Method method, SourceArgumentVisitor bodyBuilder, AssignableValue contextVar, ScopedBuilder catchBody, Iterator<String> freeArguments, List<BytecodeExpression> invocationArguments, GambitCreator.ScopeBuilder block) {
         Class<?>[] arguments = method.getParameterTypes();
         java.lang.reflect.Type[] genericArguments = method.getGenericParameterTypes();
@@ -107,9 +86,6 @@ public class SourceApiGenerator {
                     }
                     BytecodeExpression timeoutExpr = catchBody.propertyValue(Location.NONE, contextVar, "timeout");
                     invocationArguments.add(catchBody.invokeExact(Location.NONE, "getRemaining", Timeout.class, BaseTypeAdapter.INT64, timeoutExpr, catchBody.constant(TimeUnit.MILLISECONDS)));
-                } else if (annotate instanceof Injected) {
-                    ObjectBuilder.FieldBuilder fld = createInjectedField(target, catchBody, genericArguments[i], annotations[i]);
-                    invocationArguments.add(fld.get(catchBody.local("this")));
                 } else if (annotate instanceof Trace) {
                     if (!Tracer.class.isAssignableFrom(parameterType)) {
                         reportMethodParameterException("Trace", method, "@Trace argument type must be a %s", Tracer.class.getName());
@@ -151,7 +127,6 @@ public class SourceApiGenerator {
                     DefaultValue.class,
                     CompoundKey.class,
                     TimeoutMilliseconds.class,
-                    Injected.class,
                     Trace.class,
                     Emitter.class);
 
