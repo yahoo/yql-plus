@@ -135,16 +135,6 @@ public class ArrayTypeWidget implements TypeWidget {
     }
 
     @Override
-    public boolean isResult() {
-        return false;
-    }
-
-    @Override
-    public ResultAdapter getResultAdapter() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getTypeName() {
         return type.getDescriptor();
     }

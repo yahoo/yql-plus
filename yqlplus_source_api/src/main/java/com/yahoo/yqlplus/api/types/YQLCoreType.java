@@ -29,8 +29,6 @@ public enum YQLCoreType {
     OBJECT,   // something with properties *and* bound functions
     NAME_PAIR,    // {name, V}
     ERROR,
-    SEQUENCE, // <V>
 
-    PROMISE,  // <V>
-    RESULT,   // <V> | error
+    PROMISE,  // <V> | error
 }

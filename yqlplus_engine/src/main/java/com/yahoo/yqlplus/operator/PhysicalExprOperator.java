@@ -65,7 +65,6 @@ public enum PhysicalExprOperator implements Operator {
     NOT(PhysicalExprOperator.class),
 
     RECORD(TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
-    RECORD_AS(TypeWidget.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     PROJECT(new TypeLiteral<List<OperatorNode<PhysicalProjectOperator>>>() {}),
 
     ARRAY(PlanOperatorTypes.EXPRS),
@@ -74,13 +73,16 @@ public enum PhysicalExprOperator implements Operator {
 
     PROPREF(PhysicalExprOperator.class, String.class),
 
+    RECORD_AS(TypeWidget.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     CALL(TypeWidget.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKE(GambitCreator.Invocable.class, PlanOperatorTypes.EXPRS),
+    CONSTANT(TypeWidget.class, Object.class),
+    NULL(TypeWidget.class),
+    CAST(TypeWidget.class, PhysicalExprOperator.class),
+    NEW(TypeWidget.class, PlanOperatorTypes.EXPRS),
 
     VALUE(OperatorValue.class),
     LOCAL(String.class),
-    CONSTANT(TypeWidget.class, Object.class),
-    NULL(TypeWidget.class),
 
     FOREACH(PhysicalExprOperator.class, FunctionOperator.FUNCTION),
     CONCAT(PlanOperatorTypes.EXPRS),
@@ -91,9 +93,7 @@ public enum PhysicalExprOperator implements Operator {
 
     CATCH(PhysicalExprOperator.class, PhysicalExprOperator.class),
 
-    CAST(TypeWidget.class, PhysicalExprOperator.class),
     CURRENT_CONTEXT(),
-    NEW(TypeWidget.class, PlanOperatorTypes.EXPRS),
     INJECT_MEMBERS(PhysicalExprOperator.class),
     FIRST(PhysicalExprOperator.class),
     LENGTH(PhysicalExprOperator.class),

@@ -21,11 +21,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class ExpressionHandler extends TypesHandler implements ScopedBuilder {
     protected LocalCodeChunk body;
@@ -389,9 +385,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public BytecodeExpression resolve(Location loc, BytecodeExpression timeout, BytecodeExpression promise) {
-        if (promise.getType().isResult()) {
-            return promise.getType().getResultAdapter().resolve(promise);
-        } else if (promise.getType().isPromise()) {
+        if (promise.getType().isPromise()) {
             return promise.getType().getPromiseAdapter().resolve(this, timeout, promise);
         } else {
             return promise;
@@ -406,13 +400,13 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     @Override
     public BytecodeExpression evaluateTryCatch(Location loc, final BytecodeExpression expr) {
         // TODO: should we initialize the output value with a null?
-        final TypeWidget resultType = resultTypeFor(expr.getType());
+        final ResultAdapter resultType = resultTypeFor(expr.getType());
         CatchBuilder tryCatch = tryCatchFinally();
-        AssignableValue resultValue = body.allocate(resultType);
+        AssignableValue resultValue = body.allocate(resultType.getType());
         ScopedBuilder body = tryCatch.body();
-        body.set(loc, resultValue, resultType.getResultAdapter().createSuccess(expr));
+        body.set(loc, resultValue, resultType.createSuccess(expr));
         ScopedBuilder catchBlock = tryCatch.on("$e", Throwable.class);
-        catchBlock.set(loc, resultValue, resultType.getResultAdapter().createFailureThrowable(catchBlock.local("$e")));
+        catchBlock.set(loc, resultValue, resultType.createFailureThrowable(catchBlock.local("$e")));
         exec(tryCatch.build());
         return resultValue;
     }

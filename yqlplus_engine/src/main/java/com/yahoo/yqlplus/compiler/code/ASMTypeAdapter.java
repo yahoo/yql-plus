@@ -11,13 +11,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.api.types.YQLArrayType;
-import com.yahoo.yqlplus.api.types.YQLBaseType;
-import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.api.types.YQLMapType;
-import com.yahoo.yqlplus.api.types.YQLOptionalType;
-import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.api.types.YQLType;
+import com.yahoo.yqlplus.api.types.*;
 import com.yahoo.yqlplus.compiler.runtime.Result;
 import com.yahoo.yqlplus.compiler.runtime.YQLError;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -40,7 +34,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     private final Map<TypeLiteral<?>, TypeWidget> resolvedInternal = Maps.newLinkedHashMap();
     private final Iterable<TypeAdaptingWidget> adapterChain;
-    private final Map<TypeWidget, TypeWidget> resultTypes = Maps.newLinkedHashMap();
+    private final Map<TypeWidget, ResultAdapter> resultTypes = Maps.newLinkedHashMap();
 
     public ASMTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultAdaptingWidget) {
         this.source = source;
@@ -222,9 +216,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
                 case MAP:
                 case ARRAY:
                 case STRUCT:
-                case SEQUENCE:
                 case PROMISE:
-                case RESULT:
                     if (leftType.hasUnificationAdapter()) {
                         result = leftType.getUnificationAdapter(this).unify(rightType);
                     } else if (rightType.hasUnificationAdapter()) {
@@ -411,40 +403,41 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
         return nullable ? NullableTypeWidget.create(output) : NotNullableTypeWidget.create(output);
     }
 
-    public TypeWidget resultTypeFor(TypeWidget valueType) {
+    public ResultAdapter resultTypeFor(TypeWidget valueType) {
         if (resultTypes.containsKey(valueType)) {
             return resultTypes.get(valueType);
         }
-        TypeWidget rt = createResultType(valueType);
+        ResultAdapter rt = createResultType(valueType);
         resultTypes.put(valueType, rt);
         return rt;
     }
 
-    private TypeWidget createResultType(final TypeWidget valueType) {
-        return new BaseTypeWidget(Type.getType(Result.class)) {
+    private ResultAdapter createResultType(final TypeWidget valueType) {
+        TypeWidget resultType = new BaseTypeWidget(Type.getType(Result.class)) {
             @Override
             public YQLCoreType getValueCoreType() {
-                return YQLCoreType.RESULT;
+                return YQLCoreType.PROMISE;
             }
 
             @Override
-            public boolean isResult() {
+            public boolean isPromise() {
                 return true;
             }
 
             @Override
-            public ResultAdapter getResultAdapter() {
-                return new ResultResultAdapter(this, valueType);
+            public PromiseAdapter getPromiseAdapter() {
+                return new ResultType(this, valueType);
             }
 
         };
+        return new ResultType(resultType, valueType);
     }
 
-    private class ResultResultAdapter implements ResultAdapter {
+    private class ResultType implements ResultAdapter, PromiseAdapter {
         private final TypeWidget ownerType;
         private final TypeWidget valueType;
 
-        public ResultResultAdapter(TypeWidget ownerType, TypeWidget valueType) {
+        public ResultType(TypeWidget ownerType, TypeWidget valueType) {
             this.ownerType = ownerType;
             this.valueType = valueType;
         }
@@ -452,6 +445,11 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
         @Override
         public TypeWidget getResultType() {
             return valueType;
+        }
+
+        @Override
+        public TypeWidget getType() {
+            return ownerType;
         }
 
         @Override
@@ -473,6 +471,11 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
         public BytecodeExpression resolve(BytecodeExpression target) {
             GambitCreator.Invocable invocable = ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "resolve", ownerType, AnyTypeWidget.getInstance(), target);
             return new BytecodeCastExpression(valueType, invocable.invoke(Location.NONE, ImmutableList.of()));
+        }
+
+        @Override
+        public BytecodeExpression resolve(ScopedBuilder scope, BytecodeExpression timeout, BytecodeExpression target) {
+            return resolve(target);
         }
 
         @Override

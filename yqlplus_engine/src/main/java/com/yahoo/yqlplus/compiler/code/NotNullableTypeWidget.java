@@ -129,16 +129,6 @@ public final class NotNullableTypeWidget implements TypeWidget {
     }
 
     @Override
-    public ResultAdapter getResultAdapter() {
-        return target.getResultAdapter();
-    }
-
-    @Override
-    public boolean isResult() {
-        return target.isResult();
-    }
-
-    @Override
     public String getTypeName() {
         return target.getTypeName();
     }

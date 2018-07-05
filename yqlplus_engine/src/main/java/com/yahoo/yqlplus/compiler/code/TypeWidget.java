@@ -51,10 +51,6 @@ public interface TypeWidget {
 
     PromiseAdapter getPromiseAdapter();
 
-    boolean isResult();
-
-    ResultAdapter getResultAdapter();
-
     String getTypeName();
 
     boolean isAssignableFrom(TypeWidget type);

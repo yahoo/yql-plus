@@ -32,7 +32,7 @@ public interface GambitTypes {
 
     TypeWidget unify(TypeWidget left, TypeWidget right);
 
-    TypeWidget resultTypeFor(TypeWidget valueType);
+    ResultAdapter resultTypeFor(TypeWidget valueType);
 
     BytecodeExpression constant(TypeWidget type, Object value);
 

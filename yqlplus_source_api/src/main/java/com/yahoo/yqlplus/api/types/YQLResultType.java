@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.api.types;
 
 public final class YQLResultType extends YQLValueType {
     public YQLResultType(Annotations annnotations, YQLType valueType) {
-        super(annnotations, YQLCoreType.RESULT, "result<" + valueType.getName() + ">", valueType);
+        super(annnotations, YQLCoreType.PROMISE, "result<" + valueType.getName() + ">", valueType);
     }
 
     @Override

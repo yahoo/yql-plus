@@ -252,16 +252,6 @@ public abstract class BaseTypeWidget implements TypeWidget {
     }
 
     @Override
-    public boolean isResult() {
-        return false;
-    }
-
-    @Override
-    public ResultAdapter getResultAdapter() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean hasUnificationAdapter() {
         return false;
     }

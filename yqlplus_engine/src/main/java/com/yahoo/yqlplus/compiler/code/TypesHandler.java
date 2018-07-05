@@ -100,7 +100,7 @@ public class TypesHandler implements GambitTypes {
     }
 
     @Override
-    public TypeWidget resultTypeFor(TypeWidget valueType) {
+    public ResultAdapter resultTypeFor(TypeWidget valueType) {
         return source.resultTypeFor(valueType);
     }
 
