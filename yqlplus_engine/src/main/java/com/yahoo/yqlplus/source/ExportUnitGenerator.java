@@ -200,12 +200,6 @@ public class ExportUnitGenerator extends SourceApiGenerator {
             }
 
             @Override
-            public BytecodeExpression visitCompoundKey(CompoundKey compoundKey, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget) {
-                reportMethodParameterException("Export", method, "@Export methods do not support @CompoundKey arguments: %s", compoundKey);
-                throw new IllegalArgumentException(); // reachability (reportMethodetc throws but javac doesn't know that
-            }
-
-            @Override
             public BytecodeExpression visitSet(Set annotate, DefaultValue defaultValue, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget) {
                 reportMethodParameterException("Export", method, "@Export methods do not support @Set arguments: %s", annotate);
                 throw new IllegalArgumentException(); // reachability (reportMethodetc throws but javac doesn't know that

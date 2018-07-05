@@ -401,7 +401,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
 
             final IndexDescriptor.Builder indexBuilder;
             final Map<String, AssignableValue> keyArguments;
-            AssignableValue compoundKeyArgument;
             final Method method;
             boolean singleton;
             boolean async;
@@ -441,7 +440,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             }
 
             public boolean isScan() {
-                return keyArguments.isEmpty() && compoundKeyArgument == null;
+                return keyArguments.isEmpty();
             }
 
             @Override
@@ -457,9 +456,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                 String keyName = key.value().toLowerCase();
                 boolean skipEmpty = key.skipEmptyOrZero();
                 boolean skipNull = key.skipNull();
-                if (compoundKeyArgument != null) {
-                    reportMethodParameterException(methodType, method, "@Key column '%s' conflicts with @CompoundKey argument (only one of @Key arguments and @CompoundKey may be used)", keyName);
-                } else if (keyArguments.containsKey(keyName)) {
+                if (keyArguments.containsKey(keyName)) {
                     reportMethodParameterException(methodType, method, "@Key column '%s' used multiple times", keyName);
                 } else if (List.class.isAssignableFrom(parameterType)) {
                     if (!batch && !isScan()) {
@@ -485,60 +482,15 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             }
 
             @Override
-            public BytecodeExpression visitCompoundKey(CompoundKey compoundKey, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget) {
-                if (!isScan()) {
-                    reportMethodParameterException(methodType, method, "Only one @CompoundKey argument is permitted and is mutually exclusive with any @Key arguments");
-                }
-                boolean skipEmpty = compoundKey.skipEmptyOrZero();
-                boolean skipNull = compoundKey.skipNull();
-                TypeWidget itemType = parameterWidget;
-                if (List.class.isAssignableFrom(parameterType)) {
-                    batch = true;
-                    itemType = parameterWidget.getIterableAdapter().getValue();
-                }
-                TypeWidget recordType = gambitScope.adapt(Record.class, false);
-                if (!recordType.getJVMType().getDescriptor().equals(itemType.getJVMType().getDescriptor())) {
-                    reportMethodParameterException(methodType, method, "@CompoundKey argument type must be %s (not %s)", Record.class.getName(), parameterType.getName());
-                }
-                String[] keyNames = compoundKey.names();
-                if (keyNames == null || keyNames.length == 0) {
-                    reportMethodParameterException(methodType, method, "@CompoundKey argument must specify 1 or more names");
-                }
-                for (String keyName : keyNames) {
-                    try {
-                        TypeWidget propertyType = rowProperties.getPropertyType(keyName);
-                        addIndexKey(keyName, propertyType, skipEmpty, skipNull);
-                    } catch (PropertyNotFoundException e) {
-                        reportMethodParameterException(methodType, method, "@CompoundKey property '%s' does not exist on row type %s", keyName, rowType.getTypeName());
-                    }
-                }
-                if (batch) {
-                    compoundKeyArgument = body.allocate(new ListTypeWidget(recordType));
-                    return compoundKeyArgument;
-                } else {
-                    compoundKeyArgument = body.allocate(recordType);
-                    return compoundKeyArgument;
-                }
-            }
-
-            @Override
             public void complete(ObjectBuilder.MethodBuilder adapterMethod, ScopedBuilder body) {
                 if (isScan()) {
                     // we're done
                     return;
                 }
                 // if it's not a scan, we need to prepare all the key arguments
-                if (compoundKeyArgument != null) {
-                    // excellent, a compound key argument means we'll just take the record passed into us, so we'll just
-                    // add an argument and assign it! this works for batch or not.
-                    body.set(Location.NONE, compoundKeyArgument, adapterMethod.addArgument("$key", compoundKeyArgument.getType()));
-                    return;
-                }
-                // if it's not a compound key argument, we need to prepare each of the keyArguments, which will
                 // either be lists or not
                 // we'll receive a (list of) structs
-
-
+                
                 // first build the struct type representing each compound key
                 StructBuilder structBuilder = gambitScope.createStruct();
                 for (Map.Entry<String, AssignableValue> keyEntry : keyArguments.entrySet()) {
@@ -726,12 +678,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             @Override
             public BytecodeExpression visitKeyArgument(Key key, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget) {
                 reportMethodParameterException("Insert", method, "@Key parameters are not permitted on @Insert methods");
-                throw new IllegalArgumentException();
-            }
-
-            @Override
-            public BytecodeExpression visitCompoundKey(CompoundKey compoundKey, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget) {
-                reportMethodParameterException("Insert", method, "@CompoundKey parameters are not permitted on @Insert methods");
                 throw new IllegalArgumentException();
             }
 

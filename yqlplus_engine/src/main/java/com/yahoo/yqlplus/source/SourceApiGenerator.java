@@ -41,8 +41,6 @@ public class SourceApiGenerator {
     interface SourceArgumentVisitor {
         BytecodeExpression visitKeyArgument(Key key, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget);
 
-        BytecodeExpression visitCompoundKey(CompoundKey compoundKey, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget);
-
         BytecodeExpression visitSet(Set annotate, DefaultValue defaultValue, ScopedBuilder body, Class<?> parameterType, TypeWidget parameterWidget);
     }
 
@@ -70,8 +68,6 @@ public class SourceApiGenerator {
             for (Annotation annotate : annotations[i]) {
                 if (annotate instanceof Key) {
                     invocationArguments.add(bodyBuilder.visitKeyArgument(((Key) annotate), catchBody, parameterType, parameterWidget));
-                } else if (annotate instanceof CompoundKey) {
-                    invocationArguments.add(bodyBuilder.visitCompoundKey(((CompoundKey) annotate), catchBody, parameterType, parameterWidget));
                 } else if (annotate instanceof Set) {
                     DefaultValue defaultValue = null;
                     for (Annotation ann : annotations[i]) {
@@ -125,7 +121,6 @@ public class SourceApiGenerator {
             ImmutableList.of(com.yahoo.yqlplus.api.annotations.Key.class,
                     Set.class,
                     DefaultValue.class,
-                    CompoundKey.class,
                     TimeoutMilliseconds.class,
                     Trace.class,
                     Emitter.class);
