@@ -12,9 +12,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.annotations.Set;
@@ -69,10 +67,10 @@ public class SourceUnitGenerator extends SourceApiGenerator {
         cb.exec(fld.get(cb.local("this")).write(cb.cast(sourceType,
                 cb.invokeExact(Location.NONE, "get", Provider.class, AnyTypeWidget.getInstance(), sourceProvider))));
         adapter.addParameterField(fld);
-        ObjectBuilder.FieldBuilder programName = adapter.field("$programName", BaseTypeAdapter.STRING);
-        programName.annotate(Inject.class);
-        programName.annotate(Named.class).put("value", "programName");
-        adapter.addParameterField(programName);
+//        ObjectBuilder.FieldBuilder programName = adapter.field("$programName", BaseTypeAdapter.STRING);
+//        programName.annotate(Inject.class);
+//        programName.annotate(Named.class).put("value", "programName");
+//        adapter.addParameterField(programName);
 
         BytecodeExpression metric = gambitScope.constant(PhysicalExprOperatorCompiler.EMPTY_DIMENSION);
         metric = metricWith(cb, metric, "source", sourceName);

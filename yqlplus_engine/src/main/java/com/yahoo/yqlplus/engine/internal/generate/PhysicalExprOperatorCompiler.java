@@ -448,24 +448,6 @@ public class PhysicalExprOperatorCompiler {
                 }
                 return scope.invoke(expr.getLocation(), scope.constructor(type, types), exprs);
             }
-            case INJECT_MEMBERS: {
-                OperatorNode<PhysicalExprOperator> value = expr.getArgument(0);
-                final BytecodeExpression result = evaluateExpression(program, context, value);
-                final BytecodeExpression injector = getInjector(program, context);
-                return new BaseTypeExpression(result.getType()) {
-                    @Override
-                    public void generate(CodeEmitter code) {
-                        code.exec(result);
-                        code.dup(result.getType());
-                        code.exec(injector);
-                        code.swap(injector.getType(), result.getType());
-                        code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.getInternalName(Injector.class),
-                                "injectMembers", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class)), true);
-                    }
-                };
-
-
-            }
             default:
                 throw new ProgramCompileException("Unimplemented PhysicalExprOperator: " + expr.toString());
         }

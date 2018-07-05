@@ -84,10 +84,9 @@ public class IndexedSourceAdapter extends IndexedSourceType {
 
     private OperatorNode<PhysicalExprOperator> createSource(Location location, ContextPlanner planner, List<OperatorNode<PhysicalExprOperator>> arguments) {
         return planner.computeExpr(
-                OperatorNode.create(location, PhysicalExprOperator.INJECT_MEMBERS,
                         OperatorNode.create(location, PhysicalExprOperator.NEW,
                                 adapterClass,
-                                arguments)));
+                                arguments));
     }
 
     @Override

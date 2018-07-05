@@ -88,10 +88,9 @@ public class ExportModuleAdapter implements ModuleType {
         if (module == null) {
             OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
                     OperatorNode.create(location, PhysicalExprOperator.ROOT_CONTEXT),
-                    OperatorNode.create(location, PhysicalExprOperator.INJECT_MEMBERS,
                             OperatorNode.create(location, PhysicalExprOperator.NEW,
                                     type,
-                                    ImmutableList.of())));
+                                    ImmutableList.of()));
             module = OperatorNode.create(location, PhysicalExprOperator.VALUE, value);
         }
         return module;

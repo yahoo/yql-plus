@@ -94,7 +94,6 @@ public enum PhysicalExprOperator implements Operator {
     CATCH(PhysicalExprOperator.class, PhysicalExprOperator.class),
 
     CURRENT_CONTEXT(),
-    INJECT_MEMBERS(PhysicalExprOperator.class),
     FIRST(PhysicalExprOperator.class),
     LENGTH(PhysicalExprOperator.class),
     SINGLETON(PhysicalExprOperator.class);
