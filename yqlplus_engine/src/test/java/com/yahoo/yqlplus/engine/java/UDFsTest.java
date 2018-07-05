@@ -18,10 +18,6 @@ import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
-import com.yahoo.yqlplus.api.annotations.Trace;
-import com.yahoo.yqlplus.api.trace.TraceEntry;
-import com.yahoo.yqlplus.api.trace.TraceRequest;
-import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
@@ -33,11 +29,7 @@ import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
@@ -52,7 +44,7 @@ public class UDFsTest {
         }
 
         @Export
-        public String joeify(@Trace("MINE") Tracer tracer, String input) {
+        public String joeify(String input) {
             return input + "joe";
         }
 
@@ -134,34 +126,7 @@ public class UDFsTest {
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("upperStr"), "COOL");
     }
-	
-	@Test
-    public void testUDFs() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("SELECT cool.joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.of(), true);
-        List<Record> record = rez.getResult("f1").get().getResult();
-        AssertJUnit.assertEquals(record.size(), 1);
-        AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
-        TraceRequest trace = rez.getEnd().get();
-        boolean found = false;
-        boolean foundMyTracer = false;
-        for (TraceEntry entry:trace.getEntries()) {
-            if (entry.getGroup().equals("PIPE") && entry.getName().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify")
-                    && entry.getDurationMilliseconds() > 0) {
-                found = true;
-            }
-            if (entry.getGroup().equals("com.yahoo.yqlplus.engine.java.UDFsTest$CoolModule::joeify") && entry.getName().equals("MINE")
-                    && entry.getDurationMilliseconds() > 0) {
-                foundMyTracer = true;
-            }
-        }
-        String foundMsg = "Found: " + found + " and FoundMyTracer: " + foundMyTracer;
-        //Failed for no reason at one point
-        AssertJUnit.assertTrue(foundMsg, found && foundMyTracer);
-    }
-
+    
     @Test
     public void testUDFsImportFrom() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));

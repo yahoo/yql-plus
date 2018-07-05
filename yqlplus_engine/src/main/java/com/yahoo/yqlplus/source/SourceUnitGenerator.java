@@ -801,10 +801,8 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                 builder.addInsertMethod(method);
             } else if (update != null) {
                 builder.addUpdateMethod(method);
-            } else if (delete != null) {
-                builder.addDeleteMethod(method);
             } else {
-                throw new IllegalStateException("This should be impossible (matched step 1 of source method matching but not step 2");
+                builder.addDeleteMethod(method);
             }
         }
 

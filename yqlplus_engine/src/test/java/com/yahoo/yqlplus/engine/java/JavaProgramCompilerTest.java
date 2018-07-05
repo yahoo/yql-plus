@@ -19,7 +19,6 @@ import com.yahoo.yqlplus.api.annotations.ExecuteScoped;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.guice.SeededKeyProvider;
-import com.yahoo.yqlplus.api.trace.TraceEntry;
 import com.yahoo.yqlplus.api.trace.TraceRequest;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.CompiledProgram;
@@ -122,45 +121,6 @@ public class JavaProgramCompilerTest {
             TraceRequest trace = myResult.getEnd().get();
             TraceFormatter.dump(System.err, trace);
         }
-    }
-
-    @Test(enabled = false)
-    public void testTrace() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("SELECT * FROM trace OUTPUT AS b1;");
-        TraceRequest trace = program.run(ImmutableMap.of(), true).getEnd().get();
-        for (TraceEntry entry : trace.getEntries()) {
-            if ("MINE".equals(entry.getName())) {
-                return; // found it
-            }
-        }
-        Assert.fail("Did not find our trace entry");
-    }
-
-    @Test
-    public void testMethodTrace() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("traceMethod", MethodTracingSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("testMethodTrace", "SELECT * FROM traceMethod OUTPUT AS b1;");
-        TraceRequest trace = program.run(ImmutableMap.of(), true).getEnd().get();
-        for (TraceEntry entry : trace.getEntries()) {
-            if (entry.getGroup().equals("program")) {
-                assertEquals("testMethodTrace", entry.getName());
-            }
-            if (entry.getGroup().equals("query")) {
-              assertEquals("b1", entry.getName());
-            }
-            if (entry.getGroup().equals("method")) {
-                assertEquals("scan", entry.getName());
-                String message = "End: " + entry.getEndMilliseconds() + " Start: " + entry.getStartMilliseconds() + " is <= 5";
-                assertTrue(message, (entry.getEndMilliseconds() - entry.getStartMilliseconds()) > 490);
-            }
-            if ("MINE".equals(entry.getName())) {
-                return; // found it
-            }
-        }
-        Assert.fail("Did not find our trace entry");
     }
 
     @Test

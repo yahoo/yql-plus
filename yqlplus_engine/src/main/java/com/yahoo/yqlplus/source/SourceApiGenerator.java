@@ -11,7 +11,6 @@ import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.trace.Timeout;
-import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.compiler.code.*;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -82,20 +81,6 @@ public class SourceApiGenerator {
                     }
                     BytecodeExpression timeoutExpr = catchBody.propertyValue(Location.NONE, contextVar, "timeout");
                     invocationArguments.add(catchBody.invokeExact(Location.NONE, "getRemaining", Timeout.class, BaseTypeAdapter.INT64, timeoutExpr, catchBody.constant(TimeUnit.MILLISECONDS)));
-                } else if (annotate instanceof Trace) {
-                    if (!Tracer.class.isAssignableFrom(parameterType)) {
-                        reportMethodParameterException("Trace", method, "@Trace argument type must be a %s", Tracer.class.getName());
-                    }
-                    Trace traceAnnotation = (Trace) annotate;
-                    String group = traceAnnotation.group();
-                    if ("".equals(group)) {
-                        group = method.getDeclaringClass().getName() + "::" + method.getName();
-                    }
-                    BytecodeExpression tracerExpr = catchBody.propertyValue(Location.NONE, contextVar, "tracer");
-                    BytecodeExpression methodTracerExpr = catchBody.invokeExact(Location.NONE, "start", Tracer.class, tracerExpr.getType(), tracerExpr, catchBody.constant(group), catchBody.constant(traceAnnotation.value()));
-                    AssignableValue methodTracerVar = block.allocate("methodTracer", gambitScope.adapt(Tracer.class, false));
-                    block.set(Location.NONE, methodTracerVar, methodTracerExpr);
-                    invocationArguments.add(methodTracerVar);
                 } else if (annotate instanceof Emitter) {
                     if (!MetricEmitter.class.isAssignableFrom(parameterType)) {
                         reportMethodParameterException("Trace", method, "@Emitter argument type must be a %s", MetricEmitter.class.getName());
@@ -122,7 +107,6 @@ public class SourceApiGenerator {
                     Set.class,
                     DefaultValue.class,
                     TimeoutMilliseconds.class,
-                    Trace.class,
                     Emitter.class);
 
     protected static boolean isFreeArgument(Class<?> argumentType, Annotation[] annotations) {
