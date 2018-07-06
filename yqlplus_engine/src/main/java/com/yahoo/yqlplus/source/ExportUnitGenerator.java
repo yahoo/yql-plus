@@ -11,16 +11,25 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import com.yahoo.yqlplus.api.Exports;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Export;
+import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Set;
 import com.yahoo.yqlplus.api.trace.Tracer;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;
@@ -30,7 +39,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Generate adapter class for Exports modules.
@@ -51,13 +64,6 @@ public class ExportUnitGenerator extends SourceApiGenerator {
         cb.exec(fld.get(cb.local("this")).write(cb.cast(moduleType,
                 cb.invokeExact(Location.NONE, "get", Provider.class, AnyTypeWidget.getInstance(), sourceProvider))));
         adapter.addParameterField(fld);
-        ObjectBuilder.FieldBuilder programName = adapter.field("$programName", BaseTypeAdapter.STRING);
-        programName.annotate(Inject.class);
-        programName.annotate(Named.class).put("value", "programName");
-        adapter.addParameterField(programName);
-
-        BytecodeExpression metric = gambitScope.constant(PhysicalExprOperatorCompiler.EMPTY_DIMENSION);
-        metric = metricWith(cb, metric, "source", moduleName);
         return adapter;
     }
 
@@ -68,15 +74,6 @@ public class ExportUnitGenerator extends SourceApiGenerator {
         ObjectBuilder target;
         TypeWidget sourceClass;
 
-        // SELECT
-        // DELETE - match an index (just like SELECT)
-
-        // UPDATE - match an INDEX
-        // INSERT - accept a record, dispatch to an appropriate method if possible
-
-        // we need to store a dispatch table of methods
-        // also properties
-
         Multimap<String, ObjectBuilder.MethodBuilder> methods = Multimaps.newListMultimap(new TreeMap<String, Collection<ObjectBuilder.MethodBuilder>>(String.CASE_INSENSITIVE_ORDER), new com.google.common.base.Supplier<List<ObjectBuilder.MethodBuilder>>() {
             @Override
             public List<ObjectBuilder.MethodBuilder> get() {
@@ -86,14 +83,10 @@ public class ExportUnitGenerator extends SourceApiGenerator {
 
         Map<String, ObjectBuilder.MethodBuilder> fields = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
 
-        long minimumBudget;
-        long maximumBudget;
 
-        public AdapterBuilder(String moduleName, Class<? extends Exports> clazz, BytecodeExpression providerConstant, long minimumBudget, long maximumBudget) {
+        public AdapterBuilder(String moduleName, Class<? extends Exports> clazz, BytecodeExpression providerConstant) {
             this.clazz = clazz;
             this.sourceName = moduleName;
-            this.minimumBudget = minimumBudget;
-            this.maximumBudget = maximumBudget;
             // TODO: should accept the annotations for the free argument signatures, so they can be checked for @NotNullable or equiv.
             this.sourceClass = gambitScope.adapt(clazz, false);
             this.target = createModuleAdapter(moduleName, clazz, sourceClass, gambitScope.adapt(TaskContext.class, false), providerConstant);
@@ -217,15 +210,8 @@ public class ExportUnitGenerator extends SourceApiGenerator {
         String sourceName = Joiner.on(".").join(path);
         Exports source = input.get();
         final Class<? extends Exports> clazz = source.getClass();
-        long minimumBudget = -1;
-        long maximumBudget = -1;
-        TimeoutBudget budget = clazz.getAnnotation(TimeoutBudget.class);
-        if (budget != null) {
-            minimumBudget = budget.minimumMilliseconds();
-            maximumBudget = budget.maximumMilliseconds();
-        }
         final BytecodeExpression providerConstant = gambitScope.constant(input);
-        AdapterBuilder builder = new AdapterBuilder(sourceName, clazz, providerConstant, minimumBudget, maximumBudget);
+        AdapterBuilder builder = new AdapterBuilder(sourceName, clazz, providerConstant);
         for (Method method : clazz.getMethods()) {
             if (!method.isAnnotationPresent(Export.class)) {
                 continue;
