@@ -110,7 +110,6 @@ public class ExportUnitGenerator extends SourceApiGenerator {
 
             AssignableValue contextVar = block.local("$context");
 
-            // we do NOT want to fork a callable -- just call the function and return the result.
             boolean isStatic = Modifier.isStatic(method.getModifiers());
 
             GambitCreator.Invocable targetMethod;
@@ -200,12 +199,6 @@ public class ExportUnitGenerator extends SourceApiGenerator {
         }
     }
 
-    /**
-     * Transform a Source provider into an implementation of IndexedTable and/or IndexedTableFunction.
-     *
-     * @param input
-     * @return
-     */
     public ModuleType apply(List<String> path, Provider<? extends Exports> input) {
         String sourceName = Joiner.on(".").join(path);
         Exports source = input.get();
