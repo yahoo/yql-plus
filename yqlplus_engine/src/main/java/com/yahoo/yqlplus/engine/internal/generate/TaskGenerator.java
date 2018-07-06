@@ -9,7 +9,18 @@ package com.yahoo.yqlplus.engine.internal.generate;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.InvocableBuilder;
+import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ReturnCode;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.operator.OperatorStep;
@@ -23,18 +34,15 @@ import java.util.List;
 
 public class TaskGenerator {
     private final ProgramGenerator programGenerator;
-    private final ObjectBuilder builder;
-    private final ObjectBuilder.MethodBuilder run;
+    private final LambdaFactoryBuilder builder;
     private final ScopedBuilder runBody;
     List<String> argumentNames = Lists.newArrayList();
 
     public TaskGenerator(ProgramGenerator program, GambitScope scope) {
-        builder = scope.createObject();
-        builder.implement(Runnable.class);
-        builder.addParameter("$program", program.getType());
+        builder = scope.createLambdaBuilder(Runnable.class, "run", void.class, false);
+        builder.addArgument("$program", program.getType());
         programGenerator = program;
-        this.run = builder.method("run");
-        GambitCreator.CatchBuilder catcher = run.tryCatchFinally();
+        GambitCreator.CatchBuilder catcher = builder.tryCatchFinally();
         ScopedBuilder body = catcher.body();
         runBody = body.block();
         body.exec(new ReturnCode());
@@ -49,11 +57,11 @@ public class TaskGenerator {
                 code.getMethodVisitor().visitInsn(Opcodes.RETURN);
             }
         });
-        run.exec(catcher.build());
+        builder.exec(catcher.build());
     }
 
     public void addArgument(OperatorValue arg) {
-        builder.addParameter(arg.getName(), programGenerator.getValue(arg));
+        builder.addArgument(arg.getName(), programGenerator.getValue(arg));
         argumentNames.add(arg.getName());
     }
 
@@ -143,7 +151,7 @@ public class TaskGenerator {
         for (OperatorValue arg : args) {
             exprs.add(body.local(arg.getName()));
         }
-        return body.invoke(Location.NONE, builder.getConstructor().invoker(), exprs);
+        return body.invoke(Location.NONE, builder.exit(), exprs);
     }
 
     public ScopedBuilder getBody() {
