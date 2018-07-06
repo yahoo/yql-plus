@@ -288,7 +288,7 @@ public class DateTimeTest {
         String query = "SELECT datetime.add(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        ProgramResult result = program.run(ImmutableMap.of(), false);
+        ProgramResult result = program.run(ImmutableMap.of());
         result.getResult("d1").get().getResult();
 
     }
@@ -323,7 +323,7 @@ public class DateTimeTest {
         String query = "SELECT datetime.sub(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        ProgramResult result = program.run(ImmutableMap.of(), false);
+        ProgramResult result = program.run(ImmutableMap.of());
         result.getResult("d1").get().getResult();
     }
 
@@ -403,7 +403,7 @@ public class DateTimeTest {
     private ProgramResult getProgramResult(String query) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(query);
-        return program.run(ImmutableMap.of(), false);
+        return program.run(ImmutableMap.of());
     }
     
     public static class MetricModule extends AbstractModule {

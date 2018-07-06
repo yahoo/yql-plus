@@ -6,8 +6,6 @@
 
 package com.yahoo.yqlplus.compiler.code;
 
-import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
-import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
@@ -110,10 +108,6 @@ public interface GambitCreator extends GambitTypes {
     Invocable constructor(TypeWidget type, TypeWidget... argumentTypes);
 
     Invocable constructor(TypeWidget type, List<TypeWidget> argumentTypes);
-
-    BytecodeExpression invoke(Location loc, Invocable invocable, BytecodeExpression... args);
-
-    BytecodeExpression invoke(Location loc, Invocable invocable, List<BytecodeExpression> args);
 
     BytecodeExpression transform(Location location, BytecodeExpression iterable, Invocable function);
 

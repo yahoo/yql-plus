@@ -14,15 +14,33 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Delete;
+import com.yahoo.yqlplus.api.annotations.Insert;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutBudget;
+import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLNamePair;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.StructBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.runtime.FieldWriter;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
@@ -37,7 +55,12 @@ import org.objectweb.asm.Opcodes;
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 /**
  * Generated one or more classes adapting Source-API equipped classes.
@@ -254,7 +277,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             
             bodyBuilder.complete(adapterMethod, catchBody);
 
-            BytecodeExpression invocation = catchBody.invoke(Location.NONE, targetMethod, invocationArguments);
+            BytecodeExpression invocation = targetMethod.invoke(Location.NONE, invocationArguments);
 
             catchBody.set(Location.NONE, resultValue, invocation);
 
@@ -504,7 +527,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                         String propertyName = keyEntry.getKey();
                         AssignableValue keyListValue = keyEntry.getValue();
                         // create the list (above the loop)
-                        convertScope.set(Location.NONE, keyListValue, convertScope.invoke(Location.NONE, convertScope.constructor(keyListValue.getType())));
+                        convertScope.set(Location.NONE, keyListValue, convertScope.constructor(keyListValue.getType()).invoke(Location.NONE));
                         // for each item, extract the property into the list
                         loop.exec(loop.invokeExact(Location.NONE, "add", Collection.class, BaseTypeAdapter.BOOLEAN,
                                 keyListValue,

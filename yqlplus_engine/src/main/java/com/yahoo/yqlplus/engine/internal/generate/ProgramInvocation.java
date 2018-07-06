@@ -7,74 +7,20 @@
 package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.compiler.code.GambitRuntime;
 import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
-import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
+import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 
-import javax.inject.Named;
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class ProgramInvocation {
     private volatile InvocationResultHandler resultHandler;
 
-    @Inject
-    public Injector injector;
-
-    @Inject
-    @Named("programExecutor")
-    public ListeningExecutorService tasks;
-
-    @Inject
-    @Named("timeout")
-    public ScheduledExecutorService timers;
-
-    @Inject
-    @Named("rootContext")
-    public TaskContext rootContext;
-
-    public void execute(Runnable runnable) {
-        tasks.submit(wrap(runnable));
-    }
-
-    private Runnable wrap(final Runnable run) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    run.run();
-                } catch (Exception e) {
-                    fail(e);
-                } catch (Error e) {
-                    fail(e);
-                    throw e;
-                }
-            }
-        };
-    }
-
-    public void executeAll(Runnable one) {
-        wrap(one).run();
-    }
-
-    public void executeAll(Runnable... runnables) {
-        for (int i = 0; i < runnables.length - 1; ++i) {
-            execute(runnables[i]);
-        }
-        wrap(runnables[runnables.length - 1]).run();
-    }
 
     protected void missingArgument(String name, YQLType expectedType) {
         throw new IllegalArgumentException("Missing required program argument '" + name + "' (type '" + expectedType + "')");
@@ -165,8 +111,4 @@ public abstract class ProgramInvocation {
     }
 
     protected abstract void run() throws Exception;
-
-    public final Injector getInjector() {
-        return injector;
-    }
 }

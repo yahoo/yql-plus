@@ -9,6 +9,8 @@ package com.yahoo.yqlplus.engine;
 import com.yahoo.yqlplus.api.trace.Tracer;
 
 public class DummyTracer implements Tracer {
+    public static final Tracer instance = new DummyTracer();
+
     @Override
     public String getGroup() {
         return "";

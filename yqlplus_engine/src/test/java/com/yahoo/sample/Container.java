@@ -14,7 +14,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.yahoo.cloud.metrics.api.*;
+import com.yahoo.cloud.metrics.api.MetricDimension;
+import com.yahoo.cloud.metrics.api.RequestEvent;
+import com.yahoo.cloud.metrics.api.RequestMetricSink;
+import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
+import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
@@ -66,7 +70,7 @@ public class Container implements EngineContainerInterface {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap());
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {

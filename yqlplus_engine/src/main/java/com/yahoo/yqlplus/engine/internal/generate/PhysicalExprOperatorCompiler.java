@@ -11,9 +11,38 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Injector;
 import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ArrayTypeWidget;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.BooleanCompareExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeArithmeticExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeCastExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeNegateExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.CompareExpression;
+import com.yahoo.yqlplus.compiler.code.EqualsExpression;
+import com.yahoo.yqlplus.compiler.code.ExactInvocation;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitTypes;
+import com.yahoo.yqlplus.compiler.code.InvocableBuilder;
+import com.yahoo.yqlplus.compiler.code.IterableTypeWidget;
+import com.yahoo.yqlplus.compiler.code.IterateAdapter;
+import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.compiler.code.LambdaInvocable;
+import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.compiler.code.MulticompareExpression;
+import com.yahoo.yqlplus.compiler.code.NotNullableTypeWidget;
+import com.yahoo.yqlplus.compiler.code.NullTestedExpression;
+import com.yahoo.yqlplus.compiler.code.NullableTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.compiler.runtime.KeyAccumulator;
@@ -23,13 +52,25 @@ import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +90,7 @@ public class PhysicalExprOperatorCompiler {
                 GambitCreator.Invocable invocable = expr.getArgument(0);
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(1);
                 List<BytecodeExpression> arguments = evaluateExpressions(program, context, args);
-                BytecodeExpression result = scope.invoke(expr.getLocation(), invocable, arguments);
+                BytecodeExpression result = invocable.invoke(expr.getLocation(), arguments);
                 return scope.resolve(expr.getLocation(), getTimeout(context, expr.getLocation()), result);
             }
             case CALL: {
@@ -66,7 +107,7 @@ public class PhysicalExprOperatorCompiler {
                 return scope.constant(t, cval);
             }
             case ROOT_CONTEXT: {
-                return scope.propertyValue(expr.getLocation(), program, "rootContext");
+                return scope.propertyValue(expr.getLocation(), context, "rootContext");
             }
             case CURRENT_CONTEXT:
                 return context;
@@ -249,10 +290,9 @@ public class PhysicalExprOperatorCompiler {
             case STREAM_COMPLETE: {
                 OperatorNode<PhysicalExprOperator> streamExpression = expr.getArgument(0);
                 BytecodeExpression streamExpr = evaluateExpression(program, context, streamExpression);
-                return scope.invoke(expr.getLocation(),
-                        ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "complete", streamExpr.getType(),
-                                // ideally this would unify the types of the input streams
-                                new ListTypeWidget(AnyTypeWidget.getInstance()), streamExpr));
+                return ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "complete", streamExpr.getType(),
+                        // ideally this would unify the types of the input streams
+                        new ListTypeWidget(AnyTypeWidget.getInstance()), streamExpr).invoke(expr.getLocation());
             }
             case RECORD: {
                 List<String> names = expr.getArgument(0);
@@ -322,7 +362,7 @@ public class PhysicalExprOperatorCompiler {
 
                 BytecodeExpression arr = scope.array(expr.getLocation(), BaseTypeAdapter.ANY, insns);
                 GambitCreator.Invocable factory = scope.constructor(keyCursorFor(scope, names), arr.getType());
-                return scope.invoke(expr.getLocation(), factory, arr);
+                return factory.invoke(expr.getLocation(), arr);
             }
             case OR: {
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(0);
@@ -446,7 +486,7 @@ public class PhysicalExprOperatorCompiler {
                 for (BytecodeExpression e : exprs) {
                     types.add(e.getType());
                 }
-                return scope.invoke(expr.getLocation(), scope.constructor(type, types), exprs);
+                return scope.constructor(type, types).invoke(expr.getLocation(), exprs);
             }
             default:
                 throw new ProgramCompileException("Unimplemented PhysicalExprOperator: " + expr.toString());
@@ -481,7 +521,8 @@ public class PhysicalExprOperatorCompiler {
         GambitCreator.IterateBuilder iterate = scope.iterate(input);
         pipeline.item(iterate, iterate.getItem());
         finish.exit(pipeline.end(scope, iterate));
-        return scope.invoke(node.getLocation(), scope.constructor(stream.type(), program.getType(), context.getType()).prefix(program, context));
+        GambitCreator.Invocable invocable = scope.constructor(stream.type(), program.getType(), context.getType());
+        return invocable.invoke(node.getLocation(), program, context);
     }
 
     public BytecodeExpression resolveValue(Location loc, BytecodeExpression program, BytecodeExpression ctx, OperatorValue value) {
@@ -577,10 +618,6 @@ public class PhysicalExprOperatorCompiler {
             output.add(evaluateExpression(program, context, expr));
         }
         return output;
-    }
-
-    private BytecodeExpression getInjector(BytecodeExpression program, BytecodeExpression context) {
-        return ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "getInjector", scope.adapt(ProgramInvocation.class, false), scope.adapt(Injector.class, false), program).invoke(Location.NONE);
     }
 
     private BytecodeExpression streamExecute(final BytecodeExpression program, final BytecodeExpression ctxExpr, OperatorNode<PhysicalExprOperator> input, OperatorNode<StreamOperator> stream) {
@@ -808,8 +845,8 @@ public class PhysicalExprOperatorCompiler {
 
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
-            loop.exec(loop.invoke(Location.NONE,
-                    ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "receive", target.getType(), BaseTypeAdapter.BOOLEAN, target, loop.cast(AnyTypeWidget.getInstance(), item))));
+            GambitCreator.Invocable invocable = ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "receive", target.getType(), BaseTypeAdapter.BOOLEAN, target, loop.cast(AnyTypeWidget.getInstance(), item));
+            loop.exec(invocable.invoke(Location.NONE));
         }
 
         @Override
@@ -861,7 +898,7 @@ public class PhysicalExprOperatorCompiler {
             //    list = new list
             //    map.put(key, list)
             // list.add(item)
-            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), loop.invoke(this.key.getLocation(), compiledKey, program, ctxExpr, item)));
+            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), compiledKey.invoke(this.key.getLocation(), program, ctxExpr, item)));
             GambitCreator.CaseBuilder test = loop.createCase();
             test.when(loop.invokeExact(this.key.getLocation(), "containsKey", Map.class, BaseTypeAdapter.BOOLEAN, map, key),
                     loop.cast(listOfItemType, loop.invokeExact(this.key.getLocation(), "get", Map.class, AnyTypeWidget.getInstance(), map, key)));
@@ -880,7 +917,7 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.IterateBuilder nextLoop = scope.iterate(map);
             BytecodeExpression item = nextLoop.getItem();
             PropertyAdapter entryType = nextLoop.getItem().getType().getPropertyAdapter();
-            BytecodeExpression actualItem = nextLoop.evaluateInto(nextLoop.invoke(this.output.getLocation(), compiledOutput, program, ctxExpr, entryType.property(item, "key"), entryType.property(item, "value")));
+            BytecodeExpression actualItem = nextLoop.evaluateInto(compiledOutput.invoke(this.output.getLocation(), program, ctxExpr, entryType.property(item, "key"), entryType.property(item, "value")));
             this.next.prepare(scope, program, ctxExpr, actualItem.getType());
             this.next.item(nextLoop, actualItem);
             return this.next.end(scope, nextLoop);
@@ -934,7 +971,7 @@ public class PhysicalExprOperatorCompiler {
             // for item in rightExpr:
             GambitCreator.IterateBuilder loop = scope.iterate(rightExpr);
             //    key = right_key(item)
-            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), loop.invoke(this.rightKey.getLocation(), compiledRightKey, program, context, loop.getItem())));
+            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), compiledRightKey.invoke(this.rightKey.getLocation(), program, context, loop.getItem())));
             GambitCreator.CaseBuilder test = loop.createCase();
             //    if key in map:
             //       list = map[key]
@@ -957,7 +994,7 @@ public class PhysicalExprOperatorCompiler {
 
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
-            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), loop.invoke(this.leftKey.getLocation(), compiledLeftKey, program, ctxExpr, item)));
+            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), compiledLeftKey.invoke(this.leftKey.getLocation() , program, ctxExpr, item)));
             //
             // arrange for the output list to container either:
             //     1) list of right rows or
@@ -967,7 +1004,7 @@ public class PhysicalExprOperatorCompiler {
                     loop.cast(listOfRightType, loop.invokeExact(this.leftKey.getLocation(), "get", Map.class, AnyTypeWidget.getInstance(), rightMap, key)));
             BytecodeExpression rightMatchedList = loop.evaluateInto(test.exit(emptyMatchList));
             GambitCreator.IterateBuilder rightLoop = loop.iterate(rightMatchedList);
-            this.next.item(rightLoop, rightLoop.evaluateInto(rightLoop.invoke(join.getLocation(), compiledJoin, program, ctxExpr, item, rightLoop.getItem())));
+            this.next.item(rightLoop, rightLoop.evaluateInto(compiledJoin.invoke(join.getLocation(), program, ctxExpr, item, rightLoop.getItem())));
             loop.exec(rightLoop.build());
         }
 
@@ -995,7 +1032,7 @@ public class PhysicalExprOperatorCompiler {
 
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
-            super.item(loop, loop.evaluateInto(loop.invoke(function.getLocation(), compiledTransform, program, ctxExpr, item)));
+            super.item(loop, loop.evaluateInto(compiledTransform.invoke(function.getLocation(), program, ctxExpr, item)));
         }
     }
 
@@ -1050,8 +1087,8 @@ public class PhysicalExprOperatorCompiler {
             IterateAdapter it = cursorType.getIterableAdapter();
             TypeWidget valueType = it.getValue();
             LambdaInvocable comparatorType = compileComparator(program.getType(), ctxExpr.getType(), valueType, comparator);
-            BytecodeExpression comparatorInstance = scope.invoke(comparator.getLocation(),
-                    comparatorType, program, ctxExpr);
+            BytecodeExpression comparatorInstance = comparatorType.invoke(comparator.getLocation(),
+                    program, ctxExpr);
             BytecodeExpression sorted = scope.invokeExact(comparator.getLocation(), "sort", ProgramInvocation.class, output.getType(),
                     program,
                     output,
@@ -1128,7 +1165,7 @@ public class PhysicalExprOperatorCompiler {
             // for each item in right
             //    emit each item in output(item, right)
             GambitCreator.IterateBuilder rightIterator = loop.iterate(rightExpr);
-            BytecodeExpression rows = rightIterator.evaluateInto(rightIterator.invoke(right.getLocation(), compiledOutput, program, ctxExpr, item, rightIterator.getItem()));
+            BytecodeExpression rows = rightIterator.evaluateInto(compiledOutput.invoke(right.getLocation(), program, ctxExpr, item, rightIterator.getItem()));
             GambitCreator.IterateBuilder outputIterator = rightIterator.iterate(rows);
             super.item(outputIterator, outputIterator.getItem());
             rightIterator.exec(outputIterator.build());
@@ -1227,7 +1264,7 @@ public class PhysicalExprOperatorCompiler {
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
             final GambitCreator.Invocable compiledPredicate = compileFunction(program.getType(), ctxExpr.getType(), ImmutableList.of(item.getType()), function);
-            loop.next(loop.not(function.getLocation(), loop.invoke(function.getLocation(), compiledPredicate, program, ctxExpr, item)));
+            loop.next(loop.not(function.getLocation(), compiledPredicate.invoke(function.getLocation(), program, ctxExpr, item)));
             super.item(loop, item);
         }
     }

@@ -6,13 +6,14 @@
 
 package com.yahoo.yqlplus.engine;
 
+import com.google.common.base.Ticker;
 import com.google.common.collect.Lists;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.trace.Tracer;
-import com.yahoo.yqlplus.engine.internal.scope.ExecutionScoper;
-import com.yahoo.yqlplus.engine.internal.scope.ScopedObjects;
+import com.yahoo.yqlplus.compiler.runtime.RelativeTicker;
+import com.yahoo.yqlplus.compiler.runtime.TimeoutTracker;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,56 +24,99 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public final class TaskContext {
+    public final TaskContext rootContext;
     public final TaskMetricEmitter metricEmitter;
     public final Tracer tracer;
     public final Timeout timeout;
     public final ForkJoinPool pool;
-    public final ScopedObjects scope;
-    public final ExecutionScoper scoper;
 
-    public TaskContext(TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout, ExecutionScoper scoper, ScopedObjects scope) {
+    public static class Builder {
+        TaskMetricEmitter metricEmitter = DummyMetricEmitter.instance;
+        Tracer tracer = DummyTracer.instance;
+        Timeout timeout;
+        ForkJoinPool pool = ForkJoinPool.commonPool();
+
+        private Builder() {
+
+        }
+
+        public Builder withEmitter(TaskMetricEmitter emitter) {
+            this.metricEmitter = emitter;
+            return this;
+        }
+
+        public Builder withTracer(Tracer tracer) {
+            this.tracer = tracer;
+            return this;
+        }
+
+        public Builder withTimeout(Timeout timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        public Builder withTimeout(long timeout, TimeUnit timeoutUnits) {
+            this.timeout = new TimeoutTracker(timeout, timeoutUnits, new RelativeTicker(Ticker.systemTicker()));
+            return this;
+        }
+
+        public Builder withPool(ForkJoinPool pool) {
+            this.pool = pool;
+            return this;
+        }
+
+        public TaskContext build() {
+            if(timeout == null) {
+                withTimeout(30L, TimeUnit.SECONDS);
+            }
+            return new TaskContext(metricEmitter, tracer, timeout, pool);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    private TaskContext(TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout, ForkJoinPool pool) {
+        this.rootContext = this;
+        this.metricEmitter = metricEmitter;
+        this.tracer = tracer;
+        this.timeout = timeout;
+        // TODO: give container control over this
+        this.pool = pool;
+    }
+
+    private TaskContext(TaskContext rootContext, TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout) {
+        this.rootContext = rootContext;
         this.metricEmitter = metricEmitter;
         this.tracer = tracer;
         this.timeout = timeout;
         // TODO: give container control over this
         this.pool = ForkJoinPool.commonPool();
-        this.scope = scope;
-        this.scoper = scoper;
-    }
-
-    public final <T> Supplier<T> scopeSupplier(Supplier<T> work) {
-        return () -> {
-            try {
-                scoper.enter(scope);
-                return work.get();
-            } finally {
-                scoper.exit();
-            }
-        };
     }
 
     public final <T> T runTimeout(Supplier<T> work) throws ExecutionException, InterruptedException {
-        CompletableFuture<T> f = CompletableFuture.supplyAsync(scopeSupplier(work), pool);
+        CompletableFuture<T> f = CompletableFuture.supplyAsync(work, pool);
         f.orTimeout(timeout.remainingTicks(), timeout.getTickUnits());
         return f.get();
     }
 
     public TaskContext start(MetricDimension ctx) {
-        return new TaskContext(metricEmitter.start(ctx), tracer.start(ctx.getKey(), ctx.getValue()), timeout, scoper, scope);
+        return new TaskContext(rootContext, metricEmitter.start(ctx), tracer.start(ctx.getKey(), ctx.getValue()), timeout);
     }
 
     public TaskContext timeout(long timeout, TimeUnit units) throws TimeoutException {
-        return new TaskContext(metricEmitter, tracer, this.timeout.createTimeout(timeout, units), scoper, scope);
+        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(timeout, units));
     }
 
     public TaskContext timeout(long min, TimeUnit minUnits, long max, TimeUnit maxUnits) throws TimeoutException {
-        return new TaskContext(metricEmitter, tracer, this.timeout.createTimeout(min, minUnits, max, maxUnits), scoper, scope);
+        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(min, minUnits, max, maxUnits));
     }
 
     public <T> List<T> scatter(List<Supplier<T>> input) throws ExecutionException, InterruptedException {
         CompletableFuture[] futures = new CompletableFuture[input.size()];
         for(int i = 0; i < futures.length; i++) {
-            futures[i] = CompletableFuture.supplyAsync(scopeSupplier(input.get(i)), pool);
+            futures[i] = CompletableFuture.supplyAsync(input.get(i), pool);
         }
         CompletableFuture<Void> done = CompletableFuture.allOf(futures);
         done.orTimeout(timeout.remainingTicks(), timeout.getTickUnits());
@@ -83,6 +127,23 @@ public final class TaskContext {
         }
         return result;
     }
+
+    public void execute(Runnable runnable) {
+        pool.submit(runnable);
+    }
+
+
+    public void executeAll(Runnable one) {
+        one.run();
+    }
+
+    public void executeAll(Runnable... runnables) {
+        for (int i = 0; i < runnables.length - 1; ++i) {
+            execute(runnables[i]);
+        }
+        runnables[runnables.length - 1].run();
+    }
+
 
     public void end() {
         metricEmitter.end();

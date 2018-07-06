@@ -12,12 +12,19 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.GambitSource;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.generate.TaskGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.ProgramPlanner;
@@ -115,7 +122,7 @@ public class PlanProgramCompiler implements ProgramCompiler {
                 }
             }
             invokeRunnables(environment.getStartBody(), environment, start);
-            return environment.compile(injector);
+            return environment.compile();
         }
 
         public CompiledProgram compile(String programName, String program) throws IOException, RecognitionException {
@@ -159,9 +166,9 @@ public class PlanProgramCompiler implements ProgramCompiler {
                 TypeWidget runnableType = body.adapt(Runnable.class, false);
                 BytecodeExpression runnableExpression = runnables.size() == 1 ? runnables.get(0) : body.array(next.getLocation(), runnableType, runnables);
                 List<TypeWidget> types = ImmutableList.of(runnables.size() == 1 ? runnableType : runnableExpression.getType());
-                GambitCreator.Invocable target = body.findExactInvoker(ProgramInvocation.class, "executeAll", BaseTypeAdapter.VOID,
+                GambitCreator.Invocable target = body.findExactInvoker(TaskContext.class, "executeAll", BaseTypeAdapter.VOID,
                         types);
-                body.exec(body.invoke(next.getLocation(), target, body.local("$program"), runnableExpression));
+                body.exec(target.invoke(next.getLocation(), body.local("$context"), runnableExpression));
             }
         }
 

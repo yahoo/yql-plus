@@ -142,7 +142,7 @@ public class ExportUnitGenerator extends SourceApiGenerator {
             BytecodeExpression tracerExpr = block.propertyValue(Location.NONE, contextVar, "tracer");
             BytecodeExpression methodTracerExpr = block.invokeExact(Location.NONE, "start", Tracer.class, tracerExpr.getType(), tracerExpr, block.constant("PIPE"), block.constant(method.getDeclaringClass().getName() + "::" + method.getName()));
 
-            BytecodeExpression invocation = block.invoke(Location.NONE, targetMethod, invocationArguments);
+            BytecodeExpression invocation = targetMethod.invoke(Location.NONE, invocationArguments);
             block.set(Location.NONE, resultValue, invocation);
             for (BytecodeExpression argument:invocationArguments) {
                 if (argument.getType().getJVMType().getClassName().equals(Tracer.class.getName())) {

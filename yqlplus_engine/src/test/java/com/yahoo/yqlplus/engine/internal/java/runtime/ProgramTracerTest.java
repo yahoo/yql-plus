@@ -10,9 +10,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.google.common.base.Ticker;
-import com.yahoo.yqlplus.api.trace.*;
+import com.yahoo.yqlplus.api.trace.ThrowableEvent;
+import com.yahoo.yqlplus.api.trace.TraceEntry;
+import com.yahoo.yqlplus.api.trace.TraceLogEntry;
+import com.yahoo.yqlplus.api.trace.TraceRequest;
+import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
-import com.yahoo.yqlplus.engine.scope.MapExecutionScope;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -48,12 +51,9 @@ public class ProgramTracerTest {
 
     @Test
     public void testDebugProgramTracer() {
-        MapExecutionScope scope = new MapExecutionScope()
-                .bind(String.class, "programName", "program")
-                .bind(Boolean.class, "debug", true);
         DummyTicker ticker = new DummyTicker();
         ticker.setValue(0L);
-        ProgramTracer tracer = new ProgramTracer(ticker, scope);
+        ProgramTracer tracer = new ProgramTracer(ticker, true, "program", "program");
 
         Tracer t1 = tracer.start("group", "name01");
         ticker.setValue(MILLISECONDS.toNanos(10L));
@@ -125,12 +125,9 @@ public class ProgramTracerTest {
 
     @Test
     public void testNonDebugProgramTracer() throws IOException {
-        MapExecutionScope scope = new MapExecutionScope()
-                .bind(String.class, "programName", "program")
-                .bind(Boolean.class, "debug", false);
         DummyTicker ticker = new DummyTicker();
         ticker.setValue(0L);
-        ProgramTracer tracer = new ProgramTracer(ticker, scope);
+        ProgramTracer tracer = new ProgramTracer(ticker, false, "program", "program");
 
         Tracer t1 = tracer.start("group", "name01");
         ticker.setValue(MILLISECONDS.toNanos(10L));

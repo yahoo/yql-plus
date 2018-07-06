@@ -10,7 +10,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import org.objectweb.asm.Opcodes;
@@ -27,6 +33,7 @@ public class JoinGenerator {
     public JoinGenerator(TypeWidget programType, GambitScope environment, final int count) {
         this.builder = environment.createObject(JoinTask.class);
         this.builder.addParameter("$program", programType);
+        this.builder.addParameter("$context", environment.adapt(TaskContext.class, false));
         ObjectBuilder.ConstructorBuilder constructor = this.builder.getConstructor();
         constructor.invokeSpecial(JoinTask.class, constructor.constant(count));
         this.execMethod = builder.method("exec");
@@ -71,7 +78,7 @@ public class JoinGenerator {
             method.exit();
         }
         final GambitCreator.Invocable send = builder.methodInvocable(methodName, joinExpr);
-        body.exec(body.invoke(Location.NONE, send, arguments));
+        body.exec(send.invoke(Location.NONE, arguments));
         return joinExpr;
     }
 

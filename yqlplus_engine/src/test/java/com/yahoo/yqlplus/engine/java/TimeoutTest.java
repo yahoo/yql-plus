@@ -10,10 +10,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.compiler.runtime.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.sources.TimeoutSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
@@ -31,7 +32,7 @@ public class TimeoutTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(10) OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
@@ -41,7 +42,7 @@ public class TimeoutTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(10) TIMEOUT 5 OUTPUT as f1;");
         try {
-            List<Person> rez = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
+            List<Person> rez = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
             Assert.fail("should fail with a timeout");
         } catch (YQLRuntimeException | ExecutionException e) {
             Assert.assertTrue(e.getMessage().contains("Timeout"));
@@ -54,7 +55,7 @@ public class TimeoutTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(8, false) TIMEOUT 5 OUTPUT as f1;");
         try {
-            List<Person> rez = program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
+            List<Person> rez = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
             Assert.fail("should time out");
         } catch (ExecutionException e) {
             Assert.assertTrue(e.getCause() instanceof TimeoutException);
@@ -66,7 +67,7 @@ public class TimeoutTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(5, true) TIMEOUT 5 OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
     }
 
@@ -76,7 +77,7 @@ public class TimeoutTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("timers", TimeoutSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(20) OUTPUT as f1;");
-        ProgramResult rez = program.run(ImmutableMap.of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         
         // Overriding default program timeout
@@ -84,7 +85,7 @@ public class TimeoutTest {
         compiler = injector.getInstance(YQLPlusCompiler.class);
         program = compiler.compile("SELECT * FROM timers(20) OUTPUT as f1;");
         try {
-            program.run(ImmutableMap.of(), true, 5, TimeUnit.MILLISECONDS).getResult("f1").get().getResult();
+            program.run(ImmutableMap.of(), TaskContext.builder().withTimeout(5, TimeUnit.MILLISECONDS).build()).getResult("f1").get().getResult();
             Assert.fail("should time out");
         } catch (ExecutionException e) {
             Assert.assertTrue(e.getCause() instanceof TimeoutException);
@@ -101,7 +102,7 @@ public class TimeoutTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(10) t1 JOIN timers(10) t2 ON t1.id = t2.id TIMEOUT 5 OUTPUT as f1;");
         try {
-            program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
+            program.run(ImmutableMap.of()).getResult("f1").get().getResult();
             Assert.fail("should time out");
         } catch (ExecutionException e) {
             Assert.assertTrue(e.getCause() instanceof TimeoutException);
@@ -114,7 +115,7 @@ public class TimeoutTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM timers(5, false) t1 JOIN timers(5, false) t2 ON t1.id = t2.id TIMEOUT 5 OUTPUT as f1;");
         try {
-            program.run(ImmutableMap.of(), true).getResult("f1").get().getResult();
+            program.run(ImmutableMap.of()).getResult("f1").get().getResult();
             Assert.fail("should time out");
         } catch (ExecutionException e) {
             Assert.assertTrue(e.getCause() instanceof TimeoutException);

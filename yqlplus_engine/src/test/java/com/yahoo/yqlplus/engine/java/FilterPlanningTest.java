@@ -54,7 +54,7 @@ public class FilterPlanningTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", false), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 0);
@@ -72,7 +72,7 @@ public class FilterPlanningTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", true), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 1);
@@ -90,7 +90,7 @@ public class FilterPlanningTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", false), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 0);
@@ -108,7 +108,7 @@ public class FilterPlanningTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", true), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 0);
@@ -165,7 +165,7 @@ public class FilterPlanningTest {
                 "MERGE " +
                 "    SELECT * FROM namer('4') WHERE '4' IN (SELECT m FROM @modules m) ); " +
                 "SELECT * FROM articles ORDER BY id OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo, ImmutableList.of(
@@ -241,7 +241,7 @@ public class FilterPlanningTest {
                 "MERGE " +
                 "    SELECT * FROM namer4 WHERE '4' IN (SELECT m FROM @modules m) ); " +
                 "SELECT * FROM articles ORDER BY id OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo, ImmutableList.of(

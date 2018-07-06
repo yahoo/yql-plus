@@ -21,6 +21,7 @@ import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
 import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.compiler.code.ReturnCode;
 import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.operator.OperatorStep;
@@ -41,6 +42,7 @@ public class TaskGenerator {
     public TaskGenerator(ProgramGenerator program, GambitScope scope) {
         builder = scope.createLambdaBuilder(Runnable.class, "run", void.class, false);
         builder.addArgument("$program", program.getType());
+        builder.addArgument("$context", scope.adapt(TaskContext.class, false));
         programGenerator = program;
         GambitCreator.CatchBuilder catcher = builder.tryCatchFinally();
         ScopedBuilder body = catcher.body();
@@ -69,7 +71,7 @@ public class TaskGenerator {
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(runBody);
         OperatorNode<PhysicalOperator> op = step.getCompute();
         OperatorValue output = step.getOutput();
-        BytecodeExpression rootContext = runBody.propertyValue(op.getLocation(), runBody.local("$program"), "rootContext");
+        BytecodeExpression rootContext = runBody.propertyValue(op.getLocation(), runBody.local("$context"), "rootContext");
         switch (op.getOperator()) {
             case REQUIRED_ARGUMENT: {
                 String nm = op.getArgument(0);
@@ -123,18 +125,18 @@ public class TaskGenerator {
                 BytecodeExpression outputExpression = stepCompiler.evaluateExpression(pgm, ctx, exprTree);
                 if (op.getOperator() == PhysicalOperator.EXECUTE) {
                     GambitCreator.Invocable inc = stepInvocable.complete(outputExpression);
-                    BytecodeExpression evaluatedExpr = runBody.invoke(exprTree.getLocation(), inc, program, ctxExpr);
+                    BytecodeExpression evaluatedExpr = inc.invoke(exprTree.getLocation() , program, ctxExpr);
                     runBody.exec(evaluatedExpr);
                 } else if (outputExpression.getType().getValueCoreType() != YQLCoreType.VOID) {
                     BytecodeExpression expr = stepInvocable.evaluateTryCatch(op.getLocation(), outputExpression);
                     GambitCreator.Invocable inc = stepInvocable.complete(expr);
 
                     ObjectBuilder.FieldBuilder field = programGenerator.registerValue(output, expr.getType());
-                    BytecodeExpression evaluatedExpr = runBody.invoke(exprTree.getLocation(), inc, program, ctxExpr);
+                    BytecodeExpression evaluatedExpr = inc.invoke(exprTree.getLocation(), program, ctxExpr);
                     runBody.set(Location.NONE, field.get(runBody.local("$program")), runBody.evaluateInto(output.getName(), evaluatedExpr));
                 } else {
                     GambitCreator.Invocable inc = stepInvocable.complete(outputExpression);
-                    BytecodeExpression evaluatedExpr = runBody.invoke(exprTree.getLocation(), inc, program, ctxExpr);
+                    BytecodeExpression evaluatedExpr = inc.invoke(exprTree.getLocation(), program, ctxExpr);
                     runBody.exec(evaluatedExpr);
                 }
                 break;
@@ -145,13 +147,14 @@ public class TaskGenerator {
     }
 
 
-    public BytecodeExpression createRunnable(ScopedBuilder body, BytecodeExpression program, List<OperatorValue> args) {
+    public BytecodeExpression createRunnable(ScopedBuilder body, BytecodeExpression program, BytecodeExpression context, List<OperatorValue> args) {
         List<BytecodeExpression> exprs = Lists.newArrayList();
         exprs.add(program);
+        exprs.add(context);
         for (OperatorValue arg : args) {
             exprs.add(body.local(arg.getName()));
         }
-        return body.invoke(Location.NONE, builder.exit(), exprs);
+        return builder.exit().invoke(Location.NONE , exprs);
     }
 
     public ScopedBuilder getBody() {

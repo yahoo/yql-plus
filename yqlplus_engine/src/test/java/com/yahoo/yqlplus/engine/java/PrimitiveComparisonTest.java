@@ -56,7 +56,7 @@ public class PrimitiveComparisonTest {
                 "SELECT * FROM source WHERE b_int NOT IN (@arr_int)     OUTPUT AS n12;" +
                 "SELECT * FROM source WHERE p_int NOT IN (@arr_int)     OUTPUT AS n13;"
         );
-        ProgramResult rez = program.run(ImmutableMap.of("arg_int", 2, "arr_int", ImmutableList.of(2)), true);
+        ProgramResult rez = program.run(ImmutableMap.of("arg_int", 2, "arr_int", ImmutableList.of(2)));
         for (int i = 1; i < 15; ++i) {
             Assert.assertEquals(rez.getResult("f" + i).get().getResult(), ImmutableList.of(record), "result f" + i);
         }

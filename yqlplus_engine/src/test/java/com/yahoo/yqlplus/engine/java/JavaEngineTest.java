@@ -11,7 +11,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.base.Joiner;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.AbstractModule;
@@ -38,7 +42,11 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -225,7 +233,6 @@ public class JavaEngineTest {
 
     protected com.google.inject.Module[] createModules() {
         return new com.google.inject.Module[]{
-                new JavaTestModule.MetricModule(),
                 new SourceBindingModule(
                         "person", ToyPersonSource.class,
                         "failuresource", FailureSource.class
@@ -289,7 +296,7 @@ public class JavaEngineTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap());
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -320,7 +327,7 @@ public class JavaEngineTest {
         CompiledProgram program = compiler.compile("PROGRAM (); \n" +
                 "SELECT * FROM source WHERE id IN (1, 2, 3) " +
                 "OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         /*
          * Without the fix, the following line would throw:
          * java.util.concurrent.ExecutionException: java.util.concurrent.TimeoutException: Timeout after ... NANOSECONDS.

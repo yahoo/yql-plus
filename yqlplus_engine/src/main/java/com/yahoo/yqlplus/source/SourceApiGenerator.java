@@ -9,10 +9,23 @@ package com.yahoo.yqlplus.source;
 import com.google.common.collect.ImmutableList;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Emitter;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
 import com.yahoo.yqlplus.api.trace.Timeout;
+import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.lang.annotation.Annotation;
@@ -82,10 +95,13 @@ public class SourceApiGenerator {
                     BytecodeExpression timeoutExpr = catchBody.propertyValue(Location.NONE, contextVar, "timeout");
                     invocationArguments.add(catchBody.invokeExact(Location.NONE, "getRemaining", Timeout.class, BaseTypeAdapter.INT64, timeoutExpr, catchBody.constant(TimeUnit.MILLISECONDS)));
                 } else if (annotate instanceof Emitter) {
-                    if (!MetricEmitter.class.isAssignableFrom(parameterType)) {
-                        reportMethodParameterException("Trace", method, "@Emitter argument type must be a %s", MetricEmitter.class.getName());
+                    if (MetricEmitter.class.isAssignableFrom(parameterType) || TaskMetricEmitter.class.isAssignableFrom(parameterType)) {
+                        invocationArguments.add(catchBody.propertyValue(Location.NONE, contextVar, "metricEmitter"));
+                    } else if(Tracer.class.isAssignableFrom(parameterType)) {
+                        invocationArguments.add(catchBody.propertyValue(Location.NONE, contextVar, "tracer"));
+                    } else {
+                        reportMethodParameterException("Trace", method, "@Emitter argument type must be a %s or %s", MetricEmitter.class.getName(), Tracer.class.getName());
                     }
-                    invocationArguments.add(catchBody.propertyValue(Location.NONE, contextVar, "metricEmitter"));
                 } else if (annotate instanceof DefaultValue) {
                     // just make sure it's paired with a Set
                     boolean found = false;

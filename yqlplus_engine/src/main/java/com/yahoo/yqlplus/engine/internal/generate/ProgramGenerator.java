@@ -10,8 +10,20 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.LocalVarExpr;
+import com.yahoo.yqlplus.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -39,7 +51,7 @@ public class ProgramGenerator {
     public ProgramGenerator(GambitScope scope) {
         this.scope = scope;
         this.program = scope.createObject(ProgramInvocation.class);
-        program.implement(Runnable.class);
+        this.program.addParameter("$context", scope.adapt(TaskContext.class, false));
         this.readArguments = program.method("readArguments");
         this.readArguments.addArgument("$args", new MapTypeWidget(BaseTypeAdapter.STRING, AnyTypeWidget.getInstance()));
         this.readArgumentsBody = readArguments.block();
@@ -58,7 +70,7 @@ public class ProgramGenerator {
 
 
     public ObjectBuilder.FieldBuilder addJoin(String name, final TypeWidget joinType) {
-        return program.finalField(name, joinType.construct(new LocalVarExpr(program.type(), "this")));
+        return program.finalField(name, joinType.construct(new LocalVarExpr(program.type(), "this"), new LocalVarExpr(scope.adapt(TaskContext.class, false), "$context")));
     }
 
     public List<CompiledProgram.ResultSetInfo> getResultSetInfos() {

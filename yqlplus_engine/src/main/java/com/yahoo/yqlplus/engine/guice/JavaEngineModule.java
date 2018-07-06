@@ -13,9 +13,7 @@ public class JavaEngineModule extends AbstractModule {
     protected void configure() {
         // This is now an assembly
         install(new EngineThreadPoolModule());
-        install(new ExecutionScopeModule());
         install(new PlannerCompilerModule());
-        install(new ProgramTracerModule());
         install(new SearchNamespaceModule());
         install(new PhysicalOperatorBuiltinsModule());
         install(new SourceApiModule());

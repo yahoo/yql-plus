@@ -15,12 +15,11 @@ import com.google.common.base.Ticker;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.google.inject.Inject;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.yahoo.yqlplus.api.annotations.ExecuteScoped;
-import com.yahoo.yqlplus.api.trace.*;
-import com.yahoo.yqlplus.engine.scope.ExecutionScope;
+import com.yahoo.yqlplus.api.trace.RequestTracer;
+import com.yahoo.yqlplus.api.trace.TraceEntry;
+import com.yahoo.yqlplus.api.trace.TraceLogEntry;
+import com.yahoo.yqlplus.api.trace.TraceRequest;
+import com.yahoo.yqlplus.api.trace.Tracer;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -31,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-@ExecuteScoped
 public class ProgramTracer implements RequestTracer {
     private final long started;
     private final boolean debug;
@@ -198,15 +196,6 @@ public class ProgramTracer implements RequestTracer {
         public void serializeWithType(JsonGenerator jgen, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
             serialize(jgen, provider);
         }
-    }
-
-    @Inject
-    ProgramTracer(ExecutionScope scope) {
-        this(Ticker.systemTicker(), scope);
-    }
-
-    public ProgramTracer(Ticker ticker, ExecutionScope scope) {
-        this(ticker, scope.get(Key.get(Boolean.class, Names.named("debug"))), "program", scope.get(Key.get(String.class, Names.named("programName"))));
     }
 
     public ProgramTracer(Ticker ticker, boolean debug, String rootGroup, String rootName) {

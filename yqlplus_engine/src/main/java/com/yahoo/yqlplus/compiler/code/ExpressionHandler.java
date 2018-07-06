@@ -21,7 +21,10 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public abstract class ExpressionHandler extends TypesHandler implements ScopedBuilder {
     protected LocalCodeChunk body;
@@ -311,26 +314,11 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
         };
     }
 
-    @Override
-    public BytecodeExpression invoke(Location loc, Invocable invocable, BytecodeExpression... args) {
-        return invocable.invoke(loc, args);
-    }
-
-    @Override
-    public BytecodeExpression invoke(Location loc, Invocable invocable, List<BytecodeExpression> args) {
-        Iterator<TypeWidget> types = invocable.getArgumentTypes().iterator();
-        List<BytecodeExpression> castArgs = Lists.newArrayListWithCapacity(args.size());
-        for (BytecodeExpression arg : args) {
-            castArgs.add(cast(loc, types.next(), arg));
-        }
-        return invocable.invoke(loc, castArgs);
-    }
-
     public BytecodeExpression transform(Location location, BytecodeExpression iterable, Invocable function) {
         ScopeBuilder scope = scope();
         IterateBuilder it = scope.iterate(iterable);
         BytecodeExpression list = scope.evaluateInto(list(function.getReturnType()));
-        it.exec(it.findExactInvoker(Collection.class, "add", BaseTypeAdapter.BOOLEAN, AnyTypeWidget.getInstance()).invoke(location, list, it.invoke(location, function, it.getItem())));
+        it.exec(it.findExactInvoker(Collection.class, "add", BaseTypeAdapter.BOOLEAN, AnyTypeWidget.getInstance()).invoke(location, list, function.invoke(location, it.getItem())));
         return scope.complete(it.build(list));
     }
 

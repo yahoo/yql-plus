@@ -6,7 +6,12 @@
 
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
@@ -18,7 +23,6 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.Record;
-
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -129,7 +133,7 @@ public class CompoundKeysTest {
     private List<Record> execute(String programText, ImmutableMap<String, Object> arguments) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(programText);
-        ProgramResult rez = program.run(arguments, true);
+        ProgramResult rez = program.run(arguments);
         return rez.getResult("f1").get().getResult();
     }
 
@@ -164,7 +168,7 @@ public class CompoundKeysTest {
       
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(programStr);
-        ProgramResult rez = program.run(ImmutableMap.of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of());
         List<ServiceMetrics> serviceMetrics = rez.getResult("serviceMetrics").get().getResult();
         List<ServiceMetrics> expectedServiceMetrics = Lists.newArrayList(new ServiceMetrics("begin", "service1", "foo", "foo"),
                                                                 new ServiceMetrics("begin", "service2", "foo", "foo"),

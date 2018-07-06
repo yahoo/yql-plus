@@ -131,7 +131,7 @@ public class EvaluateStatementTest extends CompilingTestBase {
         defineSource("table5", TestSource.class);
         defineSource("table10", TestSource.class);
         CompiledProgram program = compileProgramResource("dashboard.yql");
-        List<String> output = Lists.newArrayList(program.run(ImmutableMap.of(), true).getResultNames());
+        List<String> output = Lists.newArrayList(program.run(ImmutableMap.of()).getResultNames());
         Assert.assertEquals(output.size(), 8);
     }
 

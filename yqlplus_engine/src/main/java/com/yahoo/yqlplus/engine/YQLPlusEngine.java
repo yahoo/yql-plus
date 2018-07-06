@@ -9,10 +9,16 @@ package com.yahoo.yqlplus.engine;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.yahoo.cloud.metrics.api.*;
+import com.yahoo.cloud.metrics.api.MetricDimension;
+import com.yahoo.cloud.metrics.api.RequestEvent;
+import com.yahoo.cloud.metrics.api.RequestMetricSink;
+import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
+import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.*;
+import com.yahoo.yqlplus.engine.guice.EngineThreadPoolModule;
+import com.yahoo.yqlplus.engine.guice.NamespaceAdapter;
+import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -32,9 +38,7 @@ public final class YQLPlusEngine {
         protected void configure() {
 
             install(new EngineThreadPoolModule());
-            install(new ExecutionScopeModule());
             install(new PlannerCompilerModule());
-            install(new ProgramTracerModule());
             bind(TaskMetricEmitter.class).toInstance(new StandardRequestEmitter(
                     new MetricDimension(), new RequestMetricSink() {
                 @Override

@@ -15,11 +15,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
+import com.yahoo.yqlplus.compiler.code.JVMTypes;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.compiler.code.JVMTypes;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -65,7 +65,7 @@ public class MultisourceTest {
                 "SELECT * " +
                 "FROM SOURCES movies, hats " +
                 "OUTPUT AS foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Resource> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 5);

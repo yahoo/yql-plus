@@ -82,7 +82,7 @@ public class PromiseResolutionTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
@@ -93,7 +93,7 @@ public class PromiseResolutionTest {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }

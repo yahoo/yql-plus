@@ -12,22 +12,40 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.GambitSource;
+import com.yahoo.yqlplus.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.compiler.code.NullExpr;
+import com.yahoo.yqlplus.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.*;
+import com.yahoo.yqlplus.engine.guice.EngineThreadPoolModule;
+import com.yahoo.yqlplus.engine.guice.PhysicalOperatorBuiltinsModule;
+import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
+import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
+import com.yahoo.yqlplus.engine.guice.SourceApiModule;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEnvironment;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
-import com.yahoo.yqlplus.engine.java.JavaTestModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -57,20 +75,16 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     Map<String, OperatorNode<SequenceOperator>> views;
     Map<String, OperatorNode<PhysicalExprOperator>> modules;
     Map<String, Provider<? extends Source>> sources;
-    JavaTestModule.MetricModule metricModule;
 
 
     public class CompilingTestModule extends AbstractModule {
         @Override
         protected void configure() {
             install(new EngineThreadPoolModule());
-            install(new ExecutionScopeModule());
             install(new PlannerCompilerModule());
-            install(new ProgramTracerModule());
             install(new SearchNamespaceModule());
             install(new SourceApiModule());
             install(new PhysicalOperatorBuiltinsModule());
-            install(metricModule);
             Multibinder<SourceNamespace> sourceNamespaceMultibinder = Multibinder.newSetBinder(binder(), SourceNamespace.class);
             Multibinder<ModuleNamespace> moduleNamespaceMultibinder = Multibinder.newSetBinder(binder(), ModuleNamespace.class);
             sourceNamespaceMultibinder.addBinding().toInstance(CompilingTestBase.this);
@@ -88,7 +102,6 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         if(modules == null) {
             modules = new Module[0];
         }
-        this.metricModule = new JavaTestModule.MetricModule();
         injector = Guice.createInjector(Iterables.concat(ImmutableList.<Module>of(new CompilingTestModule()), Arrays.asList(modules)));
         source = injector.getInstance(ASMClassSource.class);
         scope = new GambitSource(source);
@@ -133,10 +146,9 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
                 }
 
                 @Override
-                public void run() {
+                protected void run() throws Exception {
 
                 }
-
             });
         } catch (VerifyError e) {
             source.trace(System.err);
@@ -238,7 +250,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     protected ProgramResult runProgram(String programText) throws Exception {
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("program.yql", programText);
-        return program.run(ImmutableMap.of(), true);
+        return program.run(ImmutableMap.of());
 
     }
 

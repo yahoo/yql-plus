@@ -7,17 +7,15 @@
 package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
-import com.yahoo.yqlplus.engine.ProgramCompiler;
 import com.yahoo.yqlplus.compiler.code.ASMClassSourceModule;
+import com.yahoo.yqlplus.engine.ProgramCompiler;
 import com.yahoo.yqlplus.engine.internal.compiler.PlanProgramCompiler;
-import com.yahoo.yqlplus.engine.internal.plan.PlanScopedModule;
 
 public class PlannerCompilerModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(ProgramCompiler.class).to(PlanProgramCompiler.class);
-        install(new PlanScopedModule());
         install(new ASMClassSourceModule());
     }
 

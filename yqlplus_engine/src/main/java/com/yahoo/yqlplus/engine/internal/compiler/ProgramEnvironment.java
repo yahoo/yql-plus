@@ -9,8 +9,12 @@ package com.yahoo.yqlplus.engine.internal.compiler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.inject.Injector;
-import com.yahoo.yqlplus.compiler.code.*;
+import com.yahoo.yqlplus.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.compiler.code.GambitScope;
+import com.yahoo.yqlplus.compiler.code.GambitSource;
+import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.compiler.code.ScopedBuilder;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramGenerator;
@@ -57,7 +61,7 @@ public class ProgramEnvironment {
         return generator;
     }
 
-    public CompiledProgram compile(Injector injector) {
+    public CompiledProgram compile() {
         try {
             classSource.build();
             Class<? extends ProgramInvocation> programClazz = (Class<? extends ProgramInvocation>) scope.getObjectClass(program.getProgram());
@@ -65,7 +69,6 @@ public class ProgramEnvironment {
             classSource.dump(stream);
             byte[] dump = stream.toByteArray();
             PlanCompiledProgram compiledProgram = new PlanCompiledProgram(name, program.getArgumentInfos(), program.getResultSetInfos(), ImmutableMap.of(), plan, dump, programClazz);
-            injector.injectMembers(compiledProgram);
             return compiledProgram;
         } catch (ClassNotFoundException e) {
             classSource.trace(System.err);
@@ -87,7 +90,7 @@ public class ProgramEnvironment {
         String name = next.getArgument(0);
         List<OperatorValue> args = next.getArgument(1);
         Preconditions.checkArgument(tasks.containsKey(name));
-        return tasks.get(name).createRunnable(body, body.local("$program"), args);
+        return tasks.get(name).createRunnable(body, body.local("$program"), body.local("$context"), args);
     }
 
     public BytecodeExpression readyRunnable(ScopedBuilder body, OperatorNode<TaskOperator> next) {

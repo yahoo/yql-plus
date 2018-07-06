@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 abstract class BytecodeInvocable implements GambitCreator.Invocable {
@@ -60,9 +61,10 @@ abstract class BytecodeInvocable implements GambitCreator.Invocable {
     @Override
     public final BytecodeExpression invoke(final Location loc, List<BytecodeExpression> args) {
         final List<BytecodeExpression> argsCopy = Lists.newArrayListWithExpectedSize(args.size());
+        Iterator<TypeWidget> argumentTypes = getArgumentTypes().iterator();
         for (BytecodeExpression arg : args) {
             Preconditions.checkNotNull(arg);
-            argsCopy.add(arg);
+            argsCopy.add(new BytecodeCastExpression(argumentTypes.next(), arg));
         }
         return new BaseTypeExpression(returnType) {
             @Override
