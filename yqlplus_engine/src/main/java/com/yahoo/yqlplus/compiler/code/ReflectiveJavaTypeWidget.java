@@ -11,7 +11,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.dynalang.dynalink.support.TypeUtilities;
 import org.objectweb.asm.Type;
 
@@ -97,26 +96,6 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
             return new StructIndexAdapter(this, getPropertyAdapter());
         }
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BytecodeExpression invoke(final BytecodeExpression target, String methodName, final List<BytecodeExpression> arguments) {
-        final Type[] argTypes = new Type[arguments.size()];
-        for (int i = 0; i < arguments.size(); ++i) {
-            argTypes[i] = arguments.get(i).getType().getJVMType();
-        }
-        // how to determine the return type?
-        // loop f
-        TypeLiteral<?> result = dispatcher.lookup(methodName, argTypes);
-        if (result == null) {
-            throw new ProgramCompileException("Unknown method %s.%s", clazz.getName(), methodName);
-        }
-        TypeWidget resultType = adapter.adaptInternal(result);
-        // semi-gross that we always use invokedynamic here, fix later
-        List<BytecodeExpression> fullArgs = Lists.newArrayListWithCapacity(arguments.size() + 1);
-        fullArgs.add(target);
-        fullArgs.addAll(arguments);
-        return new InvokeDynamicExpression(Dynamic.H_BOOTSTRAP, "dyn:callMethod:" + methodName, resultType, fullArgs);
     }
 
     @Override

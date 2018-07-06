@@ -70,11 +70,6 @@ public class AnyTypeWidget implements TypeWidget {
     }
 
     @Override
-    public BytecodeExpression invoke(BytecodeExpression target, String methodName, List<BytecodeExpression> arguments) {
-        return invokeDynamic("dyn:callMethod:" + methodName, this, target, arguments);
-    }
-
-    @Override
     public BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments) {
         return invokeDynamic("dyn:callMethod:" + methodName, outputType, target, arguments);
     }

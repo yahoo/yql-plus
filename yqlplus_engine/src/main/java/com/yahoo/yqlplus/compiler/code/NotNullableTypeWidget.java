@@ -74,11 +74,6 @@ public final class NotNullableTypeWidget implements TypeWidget {
     }
 
     @Override
-    public BytecodeExpression invoke(BytecodeExpression target, String methodName, List<BytecodeExpression> arguments) {
-        return this.target.invoke(target, methodName, arguments);
-    }
-
-    @Override
     public BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments) {
         return this.target.invoke(target, outputType, methodName, arguments);
     }

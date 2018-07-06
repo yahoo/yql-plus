@@ -25,8 +25,6 @@ public interface TypeWidget {
 
     TypeWidget unboxed();
 
-    BytecodeExpression invoke(BytecodeExpression target, String methodName, List<BytecodeExpression> arguments);
-
     BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments);
 
     ComparisonAdapter getComparisionAdapter();

@@ -32,7 +32,6 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
     public static final TypeWidget FLOAT32;
     public static final TypeWidget FLOAT64;
     public static final TypeWidget BOOLEAN;
-    //public static final ValueTypeRepresentation CHAR;
     public static final TypeWidget STRING;
     public static final TypeWidget BYTES;
     public static final TypeWidget BYTEBUFFER;

@@ -195,11 +195,6 @@ public abstract class BaseTypeWidget implements TypeWidget {
     }
 
     @Override
-    public BytecodeExpression invoke(BytecodeExpression target, String methodName, List<BytecodeExpression> arguments) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments) {
         throw new UnsupportedOperationException();
     }
