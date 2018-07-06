@@ -64,9 +64,6 @@ public class PhysicalExprOperatorCompiler {
                 Object cval = expr.getArgument(1);
                 return scope.constant(t, cval);
             }
-            case ROOT_CONTEXT: {
-                return scope.propertyValue(expr.getLocation(), context, "rootContext");
-            }
             case CURRENT_CONTEXT:
                 return context;
             case TRACE_CONTEXT: {

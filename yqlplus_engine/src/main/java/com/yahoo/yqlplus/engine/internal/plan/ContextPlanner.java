@@ -32,7 +32,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
 
     public ContextPlanner(ProgramPlanner program) {
         this.program = program;
-        this.contextExpr = OperatorNode.create(PhysicalExprOperator.ROOT_CONTEXT);
+        this.contextExpr = OperatorNode.create(PhysicalExprOperator.CURRENT_CONTEXT);
         this.eval = new DynamicExpressionEvaluator(this);
     }
 

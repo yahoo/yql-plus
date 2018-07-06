@@ -87,7 +87,7 @@ public class ExportModuleAdapter implements ModuleType {
     private OperatorNode<PhysicalExprOperator> getModule(Location location, ContextPlanner planner) {
         if (module == null) {
             OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
-                    OperatorNode.create(location, PhysicalExprOperator.ROOT_CONTEXT),
+                    OperatorNode.create(location, PhysicalExprOperator.CURRENT_CONTEXT),
                             OperatorNode.create(location, PhysicalExprOperator.NEW,
                                     type,
                                     ImmutableList.of()));

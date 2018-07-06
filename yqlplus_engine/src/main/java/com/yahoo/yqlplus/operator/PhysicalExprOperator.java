@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 public enum PhysicalExprOperator implements Operator {
-    ROOT_CONTEXT(),
     // end(context, input-value)
     END_CONTEXT(PhysicalExprOperator.class),
     // TIMEOUT(timeout, units)
