@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.java.backends.java;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.compiler.runtime.Chooser;
+import com.yahoo.yqlplus.engine.compiler.runtime.Chooser;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

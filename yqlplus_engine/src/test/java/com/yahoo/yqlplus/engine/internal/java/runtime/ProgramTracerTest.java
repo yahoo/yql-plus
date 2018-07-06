@@ -10,12 +10,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.google.common.base.Ticker;
-import com.yahoo.yqlplus.api.trace.ThrowableEvent;
-import com.yahoo.yqlplus.api.trace.TraceEntry;
-import com.yahoo.yqlplus.api.trace.TraceLogEntry;
-import com.yahoo.yqlplus.api.trace.TraceRequest;
-import com.yahoo.yqlplus.api.trace.Tracer;
-import com.yahoo.yqlplus.compiler.runtime.ProgramTracer;
+import com.yahoo.yqlplus.api.trace.*;
+import com.yahoo.yqlplus.engine.compiler.runtime.ProgramTracer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -13,9 +13,9 @@ import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.source.ExportUnitGenerator;
+import com.yahoo.yqlplus.engine.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.language.parser.Location;
-import com.yahoo.yqlplus.source.ExportUnitGenerator;
-import com.yahoo.yqlplus.source.SourceUnitGenerator;
 
 import java.util.List;
 

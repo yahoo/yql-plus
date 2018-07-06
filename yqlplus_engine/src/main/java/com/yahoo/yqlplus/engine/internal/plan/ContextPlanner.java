@@ -8,10 +8,10 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.runtime.Sequences;
 import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.runtime.Sequences;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.engine.rules.ReadFieldAliasAnnotate;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;

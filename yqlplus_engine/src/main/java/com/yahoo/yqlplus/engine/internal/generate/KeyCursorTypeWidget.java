@@ -7,10 +7,10 @@
 package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.compiler.code.BaseTypeWidget;
-import com.yahoo.yqlplus.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.compiler.code.JavaIterableAdapter;
-import com.yahoo.yqlplus.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.IterateAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.JavaIterableAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import org.objectweb.asm.Type;
 
 import java.util.List;

@@ -7,15 +7,8 @@
 package com.yahoo.yqlplus.engine.internal.compiler;
 
 import com.google.inject.Guice;
-import com.yahoo.yqlplus.compiler.code.ASMClassSource;
-import com.yahoo.yqlplus.compiler.code.ASMClassSourceModule;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.GambitScope;
-import com.yahoo.yqlplus.compiler.code.GambitSource;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.engine.TaskContext;
+import com.yahoo.yqlplus.engine.compiler.code.*;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.JoinTask;
 import com.yahoo.yqlplus.language.parser.Location;

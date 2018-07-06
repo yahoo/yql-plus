@@ -12,15 +12,11 @@ import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.api.trace.Tracer;
-import com.yahoo.yqlplus.compiler.runtime.RelativeTicker;
-import com.yahoo.yqlplus.compiler.runtime.TimeoutTracker;
+import com.yahoo.yqlplus.engine.compiler.runtime.RelativeTicker;
+import com.yahoo.yqlplus.engine.compiler.runtime.TimeoutTracker;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 public final class TaskContext {

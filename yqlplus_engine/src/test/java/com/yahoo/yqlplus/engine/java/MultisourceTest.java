@@ -15,11 +15,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
-import com.yahoo.yqlplus.compiler.code.JVMTypes;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
+import com.yahoo.yqlplus.engine.compiler.code.JVMTypes;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

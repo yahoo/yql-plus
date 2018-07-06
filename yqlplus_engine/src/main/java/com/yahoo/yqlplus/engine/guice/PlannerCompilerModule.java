@@ -7,8 +7,8 @@
 package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
-import com.yahoo.yqlplus.compiler.code.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.internal.compiler.PlanProgramCompiler;
 
 public class PlannerCompilerModule extends AbstractModule {

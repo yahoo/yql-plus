@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.engine.internal.plan;
 import com.google.common.collect.*;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
-import com.yahoo.yqlplus.compiler.runtime.Chooser;
+import com.yahoo.yqlplus.engine.compiler.runtime.Chooser;
 import com.yahoo.yqlplus.engine.rules.IndexMatchOperatorTransform;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.engine.rules.PushAndTransform;

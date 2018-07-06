@@ -7,10 +7,10 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.compiler.code.EqualsExpression;
-import com.yahoo.yqlplus.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.EqualsExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
 import org.testng.annotations.Test;

@@ -8,9 +8,9 @@ package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.compiler.code.ExactInvocation;
-import com.yahoo.yqlplus.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.ExactInvocation;
+import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.operator.FunctionOperator;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;

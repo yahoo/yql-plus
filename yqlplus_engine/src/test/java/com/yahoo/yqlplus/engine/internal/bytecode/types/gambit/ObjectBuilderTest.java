@@ -6,8 +6,8 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
-import com.yahoo.yqlplus.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
 import org.testng.annotations.Test;

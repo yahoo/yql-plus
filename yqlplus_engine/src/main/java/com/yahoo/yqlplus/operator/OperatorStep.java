@@ -9,7 +9,7 @@ package com.yahoo.yqlplus.operator;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.api.types.Annotations;
-import com.yahoo.yqlplus.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.internal.tasks.Step;
 import com.yahoo.yqlplus.engine.internal.tasks.Value;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
