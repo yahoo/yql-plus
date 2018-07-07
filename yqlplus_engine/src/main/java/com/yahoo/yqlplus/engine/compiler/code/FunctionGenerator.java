@@ -39,10 +39,6 @@ public abstract class FunctionGenerator extends Annotatable implements LocalCode
         return arguments.allocate(name, type);
     }
 
-    public List<String> getArgumentNames() {
-        return arguments.getNames();
-    }
-
     public abstract void generate(ClassVisitor cw);
 
     public void addModifier(int elt) {

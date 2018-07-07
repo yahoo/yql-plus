@@ -54,11 +54,6 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
 
     @Override
-    public BytecodeExpression constant(TypeWidget type, Object value) {
-        return source.constant(type, value);
-    }
-
-    @Override
     public BytecodeExpression constant(Object value) {
         return source.constant(inferConstantType(value), value);
     }

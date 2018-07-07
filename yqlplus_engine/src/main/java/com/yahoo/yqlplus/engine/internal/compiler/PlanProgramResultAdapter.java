@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.internal.compiler;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
@@ -18,48 +16,49 @@ import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class PlanProgramResultAdapter implements ProgramResult, InvocationResultHandler {
     private final Tracer tracer;
     private final List<String> names;
-    private final Map<String, SettableFuture<YQLResultSet>> resultSets;
-    private final SettableFuture<Tracer> end;
+    private final Map<String, CompletableFuture<YQLResultSet>> resultSets;
+    private final CompletableFuture<Tracer> end;
 
     public PlanProgramResultAdapter(Tracer tracer, List<CompiledProgram.ResultSetInfo> resultSetInfos) {
         this.tracer = tracer;
         ImmutableList.Builder<String> names = ImmutableList.builder();
-        ImmutableMap.Builder<String, SettableFuture<YQLResultSet>> resultSets = ImmutableMap.builder();
+        ImmutableMap.Builder<String, CompletableFuture<YQLResultSet>> resultSets = ImmutableMap.builder();
         for (CompiledProgram.ResultSetInfo info : resultSetInfos) {
             names.add(info.getName());
-            resultSets.put(info.getName(), SettableFuture.create());
+            resultSets.put(info.getName(), new CompletableFuture<>());
         }
-        this.end = SettableFuture.create();
+        this.end = new CompletableFuture<>();
         this.names = names.build();
         this.resultSets = resultSets.build();
     }
 
     @Override
     public void fail(Throwable t) {
-        end.setException(t);
-        for (Map.Entry<String, SettableFuture<YQLResultSet>> e : resultSets.entrySet()) {
-            e.getValue().setException(t);
+        end.completeExceptionally(t);
+        for (Map.Entry<String, CompletableFuture<YQLResultSet>> e : resultSets.entrySet()) {
+            e.getValue().completeExceptionally(t);
         }
     }
 
     @Override
     public void succeed(String name, Object value) {
-        resultSets.get(name).set(new PlanResultSet(value));
+        resultSets.get(name).complete(new PlanResultSet(value));
     }
 
     @Override
     public void fail(String name, Throwable t) {
-        resultSets.get(name).setException(t);
+        resultSets.get(name).completeExceptionally(t);
     }
 
     @Override
     public void end() {
         tracer.end();
-        end.set(tracer);
+        end.complete(tracer);
     }
 
     @Override
@@ -68,12 +67,12 @@ public class PlanProgramResultAdapter implements ProgramResult, InvocationResult
     }
 
     @Override
-    public ListenableFuture<YQLResultSet> getResult(String name) {
+    public CompletableFuture<YQLResultSet> getResult(String name) {
         return resultSets.get(name);
     }
 
     @Override
-    public ListenableFuture<Tracer> getEnd() {
+    public CompletableFuture<Tracer> getEnd() {
         return end;
     }
 
