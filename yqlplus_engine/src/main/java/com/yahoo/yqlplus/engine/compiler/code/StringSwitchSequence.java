@@ -19,7 +19,7 @@ public class StringSwitchSequence implements BytecodeSequence {
     private BytecodeExpression input;
     private final boolean caseInsensitive;
 
-    public StringSwitchSequence(BytecodeExpression input, boolean caseInsensitive) {
+    StringSwitchSequence(BytecodeExpression input, boolean caseInsensitive) {
         this.input = input;
         this.caseInsensitive = caseInsensitive;
     }

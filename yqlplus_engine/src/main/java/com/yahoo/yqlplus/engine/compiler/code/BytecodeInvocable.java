@@ -80,7 +80,7 @@ abstract class BytecodeInvocable implements GambitCreator.Invocable {
         private final List<BytecodeExpression> prefix;
         private final BytecodeInvocable parent;
 
-        public PrefixedBytecodeInvocable(TypeWidget returnType, List<BytecodeExpression> prefixed, List<TypeWidget> argTypes, BytecodeInvocable parent) {
+        PrefixedBytecodeInvocable(TypeWidget returnType, List<BytecodeExpression> prefixed, List<TypeWidget> argTypes, BytecodeInvocable parent) {
             super(returnType, argTypes);
             this.prefix = prefixed;
             this.parent = parent;

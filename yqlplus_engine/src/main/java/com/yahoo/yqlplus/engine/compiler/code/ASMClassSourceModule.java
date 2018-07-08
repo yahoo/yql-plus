@@ -107,23 +107,4 @@ public class ASMClassSourceModule extends AbstractModule {
         }
         return org.objectweb.asm.Type.getType(clazz);
     }
-
-//    @Provides
-//    @Singleton
-//    @Named("engineSource")
-//    ASMClassSource provideEngineSource(Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultTypeAdapter) {
-//        return new ASMClassSource(adapters, defaultTypeAdapter);
-//    }
-//
-//    @Provides
-//    EngineValueTypeAdapter provideEngineAdapter(@Named("engineSource") ASMClassSource engineSource) {
-//        return engineSource.getValueTypeAdapter();
-//    }
-//
-//    @Provides
-//    ASMClassSource provideWorkService(@Named("engineSource") ASMClassSource engineSource) {
-//        return engineSource.createChildSource();
-//    }
-
-
 }

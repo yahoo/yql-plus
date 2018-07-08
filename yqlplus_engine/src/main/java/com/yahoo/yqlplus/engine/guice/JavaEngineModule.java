@@ -12,7 +12,6 @@ public class JavaEngineModule extends AbstractModule {
     @Override
     protected void configure() {
         // This is now an assembly
-        install(new EngineThreadPoolModule());
         install(new PlannerCompilerModule());
         install(new SearchNamespaceModule());
         install(new PhysicalOperatorBuiltinsModule());

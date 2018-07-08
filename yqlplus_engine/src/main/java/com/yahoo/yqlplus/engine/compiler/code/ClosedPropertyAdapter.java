@@ -93,7 +93,7 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
         BytecodeSequence visit(BytecodeExpression target, String propertyName);
     }
 
-    protected BytecodeSequence dispatchProperty(final BytecodeExpression target, final BytecodeExpression propertyName, DispatchProperty visitor, final BytecodeSequence notFound) {
+    private BytecodeSequence dispatchProperty(final BytecodeExpression target, final BytecodeExpression propertyName, DispatchProperty visitor, final BytecodeSequence notFound) {
         StringSwitchSequence seq = new StringSwitchSequence(propertyName, true);
         for(Property property : getProperties()) {
             seq.put(property.name, visitor.visit(target, property.name));

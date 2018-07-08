@@ -21,7 +21,10 @@ import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.compiler.code.*;
-import com.yahoo.yqlplus.engine.guice.*;
+import com.yahoo.yqlplus.engine.guice.PhysicalOperatorBuiltinsModule;
+import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
+import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
+import com.yahoo.yqlplus.engine.guice.SourceApiModule;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.*;
@@ -61,7 +64,6 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     public class CompilingTestModule extends AbstractModule {
         @Override
         protected void configure() {
-            install(new EngineThreadPoolModule());
             install(new PlannerCompilerModule());
             install(new SearchNamespaceModule());
             install(new SourceApiModule());
