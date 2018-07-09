@@ -12,7 +12,7 @@ import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.internal.plan.*;
-import com.yahoo.yqlplus.engine.source.ExportUnitGenerator;
+import com.yahoo.yqlplus.engine.source.ExportModuleAdapter;
 import com.yahoo.yqlplus.engine.source.SourceUnitGenerator;
 import com.yahoo.yqlplus.language.parser.Location;
 
@@ -42,8 +42,7 @@ public class MultibinderPlannerNamespace implements SourceNamespace, ModuleNames
         if (moduleProvider == null) {
             return null;
         }
-        ExportUnitGenerator adapter = new ExportUnitGenerator(planner.getGambitScope());
-        return adapter.apply(modulePath, moduleProvider);
+        return new ExportModuleAdapter(keyFor(modulePath), moduleProvider.get().getClass(), moduleProvider::get);
     }
 
     @Override

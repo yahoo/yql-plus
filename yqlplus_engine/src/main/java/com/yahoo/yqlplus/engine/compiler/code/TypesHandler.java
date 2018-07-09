@@ -67,6 +67,15 @@ public class TypesHandler implements GambitTypes {
         return result;
     }
 
+    @Override
+    public TypeWidget adapt(org.objectweb.asm.Type type, boolean nullable) {
+        TypeWidget result = source.adaptInternal(type);
+        if (!nullable) {
+            return NotNullableTypeWidget.create(result);
+        }
+        return result;
+    }
+
     public TypeWidget unify(List<? extends TypeWidget> types) {
         return source.getValueTypeAdapter().unifyTypes((Iterable<TypeWidget>) types);
     }

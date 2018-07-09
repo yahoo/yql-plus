@@ -7,12 +7,12 @@
 package com.yahoo.yqlplus.engine.source;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.cloud.metrics.api.MetricEmitter;
+import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
+import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.trace.Tracer;
+import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
@@ -21,128 +21,144 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import com.yahoo.yqlplus.operator.*;
+import org.objectweb.asm.Type;
 
-import java.util.Collection;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static com.yahoo.yqlplus.engine.source.SourceApiGenerator.isFreeArgument;
 
 public class ExportModuleAdapter implements ModuleType {
-    private final TypeWidget type;
     private final String moduleName;
-    private final Multimap<String, ObjectBuilder.MethodBuilder> methods;
-    private final Map<String, ObjectBuilder.MethodBuilder> fields;
-
+    private final Class<?> clazz;
+    private final Supplier<?> supplier;
     private OperatorNode<PhysicalExprOperator> module;
 
-    public ExportModuleAdapter(TypeWidget type, String moduleName, Multimap<String, ObjectBuilder.MethodBuilder> methods, Map<String, ObjectBuilder.MethodBuilder> fields) {
-        this.type = type;
+    public ExportModuleAdapter(String moduleName, Class<?> clazz, Supplier<?> module) {
         this.moduleName = moduleName;
-        this.methods = methods;
-        this.fields = fields;
+        this.clazz = clazz;
+        this.supplier = module;
     }
 
     @Override
     public OperatorNode<PhysicalExprOperator> call(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
-        return callInRowContext(location, context, name, arguments, null);
+        return adaptInvoke(location, context, name, null, arguments, null);
+    }
+
+    private OperatorNode<PhysicalExprOperator> adaptInvoke(Location location, ContextPlanner context, String name, OperatorNode<PhysicalExprOperator> streamInput, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
+        DynamicExpressionEvaluator eval = row == null ? new DynamicExpressionEvaluator(context) : new DynamicExpressionEvaluator(context, row);
+        List<OperatorNode<PhysicalExprOperator>> inputArgs = eval.applyAll(arguments);
+        if(streamInput != null) {
+            inputArgs.add(0, streamInput);
+        }
+        methods:
+        for (Method method : clazz.getMethods()) {
+            if (!method.isAnnotationPresent(Export.class)) {
+                continue;
+            }
+            if (!name.equalsIgnoreCase(method.getName())) {
+                continue;
+            }
+            List<OperatorNode<PhysicalExprOperator>> invokeArguments = Lists.newArrayList();
+            PhysicalExprOperator callOperator = PhysicalExprOperator.INVOKEVIRTUAL;
+            if (Modifier.isStatic(method.getModifiers())) {
+                callOperator = PhysicalExprOperator.INVOKESTATIC;
+            } else if(clazz.isInterface()) {
+                callOperator = PhysicalExprOperator.INVOKEINTERFACE;
+                invokeArguments.add(getModule(location, context));
+            } else {
+                invokeArguments.add(getModule(location, context));
+            }
+            Class<?>[] argumentTypes = method.getParameterTypes();
+            Annotation[][] annotations = method.getParameterAnnotations();
+            Iterator<OperatorNode<PhysicalExprOperator>> inputNext = inputArgs.iterator();
+            for (int i = 0; i < argumentTypes.length; ++i) {
+                Class<?> parameterType = argumentTypes[i];
+                if (isFreeArgument(argumentTypes[i], annotations[i])) {
+                    if (!inputNext.hasNext()) {
+                        continue methods;
+                    }
+                    invokeArguments.add(inputNext.next());
+                } else {
+                    for (Annotation annotate : annotations[i]) {
+                        if (annotate instanceof Key) {
+                            continue methods;
+                        } else if (annotate instanceof Set || annotate instanceof DefaultValue) {
+                            continue methods;
+                        } else if (annotate instanceof TimeoutMilliseconds) {
+                            if (!Long.TYPE.isAssignableFrom(parameterType)) {
+                                reportMethodParameterException("TimeoutMilliseconds", method, "@TimeoutMilliseconds argument type must be a primitive long");
+                            }
+                            invokeArguments.add(OperatorNode.create(PhysicalExprOperator.TIMEOUT_REMAINING, TimeUnit.MILLISECONDS));
+                        } else if (annotate instanceof Emitter) {
+                            if (MetricEmitter.class.isAssignableFrom(parameterType) || TaskMetricEmitter.class.isAssignableFrom(parameterType)) {
+                                invokeArguments.add(OperatorNode.create(PhysicalExprOperator.PROPREF, OperatorNode.create(PhysicalExprOperator.CURRENT_CONTEXT), "metricEmitter"));
+                            } else if (Tracer.class.isAssignableFrom(parameterType)) {
+                                invokeArguments.add(OperatorNode.create(PhysicalExprOperator.PROPREF, OperatorNode.create(PhysicalExprOperator.CURRENT_CONTEXT), "tracer"));
+                            } else {
+                                reportMethodParameterException("Trace", method, "@Emitter argument type must be a %s or %s", MetricEmitter.class.getName(), Tracer.class.getName());
+                            }
+                        }
+                    }
+                }
+            }
+            return OperatorNode.create(callOperator, method.getGenericReturnType(), Type.getType(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method), invokeArguments);
+        }
+        for (Field field : clazz.getFields()) {
+            if (!field.isAnnotationPresent(Export.class) || !Modifier.isPublic(field.getModifiers()) || !name.equalsIgnoreCase(field.getName())) {
+                continue;
+            }
+            return OperatorNode.create(PhysicalExprOperator.PROPREF, getModule(location, context), field.getName());
+        }
+
+        throw new ProgramCompileException(location, "Method '%s' not found on module %s with matching argument count %d", name, moduleName, arguments.size());
     }
 
     @Override
     public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
-        Collection<ObjectBuilder.MethodBuilder> targets = methods.get(name);
-        if (targets.isEmpty()) {
-            throw new ProgramCompileException(location, "Method '%s' not found on module %s", name, moduleName);
-        }
-        @SuppressWarnings("ConstantConditions") GambitCreator.Invocable firstInvocable = Iterables.getFirst(targets, null).invoker();
-        TypeWidget outputType = firstInvocable.getReturnType();
-        DynamicExpressionEvaluator eval = row == null ? new DynamicExpressionEvaluator(context) : new DynamicExpressionEvaluator(context, row);
-        List<OperatorNode<PhysicalExprOperator>> callArgs = Lists.newArrayList();
-        callArgs.add(getModule(location, context));
-        callArgs.add(context.getContextExpr());
-        if (targets.size() > 1) {
-            callArgs.addAll(eval.applyAll(arguments));
-            for (ObjectBuilder.MethodBuilder candidate : targets) {
-                outputType = context.getValueTypeAdapter().unifyTypes(outputType, candidate.invoker().getReturnType());
-            }
-            return OperatorNode.create(location, PhysicalExprOperator.CALL, outputType, name, callArgs);
-        } else {
-            Iterator<TypeWidget> args = firstInvocable.getArgumentTypes().iterator();
-            args.next();
-            args.next();
-            // consume the module & context
-            Iterator<OperatorNode<ExpressionOperator>> e = arguments.iterator();
-            while (args.hasNext()) {
-                if (!e.hasNext()) {
-                    throw new ProgramCompileException(location, "Argument length mismatch in call to %s (expects %d arguments)", name, firstInvocable.getArgumentTypes().size());
-                }
-                callArgs.add(OperatorNode.create(location, PhysicalExprOperator.CAST, args.next(), eval.apply(e.next())));
-            }
-            if (e.hasNext()) {
-                throw new ProgramCompileException(location, "Argument length mismatch in call to %s (expects %d arguments)", name, firstInvocable.getArgumentTypes().size());
-            }
-            return OperatorNode.create(location, PhysicalExprOperator.INVOKE, firstInvocable, callArgs);
-        }
+        return adaptInvoke(location, context, name, null, arguments, row);
     }
 
     private OperatorNode<PhysicalExprOperator> getModule(Location location, ContextPlanner planner) {
         if (module == null) {
-            OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
-                    OperatorNode.create(location, PhysicalExprOperator.CURRENT_CONTEXT),
-                            OperatorNode.create(location, PhysicalExprOperator.NEW,
-                                    type,
-                                    ImmutableList.of()));
-            module = OperatorNode.create(location, PhysicalExprOperator.VALUE, value);
+            if (supplier != null) {
+                OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
+                        OperatorNode.create(location, PhysicalExprOperator.CURRENT_CONTEXT),
+                        OperatorNode.create(location, PhysicalExprOperator.INVOKEINTERFACE,
+                                clazz, Type.getType(Supplier.class), "get", Type.getMethodDescriptor(Type.getType(Object.class)),
+                                ImmutableList.of(OperatorNode.create(PhysicalExprOperator.CONSTANT_VALUE, Supplier.class, supplier))));
+                module = OperatorNode.create(location, PhysicalExprOperator.VALUE, value);
+            }  else {
+                OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
+                        OperatorNode.create(location, PhysicalExprOperator.CURRENT_CONTEXT),
+                        OperatorNode.create(location, PhysicalExprOperator.INVOKENEW,
+                                clazz,
+                                ImmutableList.of()));
+                module = OperatorNode.create(location, PhysicalExprOperator.VALUE, value);
+            }
         }
         return module;
     }
 
     @Override
     public OperatorNode<PhysicalExprOperator> property(Location location, ContextPlanner context, String name) {
-        ObjectBuilder.MethodBuilder fieldGetter = fields.get(name);
-        if (fieldGetter == null) {
-            throw new ProgramCompileException(location, "Property '%s' not found on module %s", name, moduleName);
-        }
-        return OperatorNode.create(location, PhysicalExprOperator.INVOKE, fieldGetter.invoker(), ImmutableList.of(getModule(location, context)));
+        return callInRowContext(location, context, name, ImmutableList.of(), null);
     }
 
     @Override
     public StreamValue pipe(Location location, ContextPlanner context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
-        Collection<ObjectBuilder.MethodBuilder> targets = methods.get(name);
-        if (targets.isEmpty()) {
-            throw new ProgramCompileException(location, "Method '%s' not found on module %s", name, moduleName);
-        }
-        @SuppressWarnings("ConstantConditions") GambitCreator.Invocable firstInvocable = Iterables.getFirst(targets, null).invoker();
-        TypeWidget outputType = firstInvocable.getReturnType();
-        DynamicExpressionEvaluator eval = new DynamicExpressionEvaluator(context);
-        List<OperatorNode<PhysicalExprOperator>> callArgs = Lists.newArrayList();
-        callArgs.add(getModule(location, context));
-        callArgs.add(context.getContextExpr());
-        if (targets.size() > 1) {
-            callArgs.add(input.materializeValue());
-            callArgs.addAll(eval.applyAll(arguments));
-            for (ObjectBuilder.MethodBuilder candidate : targets) {
-                outputType = context.getValueTypeAdapter().unifyTypes(outputType, candidate.invoker().getReturnType());
-            }
-            return StreamValue.iterate(context, OperatorNode.create(location, PhysicalExprOperator.CALL, outputType, name, callArgs));
-        } else {
-            Iterator<TypeWidget> args = firstInvocable.getArgumentTypes().iterator();
-            args.next();
-            args.next();
-            // consume the module & context
-            callArgs.add(input.materializeValue());
-            // consume the stream argument
-            args.next();
-            Iterator<OperatorNode<ExpressionOperator>> e = arguments.iterator();
-            while (args.hasNext()) {
-                if (!e.hasNext()) {
-                    throw new ProgramCompileException(location, "Argument length mismatch in call to %s (expects %d arguments)", name, firstInvocable.getArgumentTypes().size());
-                }
-                callArgs.add(OperatorNode.create(location, PhysicalExprOperator.CAST, args.next(), eval.apply(e.next())));
-            }
-            if (e.hasNext()) {
-                throw new ProgramCompileException(location, "Argument length mismatch in call to %s (expects %d arguments)", name, firstInvocable.getArgumentTypes().size());
-            }
-            return StreamValue.iterate(context, OperatorNode.create(location, PhysicalExprOperator.INVOKE, firstInvocable, callArgs));
-        }
+        return StreamValue.iterate(context, adaptInvoke(location, context, name, input.materializeValue(), arguments, null));
     }
+
+    protected void reportMethodParameterException(String type, Method method, String message, Object... args) {
+        message = String.format(message, args);
+        throw new YQLTypeException(String.format("@%s method error: %s.%s: %s", type, method.getDeclaringClass().getName(), method.getName(), message));
+    }
+
 }

@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.engine.compiler.code;
 
 import com.yahoo.yqlplus.api.types.YQLType;
+import org.objectweb.asm.Type;
 
 import java.util.List;
 
@@ -27,6 +28,8 @@ public interface GambitTypes {
     TypeWidget adapt(YQLType type);
 
     TypeWidget adapt(java.lang.reflect.Type type, boolean nullable);
+
+    TypeWidget adapt(Type type, boolean nullable);
 
     TypeWidget unify(List<? extends TypeWidget> types);
 

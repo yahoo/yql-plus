@@ -110,11 +110,11 @@ public abstract class PlanChain {
             case PROPREF:
                 return isRowDependent(filter.getArgument(0));
             case VARREF:
+            case READ_MODULE:
                 return false;
             case CALL:
             case READ_RECORD:
             case READ_FIELD:
-            case READ_MODULE:
                 return true;
             default:
                 // should maybe blow up in the default case since it means we have a new operator or one that should be

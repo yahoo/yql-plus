@@ -64,6 +64,36 @@ public class ASMClassSource {
         return argumentTypes;
     }
 
+    public TypeWidget adaptInternal(Type type) {
+        try {
+            switch (type.getSort()) {
+                case Type.ARRAY:
+                case Type.OBJECT:
+                    return adaptInternal(Class.forName(type.getClassName(), true, generatedClassLoader));
+                case Type.VOID:
+                    return BaseTypeAdapter.VOID;
+                case Type.BOOLEAN:
+                    return BaseTypeAdapter.BOOLEAN;
+                case Type.SHORT:
+                    return BaseTypeAdapter.INT16;
+                case Type.INT:
+                    return BaseTypeAdapter.INT32;
+                case Type.CHAR:
+                    return adaptInternal(char.class);
+                case Type.FLOAT:
+                    return BaseTypeAdapter.FLOAT32;
+                case Type.LONG:
+                    return BaseTypeAdapter.INT64;
+                case Type.DOUBLE:
+                    return BaseTypeAdapter.FLOAT64;
+                default:
+                    throw new UnsupportedOperationException("Unknown JVM type: " + type);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new ProgramCompileException(e);
+        }
+    }
+
     class LambdaFactoryCallable extends BytecodeInvocable implements LambdaInvocable {
         final MethodGenerator method;
         final FunctionalInterfaceContract contract;

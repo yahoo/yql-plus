@@ -18,9 +18,11 @@ import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorNodeVisitor;
+import org.objectweb.asm.Type;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public enum PhysicalExprOperator implements Operator {
     // end(context, input-value)
@@ -31,6 +33,8 @@ public enum PhysicalExprOperator implements Operator {
     TIMEOUT_GUARD(PhysicalExprOperator.class, PhysicalExprOperator.class, PhysicalExprOperator.class, PhysicalExprOperator.class),
     // TRACE(record<string>string dimensions)
     TRACE_CONTEXT(PhysicalExprOperator.class),
+
+    TIMEOUT_REMAINING(TimeUnit.class),
 
     WITH_CONTEXT(PhysicalExprOperator.class, PhysicalExprOperator.class),
     ENFORCE_TIMEOUT(PhysicalExprOperator.class),
@@ -75,7 +79,15 @@ public enum PhysicalExprOperator implements Operator {
     RECORD_AS(TypeWidget.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     CALL(TypeWidget.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKE(GambitCreator.Invocable.class, PlanOperatorTypes.EXPRS),
+    // (returnType, owner, methodName, methodDescriptor)
+    INVOKEVIRTUAL(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
+    INVOKESTATIC(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
+    INVOKEINTERFACE(java.lang.reflect.Type.class, Type.class, String.class, String.class, PlanOperatorTypes.EXPRS),
+    INVOKENEW(java.lang.reflect.Type.class, PlanOperatorTypes.EXPRS),
+
     CONSTANT(TypeWidget.class, Object.class),
+    // CONSTANT_VALUE(genericType, value)
+    CONSTANT_VALUE(java.lang.reflect.Type.class, Object.class),
     NULL(TypeWidget.class),
     CAST(TypeWidget.class, PhysicalExprOperator.class),
     NEW(TypeWidget.class, PlanOperatorTypes.EXPRS),

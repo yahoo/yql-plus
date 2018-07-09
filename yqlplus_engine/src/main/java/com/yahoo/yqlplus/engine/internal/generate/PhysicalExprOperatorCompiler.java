@@ -12,6 +12,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.cloud.metrics.api.MetricDimension;
+import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.compiler.code.*;
@@ -29,6 +30,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,10 +61,26 @@ public class PhysicalExprOperatorCompiler {
                 TypeWidget widget = argumentExprs.get(0).getType();
                 return widget.invoke(argumentExprs.get(0), outputType, name, argumentExprs.subList(1, argumentExprs.size()));
             }
+            //     INVOKESTATIC(Type.class,  String.class, Type.class, PlanOperatorTypes.EXPRS),
+                //     // (owner, methodName, methodDescriptor)
+            case INVOKEVIRTUAL:
+                return handleInvoke(Opcodes.INVOKEVIRTUAL, program, context, expr);
+            case INVOKESTATIC:
+                return handleInvoke(Opcodes.INVOKESTATIC, program, context, expr);
+            case INVOKEINTERFACE:
+                return handleInvoke(Opcodes.INVOKEINTERFACE, program, context, expr);
+            case INVOKENEW: {
+                return handleInvokeNew(program, context, expr);
+            }
             case CONSTANT: {
                 TypeWidget t = expr.getArgument(0);
                 Object cval = expr.getArgument(1);
                 return scope.constant(t, cval);
+            }
+            case CONSTANT_VALUE: {
+                java.lang.reflect.Type t = expr.getArgument(0);
+                Object cval = expr.getArgument(1);
+                return scope.constant(scope.adapt(t, false), cval);
             }
             case CURRENT_CONTEXT:
                 return context;
@@ -160,6 +178,11 @@ public class PhysicalExprOperatorCompiler {
                                 scope.adapt(Iterable.class, false),
                                 scope.cast(scope.adapt(Iterable.class, false),
                                         scope.list(expr.getLocation(), exprs))).invoke(expr.getLocation()));
+            }
+            case TIMEOUT_REMAINING: {
+                TimeUnit units = expr.getArgument(0);
+                BytecodeExpression timeoutExpr =  scope.propertyValue(Location.NONE, context, "timeout");
+                return scope.invokeExact(Location.NONE, "getRemaining", Timeout.class, BaseTypeAdapter.INT64, timeoutExpr, scope.constant(units));
             }
             case ENFORCE_TIMEOUT: {
                 List<BytecodeExpression> localExprs = Lists.newArrayList();
@@ -446,6 +469,41 @@ public class PhysicalExprOperatorCompiler {
             default:
                 throw new ProgramCompileException("Unimplemented PhysicalExprOperator: " + expr.toString());
         }
+    }
+
+    private BytecodeExpression handleInvoke(int op, BytecodeExpression program, BytecodeExpression context, OperatorNode<PhysicalExprOperator> expr) {
+        java.lang.reflect.Type returnJVMType = expr.getArgument(0);
+        TypeWidget returnType = scope.adapt(returnJVMType, true);
+        Type owner = expr.getArgument(1);
+        TypeWidget ownerType = scope.adapt(owner, false);
+        String methodName = expr.getArgument(2);
+        Type methodDescriptor = Type.getMethodType(expr.getArgument(3));
+        List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(4);
+        List<TypeWidget> argumentTypes = Lists.newArrayListWithExpectedSize(methodDescriptor.getArgumentTypes().length+1);
+        if (op != Opcodes.INVOKESTATIC) {
+            argumentTypes.add(ownerType);
+        }
+        for(Type argType : methodDescriptor.getArgumentTypes()) {
+            argumentTypes.add(scope.adapt(argType, true));
+        }
+        List<BytecodeExpression> arguments = evaluateExpressions(program, context, args);
+        Preconditions.checkArgument(argumentTypes.size() == arguments.size(), "Expected argument count %d != %d in %s", argumentTypes.size(), arguments.size(), expr.toString());
+        return new BaseTypeExpression(returnType) {
+            @Override
+            public void generate(CodeEmitter code) {
+                for(int i = 0; i < arguments.size(); i++) {
+                    code.exec(new BytecodeCastExpression(argumentTypes.get(i), arguments.get(i)));
+                }
+                code.getMethodVisitor().visitMethodInsn(op, owner.getInternalName(), methodName, methodDescriptor.getDescriptor(), op == Opcodes.INVOKEINTERFACE);
+            }
+        };
+    }
+
+    private BytecodeExpression handleInvokeNew(BytecodeExpression program, BytecodeExpression context, OperatorNode<PhysicalExprOperator> expr) {
+        java.lang.reflect.Type returnJVMType = expr.getArgument(0);
+        TypeWidget returnType = scope.adapt(returnJVMType, false);
+        List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(1);
+        return evaluateExpression(program, context, OperatorNode.create(expr.getLocation(), PhysicalExprOperator.NEW, returnType, args));
     }
 
     private BytecodeExpression handleIfTail(BytecodeExpression program, BytecodeExpression context, GambitCreator.CaseBuilder caseBuilder, OperatorNode<PhysicalExprOperator> test, OperatorNode<PhysicalExprOperator> ifTrue, OperatorNode<PhysicalExprOperator> ifFalse) {
