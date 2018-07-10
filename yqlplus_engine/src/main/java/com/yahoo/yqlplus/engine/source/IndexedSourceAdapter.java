@@ -69,7 +69,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     @Override
     protected StreamValue scan(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
         if (selectAll == null) {
-            throw new ProgramCompileException(location, "Source '%s' does not enable SCAN (all @Query methods have @Key or @CompoundKey arguments)", this.name);
+1            throw new ProgramCompileException(location, "Source '%s' does not enable SCAN (all @Query methods have @Key arguments)", this.name);
         }
         return selectAll.scan(location, createSource(location, planner, args), planner, state);
     }
