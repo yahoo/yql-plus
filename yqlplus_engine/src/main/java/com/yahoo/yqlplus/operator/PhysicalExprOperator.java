@@ -95,9 +95,6 @@ public enum PhysicalExprOperator implements Operator {
     VALUE(OperatorValue.class),
     LOCAL(String.class),
 
-    FOREACH(PhysicalExprOperator.class, FunctionOperator.FUNCTION),
-    CONCAT(PlanOperatorTypes.EXPRS),
-
     GENERATE_KEYS(TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
 
     BOOL(PhysicalExprOperator.class),

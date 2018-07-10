@@ -12,7 +12,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.IndexKey;
+import com.yahoo.yqlplus.engine.internal.plan.IndexedQueryPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
+import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -69,7 +73,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     @Override
     protected StreamValue scan(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
         if (selectAll == null) {
-1            throw new ProgramCompileException(location, "Source '%s' does not enable SCAN (all @Query methods have @Key arguments)", this.name);
+            throw new ProgramCompileException(location, "Source '%s' does not enable SCAN (all @Query methods have @Key arguments)", this.name);
         }
         return selectAll.scan(location, createSource(location, planner, args), planner, state);
     }

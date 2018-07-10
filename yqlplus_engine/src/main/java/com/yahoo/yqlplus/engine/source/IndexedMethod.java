@@ -46,11 +46,11 @@ public class IndexedMethod {
         if (todo.size() == 1) {
             return todo.get(0).keyCursor(planner);
         } else {
-            List<OperatorNode<PhysicalExprOperator>> cursors = Lists.newArrayListWithExpectedSize(todo.size());
+            List<StreamValue> cursors = Lists.newArrayListWithExpectedSize(todo.size());
             for (IndexedSourceType.IndexQuery q : todo) {
-                cursors.add(q.keyCursor(planner).materializeValue());
+                cursors.add(q.keyCursor(planner));
             }
-            StreamValue val = StreamValue.iterate(planner, OperatorNode.create(location, PhysicalExprOperator.CONCAT, cursors));
+            StreamValue val = StreamValue.merge(planner, cursors);
             val.add(Location.NONE, StreamOperator.DISTINCT);
             return val;
         }

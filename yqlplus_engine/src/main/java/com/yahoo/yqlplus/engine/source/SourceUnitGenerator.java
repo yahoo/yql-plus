@@ -14,8 +14,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Delete;
+import com.yahoo.yqlplus.api.annotations.Insert;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutBudget;
+import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLNamePair;
@@ -25,7 +31,19 @@ import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.StructBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.FieldWriter;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.DispatchSourceTypeAdapter;
@@ -37,7 +55,12 @@ import org.objectweb.asm.Opcodes;
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 /**
  * Generated one or more classes adapting Source-API equipped classes.
@@ -67,11 +90,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
         cb.exec(fld.get(cb.local("this")).write(cb.cast(sourceType,
                 cb.invokeExact(Location.NONE, "get", Provider.class, AnyTypeWidget.getInstance(), sourceProvider))));
         adapter.addParameterField(fld);
-//        ObjectBuilder.FieldBuilder programName = adapter.field("$programName", BaseTypeAdapter.STRING);
-//        programName.annotate(Inject.class);
-//        programName.annotate(Named.class).put("value", "programName");
-//        adapter.addParameterField(programName);
-
         BytecodeExpression metric = gambitScope.constant(PhysicalExprOperatorCompiler.EMPTY_DIMENSION);
         metric = metricWith(cb, metric, "source", sourceName);
         for (String operation : OPERATIONS) {
@@ -319,12 +337,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
 
             InsertMethodAdapterBuilder builder = new InsertMethodAdapterBuilder(method);
             ObjectBuilder.MethodBuilder methodBuilder = addAdapterMethod(method, "INSERT", builder);
-            // ok, so we've define the adapter method which handles all of the injectable arguments
-            // and we're left with a method that takes (context{, key-or-keys}) where
-            // key-or-keys is:
-            //    absent if it's a SCAN method
-            //    a single Record instance of the keys to do a lookup for if it's a SINGLE
-            //    a list of Record instances of the keys to do a lookup for if it's a BATCH
             this.insert = new InsertMethod(method.getDeclaringClass() + ":" + method.getName(), builder.rowType, builder.insertType, target.type(), methodBuilder.invoker(), false, builder.singleton, builder.async, minimumBudget, maximumBudget);
         }
 

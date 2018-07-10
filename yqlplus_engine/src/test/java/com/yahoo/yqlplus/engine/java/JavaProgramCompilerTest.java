@@ -280,9 +280,9 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", BatchKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from source WHERE id = '1' OUTPUT as f1;" +
-                "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
-                "SELECT * FROM source WHERE id IN ('1', '2', '3') OUTPUT AS f3;" +
-                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f4;");
+                "SELECT * FROM source WHERE id = '1' OR id = '2' ORDER BY id OUTPUT AS f2;" +
+                "SELECT * FROM source WHERE id IN ('1', '2', '3') ORDER BY id OUTPUT AS f3;" +
+                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') ORDER BY id OUTPUT AS f4;");
         ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
@@ -362,9 +362,9 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from source WHERE id = '1' OUTPUT as f1;" +
-                "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
-                "SELECT * FROM source WHERE id IN ('1', '2', '3') OUTPUT AS f3;" +
-                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f4;");
+                "SELECT * FROM source WHERE id = '1' OR id = '2' ORDER BY id OUTPUT AS f2;" +
+                "SELECT * FROM source WHERE id IN ('1', '2', '3') ORDER BY id OUTPUT AS f3;" +
+                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') ORDER BY id OUTPUT AS f4;");
         ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
@@ -390,8 +390,8 @@ public class JavaProgramCompilerTest {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("SELECT * from source WHERE id = '1' OUTPUT as f1;" +
-                "SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;" +
-                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') OUTPUT AS f3;");
+                "SELECT * FROM source WHERE id = '1' OR id = '2' ORDER BY id OUTPUT AS f2;" +
+                "SELECT * FROM source(10) WHERE id IN ('1', '2', '3') ORDER BY id OUTPUT AS f3;");
         ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 1)));
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));

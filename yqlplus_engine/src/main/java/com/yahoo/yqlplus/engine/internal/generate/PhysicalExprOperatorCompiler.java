@@ -8,28 +8,66 @@ package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BooleanCompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeArithmeticExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeCastExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeNegateExpression;
+import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.engine.compiler.code.CompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.EqualsExpression;
+import com.yahoo.yqlplus.engine.compiler.code.ExactInvocation;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitTypes;
+import com.yahoo.yqlplus.engine.compiler.code.InvocableBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.IterateAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.LambdaInvocable;
+import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.MulticompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.NullTestedExpression;
+import com.yahoo.yqlplus.engine.compiler.code.NullableTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
-import com.yahoo.yqlplus.engine.compiler.runtime.KeyAccumulator;
+import com.yahoo.yqlplus.engine.compiler.runtime.KeyGenerator;
 import com.yahoo.yqlplus.engine.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -118,13 +156,6 @@ public class PhysicalExprOperatorCompiler {
                 final BytecodeExpression output = evaluateExpression(program, context, input);
                 return scope.cast(expr.getLocation(), outputType, output);
             }
-            case FOREACH: {
-                BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
-                OperatorNode<FunctionOperator> function = expr.getArgument(1);
-                TypeWidget itemType = inputExpr.getType().getIterableAdapter().getValue();
-                GambitCreator.Invocable functionImpl = compileFunction(program.getType(), context.getType(), ImmutableList.of(itemType), function);
-                return scope.transform(expr.getLocation(), inputExpr, functionImpl.prefix(program, context));
-            }
             case FIRST: {
                 BytecodeExpression inputExpr = evaluateExpression(program, context, expr.getArgument(0));
                 if (!inputExpr.getType().isIterable()) {
@@ -164,20 +195,6 @@ public class PhysicalExprOperatorCompiler {
                 OperatorNode<PhysicalExprOperator> exprTarget = expr.getArgument(1);
                 BytecodeExpression resultExpr = compiler.evaluateExpression(program, ctxExpr, OperatorNode.create(PhysicalExprOperator.END_CONTEXT, exprTarget));
                 return contextScope.complete(resultExpr);
-            }
-            case CONCAT: {
-                List<OperatorNode<PhysicalExprOperator>> iterables = expr.getArgument(0);
-                List<BytecodeExpression> exprs = evaluateExpressions(program, context, iterables);
-                List<TypeWidget> types = Lists.newArrayList();
-                for (BytecodeExpression e : exprs) {
-                    types.add(e.getType().getIterableAdapter().getValue());
-                }
-
-                return scope.cast(expr.getLocation(), new IterableTypeWidget(scope.unify(types)),
-                        ExactInvocation.boundInvoke(Opcodes.INVOKESTATIC, "concat", scope.adapt(Iterables.class, false),
-                                scope.adapt(Iterable.class, false),
-                                scope.cast(scope.adapt(Iterable.class, false),
-                                        scope.list(expr.getLocation(), exprs))).invoke(expr.getLocation()));
             }
             case TIMEOUT_REMAINING: {
                 TimeUnit units = expr.getArgument(0);
@@ -337,10 +354,20 @@ public class PhysicalExprOperatorCompiler {
                     BytecodeExpression keyExpr = evaluateExpression(program, context, valueLists.get(i));
                     insns.add(scope.cast(AnyTypeWidget.getInstance(), keyExpr));
                 }
-
-                BytecodeExpression arr = scope.array(expr.getLocation(), BaseTypeAdapter.ANY, insns);
-                GambitCreator.Invocable factory = scope.constructor(keyCursorFor(scope, names), arr.getType());
-                return factory.invoke(expr.getLocation(), arr);
+                final BytecodeExpression arr = scope.array(expr.getLocation(), BaseTypeAdapter.ANY, insns);
+                LambdaInvocable createKey = keyCursorFor(scope, names);
+                return new BaseTypeExpression(new ListTypeWidget(createKey.getResultType())) {
+                    @Override
+                    public void generate(CodeEmitter code) {
+                        code.exec(createKey.invoke(Location.NONE));
+                        code.exec(arr);
+                        code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKESTATIC,
+                                Type.getInternalName(KeyGenerator.class),
+                                "generate",
+                                Type.getMethodDescriptor(Type.getType(List.class), Type.getType(KeyGenerator.Creator.class), arr.getType().getJVMType()),
+                                false);
+                    }
+                };
             }
             case OR: {
                 List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(0);
@@ -646,26 +673,18 @@ public class PhysicalExprOperatorCompiler {
         return streamPipeline.end(scope, iterateBuilder);
     }
 
-    public TypeWidget keyCursorFor(GambitTypes types, List<String> names) {
-        ObjectBuilder builder = types.createObject(KeyAccumulator.class);
-        ObjectBuilder.ConstructorBuilder bld = builder.getConstructor();
-        bld.invokeSpecial(KeyAccumulator.class, bld.addArgument("$lst", new ArrayTypeWidget(Type.getType("[Ljava/lang/Object;"), AnyTypeWidget.getInstance())));
-        ObjectBuilder.MethodBuilder adapter = builder.method("createKey");
-        //     protected abstract RECORD createKey(List<KEY> columns);
+    public LambdaInvocable keyCursorFor(GambitTypes types, List<String> names) {
+        LambdaFactoryBuilder adapter = types.createLambdaBuilder(KeyGenerator.Creator.class, "createKey", Object.class, false, List.class);
         BytecodeExpression lst = adapter.addArgument("$list", NotNullableTypeWidget.create(new ListTypeWidget(AnyTypeWidget.getInstance())));
         TypeWidget keyType = BaseTypeAdapter.STRUCT;
         PropertyAdapter propertyAdapter = keyType.getPropertyAdapter();
         Map<String, BytecodeExpression> makeFields = Maps.newLinkedHashMap();
         int i = 0;
-        List<TypeWidget> keyTypes = Lists.newArrayList();
         for (String name : names) {
             TypeWidget propertyType = propertyAdapter.getPropertyType(name);
-            keyTypes.add(propertyType);
             makeFields.put(name, adapter.cast(Location.NONE, propertyType, adapter.indexValue(Location.NONE, lst, adapter.constant(i++))));
         }
-        adapter.exit(adapter.cast(Location.NONE, types.adapt(Record.class, false), propertyAdapter.construct(makeFields)));
-        builder.setTypeWidget(new KeyCursorTypeWidget(builder.getJVMType(), names, keyType));
-        return builder.type();
+        return adapter.complete(propertyAdapter.construct(makeFields));
     }
 
 
