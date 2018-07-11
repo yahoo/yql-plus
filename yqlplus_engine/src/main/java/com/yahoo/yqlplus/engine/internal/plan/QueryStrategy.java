@@ -9,9 +9,9 @@ package com.yahoo.yqlplus.engine.internal.plan;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-class QueryStrategy {
-    boolean scan = false;
-    Multimap<IndexKey, IndexStrategy> indexes = ArrayListMultimap.create();
+public class QueryStrategy {
+    public boolean scan = false;
+    public Multimap<IndexKey, IndexStrategy> indexes = ArrayListMultimap.create();
 
     public void add(IndexStrategy indexStrategy) {
         indexes.put(indexStrategy.index, indexStrategy);

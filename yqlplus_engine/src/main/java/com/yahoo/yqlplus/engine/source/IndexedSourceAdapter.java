@@ -12,11 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.IndexKey;
-import com.yahoo.yqlplus.engine.internal.plan.IndexedQueryPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
-import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
+import com.yahoo.yqlplus.engine.internal.plan.*;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -71,7 +67,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     }
 
     @Override
-    protected StreamValue scan(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
+    protected StreamValue scan(Location location, ContextPlanner planner, ChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
         if (selectAll == null) {
             throw new ProgramCompileException(location, "Source '%s' does not enable SCAN (all @Query methods have @Key arguments)", this.name);
         }
@@ -79,7 +75,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     }
 
     @Override
-    protected StreamValue insert(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args, StreamValue records) {
+    protected StreamValue insert(Location location, ContextPlanner planner, ChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args, StreamValue records) {
         if (insert == null) {
             throw new ProgramCompileException(location, "Source '%s' does not enable INSERT (has no @Insert method)", this.name);
         }
@@ -108,7 +104,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     }
 
     @Override
-    protected StreamValue deleteAll(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
+    protected StreamValue deleteAll(Location location, ContextPlanner planner, ChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args) {
         if (deleteAll == null) {
             throw new ProgramCompileException(location, "Source '%s' does not enable DELETE_ALL (all @Delete methods have @Key or @CompoundKey arguments)", this.name);
         }
@@ -130,7 +126,7 @@ public class IndexedSourceAdapter extends IndexedSourceType {
     }
 
     @Override
-    protected StreamValue updateAll(Location location, ContextPlanner planner, PlanChain.LocalChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args, OperatorNode<PhysicalExprOperator> record) {
+    protected StreamValue updateAll(Location location, ContextPlanner planner, ChainState state, String name, List<OperatorNode<PhysicalExprOperator>> args, OperatorNode<PhysicalExprOperator> record) {
         if (updateAll == null) {
             throw new ProgramCompileException(location, "Source '%s' does not enable UPDATE_ALL (all @Update methods have @Key or @CompoundKey arguments)", this.name);
         }

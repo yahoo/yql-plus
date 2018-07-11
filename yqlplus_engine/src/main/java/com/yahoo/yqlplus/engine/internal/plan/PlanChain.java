@@ -8,7 +8,6 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.ProjectOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -17,7 +16,6 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.operator.*;
 
 import java.util.List;
-import java.util.Set;
 
 public abstract class PlanChain {
     private ContextPlanner context;
@@ -26,25 +24,8 @@ public abstract class PlanChain {
         this.context = context;
     }
 
-    public static class LocalChainState {
-        OperatorNode<ExpressionOperator> filter;
-        List<OperatorNode<SequenceOperator>> transforms = Lists.newArrayList();
-        Set<OperatorNode<SequenceOperator>> handled = Sets.newIdentityHashSet();
-
-        boolean filtered = false;
-
-        public OperatorNode<ExpressionOperator> getFilter() {
-            return filter;
-        }
-
-        public void setFilterHandled(boolean filtered) {
-            this.filtered = filtered;
-        }
-
-    }
-
     public StreamValue execute(OperatorNode<SequenceOperator> query) {
-        LocalChainState state = new LocalChainState();
+        ChainState state = new ChainState();
         return execute(state, query);
     }
 
@@ -174,7 +155,7 @@ public abstract class PlanChain {
         );
     }
     
-    public StreamValue execute(LocalChainState state, OperatorNode<SequenceOperator> query) {
+    public StreamValue execute(ChainState state, OperatorNode<SequenceOperator> query) {
         query = enter(query);
         switch (query.getOperator()) {
             case PROJECT: {
@@ -367,7 +348,7 @@ public abstract class PlanChain {
         return operator;
     }
 
-    protected abstract StreamValue executeSource(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query);
+    protected abstract StreamValue executeSource(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query);
 
 
 }

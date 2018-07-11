@@ -19,7 +19,6 @@ import com.yahoo.yqlplus.operator.StreamOperator;
 import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class IndexedMethod {
     protected final TypeWidget rowType;
@@ -28,13 +27,9 @@ public class IndexedMethod {
     protected final boolean singleton;
     protected final QueryType type;
     protected final GambitCreator.Invocable invoker;
-    protected final long minimumBudget;
-    protected final long maximumBudget;
 
-    public IndexedMethod(long minimumBudget, TypeWidget rowType, long maximumBudget, GambitCreator.Invocable invoker, QueryType indexType, boolean singleton, boolean async, IndexDescriptor descriptor) {
-        this.minimumBudget = minimumBudget;
+    public IndexedMethod(TypeWidget rowType, GambitCreator.Invocable invoker, QueryType indexType, boolean singleton, boolean async, IndexDescriptor descriptor) {
         this.rowType = rowType;
-        this.maximumBudget = maximumBudget;
         this.invoker = invoker;
         this.type = indexType;
         this.singleton = singleton;
@@ -64,16 +59,10 @@ public class IndexedMethod {
             callArgs.add(key);
         }
         callArgs.addAll(moreArguments);
-        OperatorNode<PhysicalExprOperator> invocation = OperatorNode.create(location,
+        return OperatorNode.create(location,
                 PhysicalExprOperator.INVOKE,
                 invoker,
                 callArgs);
-        if (minimumBudget > 0 || maximumBudget > 0) {
-            OperatorNode<PhysicalExprOperator> ms = planner.constant(TimeUnit.MILLISECONDS);
-            OperatorNode<PhysicalExprOperator> subContext = OperatorNode.create(PhysicalExprOperator.TIMEOUT_GUARD, planner.constant(minimumBudget), ms, planner.constant(maximumBudget), ms);
-            return OperatorNode.create(PhysicalExprOperator.WITH_CONTEXT, subContext, OperatorNode.create(PhysicalExprOperator.ENFORCE_TIMEOUT, invocation));
-        }
-        return invocation;
     }
 
     enum QueryType {

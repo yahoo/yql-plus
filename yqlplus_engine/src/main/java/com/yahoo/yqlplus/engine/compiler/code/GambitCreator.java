@@ -97,6 +97,8 @@ public interface GambitCreator extends GambitTypes {
 
     BytecodeExpression guarded(BytecodeExpression target, BytecodeExpression ifTargetIsNotNull);
 
+    BytecodeExpression guarded(BytecodeExpression target, BytecodeExpression ifTargetIsNotNull, BytecodeExpression ifTargetIsNull);
+
     BytecodeExpression list(TypeWidget elementType);
 
     BytecodeExpression list(Location loc, List<BytecodeExpression> args);
@@ -113,6 +115,8 @@ public interface GambitCreator extends GambitTypes {
 
     BytecodeExpression propertyValue(Location loc, BytecodeExpression target, String propertyName);
 
+    BytecodeExpression propertyValue(Location loc, BytecodeExpression target, String propertyName, BytecodeExpression defaultValue);
+
     BytecodeExpression indexValue(Location loc, BytecodeExpression target, BytecodeExpression index);
 
     BytecodeExpression cast(Location loc, TypeWidget type, BytecodeExpression input);
@@ -120,5 +124,4 @@ public interface GambitCreator extends GambitTypes {
     BytecodeExpression cast(TypeWidget type, BytecodeExpression input);
 
     BytecodeExpression resolve(Location loc, BytecodeExpression timeout, BytecodeExpression promise);
-
 }

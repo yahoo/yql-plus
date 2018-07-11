@@ -37,19 +37,19 @@ public abstract class IndexedSourceType implements SourceType {
         this.updatePlanner = updatePlanner;
     }
 
-    protected StreamValue scan(Location location, final ContextPlanner planner, PlanChain.LocalChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args) {
+    protected StreamValue scan(Location location, final ContextPlanner planner, ChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args) {
         throw new ProgramCompileException(location, "Source '%s' does not support SCAN and query has no matching index", name);
     }
 
-    protected StreamValue deleteAll(Location location, final ContextPlanner planner, PlanChain.LocalChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args) {
+    protected StreamValue deleteAll(Location location, final ContextPlanner planner, ChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args) {
         throw new ProgramCompileException(location, "Source '%s' does not support DELETE_ALL", name);
     }
 
-    protected StreamValue updateAll(Location location, final ContextPlanner planner, PlanChain.LocalChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args, OperatorNode<PhysicalExprOperator> record) {
+    protected StreamValue updateAll(Location location, final ContextPlanner planner, ChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args, OperatorNode<PhysicalExprOperator> record) {
         throw new ProgramCompileException(location, "Source '%s' does not support UPDATE_ALL", name);
     }
 
-    protected StreamValue insert(Location location, final ContextPlanner planner, PlanChain.LocalChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args, StreamValue records) {
+    protected StreamValue insert(Location location, final ContextPlanner planner, ChainState state, String name, final List<OperatorNode<PhysicalExprOperator>> args, StreamValue records) {
         throw new ProgramCompileException(location, "Source '%s' does not support INSERT", name);
     }
 
@@ -157,7 +157,7 @@ public abstract class IndexedSourceType implements SourceType {
 
 
         @Override
-        protected StreamValue executeSource(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query) {
+        protected StreamValue executeSource(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
             switch (query.getOperator()) {
                 case SCAN:
                     return executeSelect(context, state, query);
@@ -175,7 +175,7 @@ public abstract class IndexedSourceType implements SourceType {
             }
         }
 
-        private StreamValue executeInsert(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query) {
+        private StreamValue executeInsert(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
             Location location = query.getLocation();
             OperatorNode<SequenceOperator> source = query.getArgument(0);
             OperatorNode<SequenceOperator> records = query.getArgument(1);
@@ -185,7 +185,7 @@ public abstract class IndexedSourceType implements SourceType {
             return insert(location, context, state, name, context.evaluateList(args), context.execute(records));
         }
 
-        private StreamValue executeDelete(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query) {
+        private StreamValue executeDelete(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
             Location location = query.getLocation();
             OperatorNode<SequenceOperator> source = query.getArgument(0);
             Preconditions.checkArgument(source.getOperator() == SequenceOperator.SCAN, "DELETE[_ALL] source argument must be SCAN, is %s", source);
@@ -233,7 +233,7 @@ public abstract class IndexedSourceType implements SourceType {
             return result;
         }
 
-        private StreamValue executeUpdate(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query) {
+        private StreamValue executeUpdate(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
             Location location = query.getLocation();
             OperatorNode<SequenceOperator> source = query.getArgument(0);
             Preconditions.checkArgument(source.getOperator() == SequenceOperator.SCAN, "DELETE[_ALL] source argument must be SCAN, is %s", source);
@@ -285,7 +285,7 @@ public abstract class IndexedSourceType implements SourceType {
             return result;
         }
 
-        private StreamValue executeSelect(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> query) {
+        private StreamValue executeSelect(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
             QueryStrategy qs = leftSide != null ?
                       indexPlanner.planJoin(leftSide, joinExpression, state.filter)
                     : indexPlanner.plan(state.filter);

@@ -10,6 +10,8 @@ public interface RuntimeAdapter {
     // Object property(Object target, String propertyName);
     BytecodeExpression property(BytecodeExpression target, BytecodeExpression propertyName);
 
+    BytecodeExpression property(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue);
+
     // Object property(Object target, Object indexExpr);
     BytecodeExpression index(BytecodeExpression target, BytecodeExpression indexExpr);
 

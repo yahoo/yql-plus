@@ -13,35 +13,7 @@ import com.google.common.collect.Maps;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BooleanCompareExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeArithmeticExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeCastExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeNegateExpression;
-import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.engine.compiler.code.CompareExpression;
-import com.yahoo.yqlplus.engine.compiler.code.EqualsExpression;
-import com.yahoo.yqlplus.engine.compiler.code.ExactInvocation;
-import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.engine.compiler.code.GambitTypes;
-import com.yahoo.yqlplus.engine.compiler.code.InvocableBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.IterateAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.LambdaFactoryBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.LambdaInvocable;
-import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.MapTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.MulticompareExpression;
-import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.NullTestedExpression;
-import com.yahoo.yqlplus.engine.compiler.code.NullableTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.*;
 import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.compiler.runtime.KeyGenerator;
@@ -49,25 +21,13 @@ import com.yahoo.yqlplus.engine.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.FunctionOperator;
-import com.yahoo.yqlplus.operator.OperatorValue;
-import com.yahoo.yqlplus.operator.PhysicalExprOperator;
-import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
-import com.yahoo.yqlplus.operator.SinkOperator;
-import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.*;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -99,8 +59,6 @@ public class PhysicalExprOperatorCompiler {
                 TypeWidget widget = argumentExprs.get(0).getType();
                 return widget.invoke(argumentExprs.get(0), outputType, name, argumentExprs.subList(1, argumentExprs.size()));
             }
-            //     INVOKESTATIC(Type.class,  String.class, Type.class, PlanOperatorTypes.EXPRS),
-                //     // (owner, methodName, methodDescriptor)
             case INVOKEVIRTUAL:
                 return handleInvoke(Opcodes.INVOKEVIRTUAL, program, context, expr);
             case INVOKESTATIC:
@@ -109,6 +67,20 @@ public class PhysicalExprOperatorCompiler {
                 return handleInvoke(Opcodes.INVOKEINTERFACE, program, context, expr);
             case INVOKENEW: {
                 return handleInvokeNew(program, context, expr);
+            }
+            case RESOLVE: {
+                BytecodeExpression v = evaluateExpression(program, context, expr.getArgument(0));
+                return scope.resolve(expr.getLocation(), getTimeout(context, expr.getLocation()), v);
+            }
+            case THROW: {
+                BytecodeExpression v = evaluateExpression(program, context, expr.getArgument(0));
+                return new BaseTypeExpression(v.getType()) {
+                    @Override
+                    public void generate(CodeEmitter code) {
+                        code.exec(v);
+                        code.getMethodVisitor().visitInsn(Opcodes.ATHROW);
+                    }
+                };
             }
             case CONSTANT: {
                 TypeWidget t = expr.getArgument(0);
@@ -131,13 +103,6 @@ public class PhysicalExprOperatorCompiler {
                 final BytecodeExpression timeout = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(0)));
                 final BytecodeExpression units = evaluateExpression(program, context, expr.getArgument(1));
                 return scope.invokeExact(expr.getLocation(), "timeout", TaskContext.class, context.getType(), context, timeout, units);
-            }
-            case TIMEOUT_GUARD: {
-                final BytecodeExpression min = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(0)));
-                final BytecodeExpression minUnits = evaluateExpression(program, context, expr.getArgument(1));
-                final BytecodeExpression max = scope.cast(BaseTypeAdapter.INT64, evaluateExpression(program, context, expr.getArgument(2)));
-                final BytecodeExpression maxUnits = evaluateExpression(program, context, expr.getArgument(3));
-                return scope.invokeExact(expr.getLocation(), "timeout", TaskContext.class, context.getType(), context, min, minUnits, max, maxUnits);
             }
             case END_CONTEXT: {
                 final BytecodeExpression output = evaluateExpression(program, context, expr.getArgument(0));
@@ -181,6 +146,14 @@ public class PhysicalExprOperatorCompiler {
                 BytecodeExpression targetExpr = evaluateExpression(program, context, target);
                 return scope.propertyValue(expr.getLocation(), targetExpr, propertyName);
             }
+            case PROPREF_DEFAULT: {
+                OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
+                String propertyName = expr.getArgument(1);
+                OperatorNode<PhysicalExprOperator> defaultValue = expr.getArgument(2);
+                BytecodeExpression defaultValueExpr = evaluateExpression(program, context, target);
+                BytecodeExpression targetExpr = evaluateExpression(program, context, target);
+                return scope.propertyValue(expr.getLocation(), targetExpr, propertyName, defaultValueExpr);
+            }
             case INDEX: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
                 OperatorNode<PhysicalExprOperator> index = expr.getArgument(1);
@@ -214,7 +187,7 @@ public class PhysicalExprOperatorCompiler {
                 }
                 LambdaInvocable invocation = compileSupplier(program.getType(), context.getType(), types,
                         OperatorNode.create(FunctionOperator.FUNCTION, localNames, expr.getArgument(0)));
-                BytecodeExpression supplier = invocation.invoke(expr.getLocation(), program, context);
+                BytecodeExpression supplier = invocation.invoke(expr.getLocation(), localExprs);
                 GambitCreator.Invocable timeoutInvocation = scope.findExactInvoker(TaskContext.class, "runTimeout", AnyTypeWidget.getInstance(), Supplier.class);
                 return scope.cast(invocation.getResultType(), timeoutInvocation.invoke(expr.getLocation(), context, supplier));
             }
@@ -592,13 +565,13 @@ public class PhysicalExprOperatorCompiler {
         List<String> argumentNames = function.getArgument(0);
         OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
         LambdaFactoryBuilder builder = this.scope.createLambdaBuilder(Supplier.class, "get", Object.class, true);
-        builder.addArgument("$program", programType);
-        builder.addArgument("$context", contextType);
+        BytecodeExpression pgm = builder.addArgument("$program", programType);
+        BytecodeExpression ctx = builder.addArgument("$context", contextType);
         for (int i = 0; i < argumentNames.size(); ++i) {
             builder.addArgument(argumentNames.get(i), argumentTypes.get(i));
         }
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(builder);
-        BytecodeExpression result = compiler.evaluateExpression(builder.local("$program"), builder.local("$context"), functionBody);
+        BytecodeExpression result = compiler.evaluateExpression(pgm, ctx, functionBody);
         return builder.complete(result);
     }
 
@@ -1094,7 +1067,7 @@ public class PhysicalExprOperatorCompiler {
             OperatorNode<PhysicalExprOperator> functionBody = function.getArgument(1);
             GambitCreator.ScopeBuilder funcBody = functor.scope();
             PhysicalExprOperatorCompiler functionCompiler = new PhysicalExprOperatorCompiler(funcBody);
-            BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxExpr, "timeout");
+            BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxArgument, "timeout");
             BytecodeExpression outputValue =  scope.resolve(function.getLocation(),  timeout, functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
             BytecodeExpression scatterValue = funcBody.complete(outputValue);
             LambdaInvocable invocable = functor.complete(scatterValue);
@@ -1166,6 +1139,26 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.IterateBuilder iterateBuilder = loop.iterate(item);
             super.item(iterateBuilder, iterateBuilder.getItem());
             loop.exec(iterateBuilder.build());
+        }
+    }
+
+    private class ResolveSink extends BaseTransformSink {
+        private ResolveSink(StreamSink next) {
+            super(next);
+        }
+
+        @Override
+        public void prepare(GambitCreator.ScopeBuilder scope, BytecodeExpression program, BytecodeExpression context, TypeWidget itemType) {
+            super.prepare(scope, program, context, itemType.isPromise() ? itemType.getPromiseAdapter().getResultType() : itemType);
+        }
+
+        @Override
+        public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
+            if(item.getType().isPromise()) {
+                super.item(loop, loop.evaluateInto(loop.resolve(Location.NONE, loop.propertyValue(Location.NONE, ctxExpr, "timeout"), item)));
+            } else {
+                super.item(loop, loop.evaluateInto(item));
+            }
         }
     }
 
@@ -1244,6 +1237,9 @@ public class PhysicalExprOperatorCompiler {
             case FILTER: {
                 OperatorNode<FunctionOperator> function = stream.getArgument(1);
                 return new FilterSink(next, function);
+            }
+            case RESOLVE: {
+                return new ResolveSink(next);
             }
             case OFFSET: {
                 OperatorNode<PhysicalExprOperator> offset = stream.getArgument(1);

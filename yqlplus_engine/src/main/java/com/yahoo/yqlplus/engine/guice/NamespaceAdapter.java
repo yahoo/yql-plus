@@ -14,7 +14,7 @@ import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.engine.internal.plan.*;
 import com.yahoo.yqlplus.engine.source.ExportModuleAdapter;
-import com.yahoo.yqlplus.engine.source.SourceUnitGenerator;
+import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
@@ -49,7 +49,8 @@ public class NamespaceAdapter implements SourceNamespace, ModuleNamespace {
         if (sourceProvider == null) {
             return null;
         }
-        SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
-        return adapter.apply(sourcePath, sourceProvider);
+        return new SourceAdapter(keyFor(sourcePath), sourceProvider.get().getClass(), sourceProvider::get);
+//        SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
+//        return adapter.apply(sourcePath, sourceProvider);
     }
 }

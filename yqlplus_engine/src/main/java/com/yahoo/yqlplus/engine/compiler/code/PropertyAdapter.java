@@ -21,8 +21,10 @@ public interface PropertyAdapter {
     Iterable<Property> getProperties();
 
     AssignableValue property(BytecodeExpression target, String propertyName);
+    BytecodeExpression property(BytecodeExpression target, String propertyName, BytecodeExpression defaultValue);
 
     AssignableValue index(BytecodeExpression target, BytecodeExpression propertyName);
+    BytecodeExpression index(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue);
 
     BytecodeSequence mergeIntoFieldWriter(BytecodeExpression target, BytecodeExpression fieldWriter);
 

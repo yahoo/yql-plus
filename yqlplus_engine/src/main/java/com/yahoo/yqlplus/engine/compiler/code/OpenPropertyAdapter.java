@@ -38,6 +38,19 @@ public abstract class OpenPropertyAdapter extends BasePropertyAdapter {
     public abstract AssignableValue index(final BytecodeExpression target, final BytecodeExpression propertyName);
 
     @Override
+    public BytecodeExpression property(BytecodeExpression target, String propertyName, BytecodeExpression defaultValue) {
+        return index(target, new StringConstantExpression(propertyName), defaultValue);
+    }
+
+    @Override
+    public BytecodeExpression index(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue) {
+        BytecodeExpression sourceExpression = index(target, propertyName);
+        return new CoalesceExpression(AnyTypeWidget.getInstance(), sourceExpression, defaultValue);
+    }
+
+
+
+    @Override
     public BytecodeSequence visitProperties(final BytecodeExpression target, final PropertyVisit loop) {
         BytecodeExpression s = getPropertyNameIterable(target);
         IterateAdapter it = s.getType().getIterableAdapter();

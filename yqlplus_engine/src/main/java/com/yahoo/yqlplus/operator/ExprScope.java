@@ -29,8 +29,9 @@ public class ExprScope {
         return gensym("sym");
     }
 
-    public void addArgument(String name) {
+    public OperatorNode<PhysicalExprOperator> addArgument(String name) {
         locals.put(name, true);
+        return OperatorNode.create(PhysicalExprOperator.LOCAL, name);
     }
 
     public OperatorNode<FunctionOperator> createFunction(OperatorNode<PhysicalExprOperator> expr) {

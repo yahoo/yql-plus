@@ -38,6 +38,20 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
         return getPropertyValue(target, getProperty(propertyName).name);
     }
 
+    @Override
+    public BytecodeExpression property(BytecodeExpression target, String propertyName, BytecodeExpression defaultValue) {
+        try {
+            BytecodeExpression propertyValue = getPropertyValue(target, getProperty(propertyName).name);
+            if(propertyValue.getType().isNullable()) {
+                return new CoalesceExpression(propertyValue.getType().boxed(), propertyValue, defaultValue);
+            } else {
+                return propertyValue;
+            }
+        } catch(PropertyNotFoundException e) {
+            return defaultValue;
+        }
+    }
+
     protected abstract AssignableValue getPropertyValue(BytecodeExpression target, String propertyName);
 
     @Override
@@ -75,7 +89,6 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
                     BytecodeExpression propertyValue = code.evaluateOnce(property(target, property.name));
                     boolean maybeNull = code.gotoIfNull(propertyValue, nextProperty);
                     if (maybeNull) {
-
                         propertyValue = new NullCheckedEvaluatedExpression(propertyValue);
                     }
                     loop.item(code, new StringConstantExpression(property.name), propertyValue, done, nextProperty);
@@ -100,6 +113,35 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
         }
         seq.setDefaultSequence(notFound);
         return seq;
+    }
+
+    @Override
+    public BytecodeExpression index(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue) {
+            return new BaseTypeExpression(AnyTypeWidget.getInstance()) {
+                @Override
+                public void generate(CodeEmitter code) {
+                    code.exec(dispatchProperty(target, propertyName, new DispatchProperty() {
+                                @Override
+                                public BytecodeSequence visit(final BytecodeExpression target, final String propertyName) {
+                                    return new BytecodeSequence() {
+                                        @Override
+                                        public void generate(CodeEmitter code) {
+                                            BytecodeExpression propertyValue = property(target, propertyName).read();
+                                            code.exec(propertyValue);
+                                            code.cast(AnyTypeWidget.getInstance(), propertyValue.getType());
+                                        }
+                                    };
+                                }
+                            },
+                            new BytecodeSequence() {
+                                @Override
+                                public void generate(CodeEmitter code) {
+                                    code.exec(defaultValue);
+                                    code.cast(AnyTypeWidget.getInstance(), defaultValue.getType());
+                                }
+                            }));
+                }
+            };
     }
 
     @Override

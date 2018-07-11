@@ -73,6 +73,7 @@ public abstract class StreamValue {
             case OUTER_HASH_JOIN:
             case TRANSFORM:
             case SCATTER:
+            case RESOLVE:
             case GROUPBY: {
                 Object[] oldArguments = target.getArguments();
                 Object[] newArguments = new Object[oldArguments.length];

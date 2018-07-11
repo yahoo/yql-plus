@@ -29,8 +29,6 @@ public enum PhysicalExprOperator implements Operator {
     END_CONTEXT(PhysicalExprOperator.class),
     // TIMEOUT(timeout, units)
     TIMEOUT_MAX(PhysicalExprOperator.class, PhysicalExprOperator.class),
-    // TIMEOUT_GUARD(min-timeout, min-units, max-timeout, max-units)
-    TIMEOUT_GUARD(PhysicalExprOperator.class, PhysicalExprOperator.class, PhysicalExprOperator.class, PhysicalExprOperator.class),
     // TRACE(record<string>string dimensions)
     TRACE_CONTEXT(PhysicalExprOperator.class),
 
@@ -71,10 +69,12 @@ public enum PhysicalExprOperator implements Operator {
     PROJECT(new TypeLiteral<List<OperatorNode<PhysicalProjectOperator>>>() {}),
 
     ARRAY(PlanOperatorTypes.EXPRS),
+    RESOLVE(PhysicalExprOperator.class),
 
     INDEX(PhysicalExprOperator.class, PhysicalExprOperator.class),
 
     PROPREF(PhysicalExprOperator.class, String.class),
+    PROPREF_DEFAULT(PhysicalExprOperator.class, String.class, PhysicalExprOperator.class),
 
     RECORD_AS(TypeWidget.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     CALL(TypeWidget.class, String.class, PlanOperatorTypes.EXPRS),
@@ -104,7 +104,8 @@ public enum PhysicalExprOperator implements Operator {
     CURRENT_CONTEXT(),
     FIRST(PhysicalExprOperator.class),
     LENGTH(PhysicalExprOperator.class),
-    SINGLETON(PhysicalExprOperator.class);
+    SINGLETON(PhysicalExprOperator.class),
+    THROW(PhysicalExprOperator.class);
 
     private final ArgumentsTypeChecker checker;
 

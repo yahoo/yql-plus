@@ -14,14 +14,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.api.annotations.DefaultValue;
-import com.yahoo.yqlplus.api.annotations.Delete;
-import com.yahoo.yqlplus.api.annotations.Insert;
-import com.yahoo.yqlplus.api.annotations.Key;
-import com.yahoo.yqlplus.api.annotations.Query;
+import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.annotations.Set;
-import com.yahoo.yqlplus.api.annotations.TimeoutBudget;
-import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLNamePair;
@@ -31,19 +25,7 @@ import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
-import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
-import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
-import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.StructBuilder;
-import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.*;
 import com.yahoo.yqlplus.engine.compiler.runtime.FieldWriter;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.plan.DispatchSourceTypeAdapter;
@@ -55,12 +37,7 @@ import org.objectweb.asm.Opcodes;
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Generated one or more classes adapting Source-API equipped classes.
@@ -131,15 +108,11 @@ public class SourceUnitGenerator extends SourceApiGenerator {
         UpdateMethod updateAll;
 
         InsertMethod insert;
-        long minimumBudget;
-        long maximumBudget;
         int sym = 0;
 
-        public AdapterBuilder(String sourceName, Class<? extends Source> clazz, BytecodeExpression providerConstant, List<Class<?>> signature, long minimumBudget, long maximumBudget) {
+        public AdapterBuilder(String sourceName, Class<? extends Source> clazz, BytecodeExpression providerConstant, List<Class<?>> signature) {
             this.clazz = clazz;
             this.sourceName = sourceName;
-            this.minimumBudget = minimumBudget;
-            this.maximumBudget = maximumBudget;
             // TODO: should accept the annotations for the free argument signatures, so they can be checked for @NotNullable or equiv.
             // TODO: should likely use generic types for type adapters
             this.sourceClass = gambitScope.adapt(clazz, false);
@@ -289,14 +262,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
 
 
         public void addSelectMethod(final Method method) {
-            TimeoutBudget budget = method.getAnnotation(TimeoutBudget.class);
-            long minimumBudget = this.minimumBudget;
-            long maximumBudget = this.maximumBudget;
-            if (budget != null) {
-                minimumBudget = budget.minimumMilliseconds();
-                maximumBudget = budget.maximumMilliseconds();
-            }
-
             SelectMethodAdapterBuilder builder = new SelectMethodAdapterBuilder(method);
             ObjectBuilder.MethodBuilder methodBuilder = addAdapterMethod(method, "SELECT", builder);
             // ok, so we've define the adapter method which handles all of the injectable arguments
@@ -310,15 +275,15 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                 if (scanner != null) {
                     reportMethodException(method, "There can be only one @Query method for SCAN (no @Key/@CompoundKey arguments) (and one is already set)");
                 }
-                scanner = new QueryMethod(builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                scanner = new QueryMethod(builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
             } else if (builder.batch) {
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.BATCH, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.BATCH, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 selectMap.put(descriptor, qm);
             } else {
                 // a single key at a time
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 selectMap.put(descriptor, qm);
             }
         }
@@ -327,28 +292,12 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             if (insert != null) {
                 reportMethodException(method, "There can be only one @Insert method (and one is already set)");
             }
-            TimeoutBudget budget = method.getAnnotation(TimeoutBudget.class);
-            long minimumBudget = this.minimumBudget;
-            long maximumBudget = this.maximumBudget;
-            if (budget != null) {
-                minimumBudget = budget.minimumMilliseconds();
-                maximumBudget = budget.maximumMilliseconds();
-            }
-
             InsertMethodAdapterBuilder builder = new InsertMethodAdapterBuilder(method);
             ObjectBuilder.MethodBuilder methodBuilder = addAdapterMethod(method, "INSERT", builder);
-            this.insert = new InsertMethod(method.getDeclaringClass() + ":" + method.getName(), builder.rowType, builder.insertType, target.type(), methodBuilder.invoker(), false, builder.singleton, builder.async, minimumBudget, maximumBudget);
+            this.insert = new InsertMethod(method.getDeclaringClass() + ":" + method.getName(), builder.rowType, builder.insertType, target.type(), methodBuilder.invoker(), false, builder.singleton, builder.async);
         }
 
         public void addUpdateMethod(Method method) {
-            TimeoutBudget budget = method.getAnnotation(TimeoutBudget.class);
-            long minimumBudget = this.minimumBudget;
-            long maximumBudget = this.maximumBudget;
-            if (budget != null) {
-                minimumBudget = budget.minimumMilliseconds();
-                maximumBudget = budget.maximumMilliseconds();
-            }
-
             UpdateMethodAdapterBuilder builder = new UpdateMethodAdapterBuilder(method);
             ObjectBuilder.MethodBuilder methodBuilder = addAdapterMethod(method, "UPDATE", builder);
             // ok, so we've define the adapter method which handles all of the injectable arguments
@@ -361,27 +310,20 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                 if (updateAll != null) {
                     reportMethodException(method, "There can be only one @Update all method (and one is already set)");
                 }
-                updateAll = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                updateAll = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
             } else if (builder.batch) {
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final UpdateMethod qm = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), descriptor, QueryMethod.QueryType.BATCH, builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final UpdateMethod qm = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), descriptor, QueryMethod.QueryType.BATCH, builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 updateMap.put(descriptor, qm);
             } else {
                 // a single key at a time
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final UpdateMethod qm = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final UpdateMethod qm = new UpdateMethod(method.getDeclaringClass() + ":" + method.getName(), descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, builder.updateType, builder.updateRecord, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 updateMap.put(descriptor, qm);
             }
         }
 
         public void addDeleteMethod(Method method) {
-            TimeoutBudget budget = method.getAnnotation(TimeoutBudget.class);
-            long minimumBudget = this.minimumBudget;
-            long maximumBudget = this.maximumBudget;
-            if (budget != null) {
-                minimumBudget = budget.minimumMilliseconds();
-                maximumBudget = budget.maximumMilliseconds();
-            }
 
             DeleteMethodAdapterBuilder builder = new DeleteMethodAdapterBuilder(method);
             ObjectBuilder.MethodBuilder methodBuilder = addAdapterMethod(method, "DELETE", builder);
@@ -393,15 +335,15 @@ public class SourceUnitGenerator extends SourceApiGenerator {
             //    a list of Record instances of the keys to do a lookup for if it's a BATCH
 
             if (builder.isScan()) {
-                deleteAll = new QueryMethod(builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                deleteAll = new QueryMethod(builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
             } else if (builder.batch) {
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.BATCH, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.BATCH, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 deleteMap.put(descriptor, qm);
             } else {
                 // a single key at a time
                 IndexDescriptor descriptor = builder.indexBuilder.build();
-                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async, minimumBudget, maximumBudget);
+                final QueryMethod qm = new QueryMethod(descriptor, QueryMethod.QueryType.SINGLE, builder.rowType, target.type(), methodBuilder.invoker(), builder.singleton, builder.async);
                 deleteMap.put(descriptor, qm);
             }
         }
@@ -764,13 +706,6 @@ public class SourceUnitGenerator extends SourceApiGenerator {
         //   is it a function, a table, or both (does it have @Query methods with/without free arguments)
         //     if it's a function, each signature will produce a table
         //     each table will have zero or more indexes, and zero or one SCAN operation
-        long minimumBudget = -1;
-        long maximumBudget = -1;
-        TimeoutBudget budget = clazz.getAnnotation(TimeoutBudget.class);
-        if (budget != null) {
-            minimumBudget = budget.minimumMilliseconds();
-            maximumBudget = budget.maximumMilliseconds();
-        }
         // we're going to compile all TableFunction @Query methods into methods with the signature
         Map<Integer, AdapterBuilder> generators = Maps.newHashMap();
         final BytecodeExpression providerConstant = gambitScope.constant(input);
@@ -791,7 +726,7 @@ public class SourceUnitGenerator extends SourceApiGenerator {
                 }
                 builder = generators.get(argTypes.size());
                 if (builder == null) {
-                    builder = new AdapterBuilder(sourceName, clazz, providerConstant, argTypes, minimumBudget, maximumBudget);
+                    builder = new AdapterBuilder(sourceName, clazz, providerConstant, argTypes);
                     builder.methods.add(method);
                     generators.put(argTypes.size(), builder);
                 } else if (!argTypes.equals(builder.signature)) {

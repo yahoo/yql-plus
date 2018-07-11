@@ -31,7 +31,7 @@ import com.yahoo.yqlplus.engine.internal.plan.*;
 import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
-import com.yahoo.yqlplus.engine.source.SourceUnitGenerator;
+import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
@@ -110,8 +110,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         if (source == null) {
             return null;
         } else {
-            SourceUnitGenerator adapter = new SourceUnitGenerator(planner.getGambitScope());
-            return adapter.apply(path, source);
+            return new SourceAdapter(pathKey, source.get().getClass(), source::get);
         }
     }
 

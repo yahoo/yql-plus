@@ -6,105 +6,41 @@
 
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
-import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.cloud.metrics.api.MetricType;
-import com.yahoo.cloud.metrics.api.RequestEvent;
-import com.yahoo.cloud.metrics.api.RequestMetric;
-import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
+import com.yahoo.cloud.metrics.api.*;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.*;
 import com.yahoo.yqlplus.engine.CompiledProgram.ArgumentInfo;
-import com.yahoo.yqlplus.engine.ProgramResult;
-import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource;
+import com.yahoo.yqlplus.engine.sources.*;
 import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource.ArraySyntaxTestRecord;
-import com.yahoo.yqlplus.engine.sources.AsyncInsertMovieSource;
-import com.yahoo.yqlplus.engine.sources.AsyncUpdateMovieSource;
-import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
-import com.yahoo.yqlplus.engine.sources.BatchKeySource;
-import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
-import com.yahoo.yqlplus.engine.sources.BulkResponse;
-import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
-import com.yahoo.yqlplus.engine.sources.ErrorSource;
-import com.yahoo.yqlplus.engine.sources.FRSource;
-import com.yahoo.yqlplus.engine.sources.InsertMovieSourceSingleField;
-import com.yahoo.yqlplus.engine.sources.InsertSourceMissingSetAnnotation;
-import com.yahoo.yqlplus.engine.sources.InsertSourceWithDuplicateSetParameters;
-import com.yahoo.yqlplus.engine.sources.InsertSourceWithMultipleInsertMethods;
-import com.yahoo.yqlplus.engine.sources.IntSource;
-import com.yahoo.yqlplus.engine.sources.JsonArraySource;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource1;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource2;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource3;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource4;
-import com.yahoo.yqlplus.engine.sources.KeyedSource;
 import com.yahoo.yqlplus.engine.sources.KeyedSource.IntegerKeyed;
-import com.yahoo.yqlplus.engine.sources.ListOfMapSource;
-import com.yahoo.yqlplus.engine.sources.LongDoubleMovieSource;
-import com.yahoo.yqlplus.engine.sources.LongMovie;
-import com.yahoo.yqlplus.engine.sources.LongSource;
-import com.yahoo.yqlplus.engine.sources.MapSource;
 import com.yahoo.yqlplus.engine.sources.MapSource.SampleId;
-import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource;
 import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource.MapSyntaxTestRecord;
-import com.yahoo.yqlplus.engine.sources.MetricEmitterSource;
-import com.yahoo.yqlplus.engine.sources.Movie;
-import com.yahoo.yqlplus.engine.sources.MovieSource;
-import com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet;
-import com.yahoo.yqlplus.engine.sources.MovieSourceWithLongUuid;
-import com.yahoo.yqlplus.engine.sources.MovieSourceWithMetricEmitter;
-import com.yahoo.yqlplus.engine.sources.MovieUDF;
-import com.yahoo.yqlplus.engine.sources.NestedMapSource;
-import com.yahoo.yqlplus.engine.sources.NestedSource;
-import com.yahoo.yqlplus.engine.sources.PersonMakerSource;
-import com.yahoo.yqlplus.engine.sources.Sample;
-import com.yahoo.yqlplus.engine.sources.SampleListSource;
-import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
-import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
-import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
-import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.SingleKeySource;
-import com.yahoo.yqlplus.engine.sources.SingleListOfStringKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.SingleStringKeySourceWithSkipEmptyOrZeroSetToTrue;
-import com.yahoo.yqlplus.engine.sources.StatusSource;
-import com.yahoo.yqlplus.engine.sources.StringUtilUDF;
-import com.yahoo.yqlplus.engine.sources.UpdateMovieSource;
-import com.yahoo.yqlplus.engine.sources.UpdateMovieSourceWithUnsortedParameters;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.*;
 
 @Test()
 public class JavaProgramCompilerTest {
@@ -294,7 +230,7 @@ public class JavaProgramCompilerTest {
     public void testBatchKeyOrClauses() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", BatchKeySource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id = '1' OR id = '2' OUTPUT AS f2;");
+        CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id = '1' OR id = '2' ORDER BY id OUTPUT AS f2;");
 //        program.dump(System.err);
         ProgramResult rez = program.run(ImmutableMap.of());
         Assert.assertEquals(rez.getResult("f2").get().getResult(), ImmutableList.of(new Person("1", "1", 1), new Person("2", "2", 2)));
@@ -900,7 +836,7 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(insertedMovie.getRating(), (byte) 0x7a);
 
         Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
-        Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
+        Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.UPDATE));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.DELETE));
     }
@@ -1040,7 +976,7 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(insertedMovie.getRating(), (byte) 0x7a);
 
         Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
-        Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
+        Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.UPDATE));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.DELETE));
     }
@@ -1552,7 +1488,7 @@ public class JavaProgramCompilerTest {
      * First element in the sequence of batch inserts specifies 'null' as its 'title' - assert that runtime exception
      * is thrown because the mapped-to @Insert method does not declare any default value for this record field
      */
-    @Test(expectedExceptions = {ExecutionException.class, IllegalArgumentException.class}, expectedExceptionsMessageRegExp = ".*com.yahoo.yqlplus.engine.sources.MovieSource::insertMovie Missing required property 'title' [(]java.lang.String[)]")
+    @Test(expectedExceptions = {ExecutionException.class, IllegalArgumentException.class}, expectedExceptionsMessageRegExp = ".*Required property 'title' not found on INSERT")
     public void testBatchInsertExceptionMissingDefaultValueForNull() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new MovieSource()));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
@@ -1571,7 +1507,8 @@ public class JavaProgramCompilerTest {
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = {YQLTypeException.class}, expectedExceptionsMessageRegExp = "method error: com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet.(insertMovie|updateMovie): .*")
+    //@Test(expectedExceptions = {YQLTypeException.class}, expectedExceptionsMessageRegExp = "method error: com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet.(insertMovie|updateMovie): .*")
+    @Test(expectedExceptions = {ProgramCompileException.class}, expectedExceptionsMessageRegExp = "Source 'source' has no matching @Insert method for.*")
     public void testInsertDefaultValueWithoutSet() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(),
                 new SourceBindingModule("source", new MovieSourceDefaultValueWithoutSet()));
@@ -1654,20 +1591,36 @@ public class JavaProgramCompilerTest {
     }
 
     /**
-     * Assert that ProgramCompileException is thrown if insert source declares more than one @Insert annotated method.
+     * Assert correct @Insert method is chosen.
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = YQLTypeException.class, expectedExceptionsMessageRegExp = ".*?There can be only one [@]Insert method [(]and one is already set[)]")
+    @Test
     public void testInsertSourceWithMultipleInsertMethods() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(),
                 new SourceBindingModule("source", new InsertSourceWithMultipleInsertMethods()));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
-        compiler.compile("PROGRAM (@uuid string, @title string, @category string, @prodDate string, @duration int32, " +
-                "@reviews array<string>);\n" +
-                "INSERT INTO source (uuid, title, category, prodDate, duration, reviews) " +
-                "values (@uuid, @title, @category, @prodDate, @duration, @reviews) " +
+        CompiledProgram prgm = compiler.compile("PROGRAM (@uuid string, @title string, @category string, @prodDate string);\n" +
+                "INSERT INTO source (uuid, title, category, prodDate) " +
+                "values (@uuid, @title, @category, @prodDate) " +
                 "OUTPUT AS out;");
+        ProgramResult res = prgm.run(ImmutableMap.<String,Object>builder()
+                .put("uuid", "1")
+                .put("title", "t")
+                .put("category", "superhero")
+                .put("prodDate", "monday")
+                .build(),
+                TaskContext.builder().build()
+        );
+        List<Movie> result = res.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 1);
+        Movie insertedMovie = result.get(0);
+        Assert.assertEquals(insertedMovie.getUuid(),"1");
+        Assert.assertEquals(insertedMovie.getTitle(),"t");
+        Assert.assertEquals(insertedMovie.getCategory(),"superhero");
+        Assert.assertEquals(insertedMovie.getProdDate(), "monday");
+        Assert.assertEquals(insertedMovie.getDuration().intValue(), 1);
+        
     }
 
     /**
@@ -1885,7 +1838,7 @@ public class JavaProgramCompilerTest {
         Assert.assertEquals(insertedMovie.getCast(), "Various");
 
         Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
-        Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
+        Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.UPDATE));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.DELETE));
     }

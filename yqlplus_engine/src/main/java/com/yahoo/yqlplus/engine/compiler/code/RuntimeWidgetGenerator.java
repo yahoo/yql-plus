@@ -21,12 +21,9 @@ public class RuntimeWidgetGenerator extends UnitGenerator {
         //    public abstract void serializeJson(Object source, JsonGenerator generator);
         //    public abstract void mergeIntoFieldWriter(Object source, FieldWriter writer);
         generateProperty(targetType, adapter);
+        generatePropertyDefault(targetType, adapter);
         generateIndex(targetType, adapter);
 
-     // Comment out for now since the code is targeting for gateway implementation
-     // Gateway is not fully implemented and the code will fail some tests of current none-gateway use case
-     //   generateJson(targetType, adapter);
-     //   generateTBin(targetType, adapter);
         generateMerge(targetType, adapter);
         generateGetFieldNames(targetType, adapter);
 
@@ -50,6 +47,24 @@ public class RuntimeWidgetGenerator extends UnitGenerator {
         BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
         BytecodeExpression nameExpr = method.addArgument("name", BaseTypeAdapter.STRING).read();
         final BytecodeExpression resultExpr = adapter.property(sourceExpr, nameExpr);
+        method.add(resultExpr);
+        method.add(new BytecodeSequence() {
+            @Override
+            public void generate(CodeEmitter code) {
+                code.box(resultExpr.getType());
+                code.getMethodVisitor().visitInsn(Opcodes.ARETURN);
+            }
+        });
+    }
+
+
+    private void generatePropertyDefault(TypeWidget targetType, RuntimeAdapter adapter) {
+        MethodGenerator method = createMethod("property");
+        method.setReturnType(AnyTypeWidget.getInstance());
+        BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
+        BytecodeExpression nameExpr = method.addArgument("name", BaseTypeAdapter.STRING).read();
+        BytecodeExpression defaultExpr = method.addArgument("def", AnyTypeWidget.getInstance()).read();
+        final BytecodeExpression resultExpr = adapter.property(sourceExpr, nameExpr, defaultExpr);
         method.add(resultExpr);
         method.add(new BytecodeSequence() {
             @Override

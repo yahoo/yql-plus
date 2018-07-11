@@ -26,6 +26,7 @@ public enum StreamOperator implements Operator {
     SLICE(StreamOperator.class, PhysicalExprOperator.class, PhysicalExprOperator.class),
     ORDERBY(StreamOperator.class, FunctionOperator.class),
     TRANSFORM(StreamOperator.class, FunctionOperator.class),
+    RESOLVE(StreamOperator.class),
     // like transform but parallel
     SCATTER(StreamOperator.class, FunctionOperator.class),
     // GROUPBY((row) -> key, (key, rows) -> row)

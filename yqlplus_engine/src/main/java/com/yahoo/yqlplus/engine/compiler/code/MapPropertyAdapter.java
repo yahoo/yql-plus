@@ -33,6 +33,17 @@ public class MapPropertyAdapter extends OpenPropertyAdapter {
         return new MapAssignableValue(valueType, target, indexExpression);
     }
 
+    @Override
+    public BytecodeExpression property(BytecodeExpression target, String propertyName, BytecodeExpression defaultValue) {
+        return index(target, new StringConstantExpression(propertyName), defaultValue);
+
+    }
+
+    @Override
+    public BytecodeExpression index(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue) {
+        return new CoalesceExpression(AnyTypeWidget.getInstance(), index(target, propertyName), defaultValue);
+    }
+
     public static Iterable<Object> stringsOnly(Iterable<Object> input) {
         return Iterables.filter(input, new Predicate<Object>() {
             @Override

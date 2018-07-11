@@ -44,8 +44,18 @@ class DynamicPropertyAdapter extends OpenPropertyAdapter {
     }
 
     @Override
+    public BytecodeExpression property(BytecodeExpression target, String propertyName, BytecodeExpression defaultValue) {
+        return AnyTypeWidget.invokeDynamic("dyn:getPropDefault:" + propertyName, AnyTypeWidget.getInstance(), target, ImmutableList.of(defaultValue));
+    }
+
+    @Override
     public AssignableValue index(BytecodeExpression target, BytecodeExpression propertyName) {
         return new DynamicPropertyAssignableValue(target, propertyName);
+    }
+
+    @Override
+    public BytecodeExpression index(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue) {
+        return AnyTypeWidget.invokeDynamic("dyn:getPropDefault", AnyTypeWidget.getInstance(), target, ImmutableList.of(propertyName, defaultValue));
     }
 
     @Override

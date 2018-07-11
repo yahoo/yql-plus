@@ -16,9 +16,9 @@ import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.engine.compiler.code.MapTypeWidget;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.internal.plan.ChainState;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.IndexedSourceType;
-import com.yahoo.yqlplus.engine.internal.plan.PlanChain;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
@@ -33,12 +33,12 @@ public class UpdateMethod extends IndexedMethod {
     private final YQLStructType updateRecord;
     private final TypeWidget updateType;
 
-    public UpdateMethod(String methodName, TypeWidget rowType, YQLStructType updateRecord, TypeWidget updateType, TypeWidget adapterType, GambitCreator.Invocable invoker, boolean singleton, boolean async, long minimumBudget, long maximumBudget) {
-        this(methodName, null, QueryType.SCAN, rowType, updateRecord, updateType, adapterType, invoker, singleton, async, minimumBudget, maximumBudget);
+    public UpdateMethod(String methodName, TypeWidget rowType, YQLStructType updateRecord, TypeWidget updateType, TypeWidget adapterType, GambitCreator.Invocable invoker, boolean singleton, boolean async) {
+        this(methodName, null, QueryType.SCAN, rowType, updateRecord, updateType, adapterType, invoker, singleton, async);
     }
 
-    public UpdateMethod(String methodName, IndexDescriptor descriptor, QueryType indexType, TypeWidget rowType, YQLStructType updateRecord, TypeWidget updateType, TypeWidget adapterType, GambitCreator.Invocable invoker, boolean singleton, boolean async, long minimumBudget, long maximumBudget) {
-        super(minimumBudget, rowType, maximumBudget, invoker, indexType, singleton, async, descriptor);
+    public UpdateMethod(String methodName, IndexDescriptor descriptor, QueryType indexType, TypeWidget rowType, YQLStructType updateRecord, TypeWidget updateType, TypeWidget adapterType, GambitCreator.Invocable invoker, boolean singleton, boolean async) {
+        super(rowType, invoker, indexType, singleton, async, descriptor);
         this.methodName = methodName;
         this.updateRecord = updateRecord;
         this.updateType = updateType;
@@ -128,7 +128,7 @@ public class UpdateMethod extends IndexedMethod {
         return super.createInvocation(location, source, planner, key, ImmutableList.of(recordAs));
     }
 
-    public StreamValue all(Location location, OperatorNode<PhysicalExprOperator> source, ContextPlanner planner, PlanChain.LocalChainState state, OperatorNode<PhysicalExprOperator> record) {
+    public StreamValue all(Location location, OperatorNode<PhysicalExprOperator> source, ContextPlanner planner, ChainState state, OperatorNode<PhysicalExprOperator> record) {
         Preconditions.checkArgument(type == QueryType.SCAN);
         return executeCall(location, source, planner, null, record);
     }

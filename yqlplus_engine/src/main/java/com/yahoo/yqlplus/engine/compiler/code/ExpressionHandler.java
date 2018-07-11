@@ -342,6 +342,25 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
     }
 
     @Override
+    public BytecodeExpression propertyValue(Location loc, BytecodeExpression target, String propertyName, BytecodeExpression defaultValue) {
+        if (!target.getType().hasProperties()) {
+            return defaultValue;
+        }
+        try {
+            if (target.getType().isNullable()) {
+                ScopeBuilder guard = scope();
+                BytecodeExpression tgt = guard.evaluateInto(target);
+                final AssignableValue property = target.getType().getPropertyAdapter().property(new NullCheckedEvaluatedExpression(tgt), propertyName);
+                return guard.complete(guard.guarded(tgt, property, defaultValue));
+
+            }
+            return target.getType().getPropertyAdapter().property(target, propertyName, defaultValue);
+        } catch (PropertyNotFoundException e) {
+            throw new ProgramCompileException(loc, e.getMessage());
+        }
+    }
+
+    @Override
     public BytecodeExpression indexValue(Location loc, BytecodeExpression target, BytecodeExpression index) {
         if (target.getType().isNullable()) {
             ScopeBuilder guard = scope();
@@ -360,6 +379,16 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             return ifTargetIsNotNull;
         }
         return new NullGuardedExpression(target, ifTargetIsNotNull);
+    }
+
+    @Override
+    public BytecodeExpression guarded(BytecodeExpression target, BytecodeExpression ifTargetIsNotNull, BytecodeExpression ifTargetIsNull) {
+        Preconditions.checkNotNull(target);
+        Preconditions.checkNotNull(ifTargetIsNotNull);
+        if (!target.getType().isNullable()) {
+            return ifTargetIsNotNull;
+        }
+        return new NullGuardedExpression(unify(ifTargetIsNotNull.getType(), ifTargetIsNull.getType()), target, ifTargetIsNotNull, ifTargetIsNull);
     }
 
     @Override
@@ -416,11 +445,20 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     private static class NullGuardedExpression extends BaseTypeExpression {
         private final BytecodeExpression ifTargetIsNotNull;
+        private final BytecodeExpression ifTargetIsNull;
         private final BytecodeExpression target;
 
         public NullGuardedExpression(BytecodeExpression target, BytecodeExpression ifTargetIsNotNull) {
             super(NullableTypeWidget.create(ifTargetIsNotNull.getType().boxed()));
             this.ifTargetIsNotNull = ifTargetIsNotNull;
+            this.ifTargetIsNull = new NullExpr(ifTargetIsNotNull.getType().boxed());
+            this.target = target;
+        }
+
+        public NullGuardedExpression(TypeWidget returnType, BytecodeExpression target, BytecodeExpression ifTargetIsNotNull, BytecodeExpression ifTargetIsNull) {
+            super(NullableTypeWidget.create(returnType.boxed()));
+            this.ifTargetIsNotNull = ifTargetIsNotNull;
+            this.ifTargetIsNull = ifTargetIsNull;
             this.target = target;
         }
 
@@ -435,7 +473,8 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             code.cast(getType(), ifTargetIsNotNull.getType());
             mv.visitJumpInsn(Opcodes.GOTO, done);
             mv.visitLabel(isNull);
-            mv.visitInsn(Opcodes.ACONST_NULL);
+            code.exec(ifTargetIsNull);
+            code.cast(getType(), ifTargetIsNull.getType());
             mv.visitLabel(done);
         }
     }

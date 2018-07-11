@@ -6,10 +6,12 @@
 
 package com.yahoo.yqlplus.engine.sources;
 
+import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.DefaultValue;
 import com.yahoo.yqlplus.api.annotations.Insert;
 import com.yahoo.yqlplus.api.annotations.Set;
+
 import java.util.List;
 
 public class InsertSourceWithMultipleInsertMethods implements Source {
@@ -19,9 +21,8 @@ public class InsertSourceWithMultipleInsertMethods implements Source {
                               @Set("title") String title,
                               @Set("category") String category,
                               @Set("prodDate") String prodDate,
-                              @Set("duration") Integer duration,
-                              @Set("reviews") List<String> reviews) {
-        return new Movie(uuid, title, category, prodDate, duration, reviews, true, null, null);
+                              @Set("duration") @DefaultValue("1") Integer duration) {
+        return new Movie(uuid, title, category, prodDate, duration, ImmutableList.of(), true, null, null);
     }
 
     @Insert

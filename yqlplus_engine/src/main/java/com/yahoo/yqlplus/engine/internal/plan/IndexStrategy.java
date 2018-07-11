@@ -13,12 +13,12 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import java.util.List;
 import java.util.Map;
 
-class IndexStrategy {
-    final IndexKey index;
-    final IndexDescriptor descriptor;
-    Map<String, OperatorNode<ExpressionOperator>> indexFilter;
-    OperatorNode<ExpressionOperator> filter;
-    List<String> joinColumns;
+public class IndexStrategy {
+    public final IndexKey index;
+    public final IndexDescriptor descriptor;
+    public Map<String, OperatorNode<ExpressionOperator>> indexFilter;
+    public OperatorNode<ExpressionOperator> filter;
+    public List<String> joinColumns;
 
     IndexStrategy(IndexKey index, IndexDescriptor descriptor) {
         this.index = index;

@@ -22,6 +22,16 @@ public class StandardRuntimeAdapter implements RuntimeAdapter {
     }
 
     @Override
+    public BytecodeExpression property(BytecodeExpression target, BytecodeExpression propertyName, BytecodeExpression defaultValue) {
+        if(widget.hasProperties()) {
+            return widget.getPropertyAdapter().index(target, propertyName, defaultValue);
+        } else {
+            return new NullExpr(AnyTypeWidget.getInstance());
+        }
+    }
+
+
+    @Override
     public BytecodeExpression index(BytecodeExpression target, BytecodeExpression indexExpr) {
         if(widget.isIndexable()) {
             return widget.getIndexAdapter().index(target, indexExpr);

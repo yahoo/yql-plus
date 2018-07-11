@@ -110,7 +110,6 @@ public class SourceApiGenerator {
     private static final List<Class<?>> SOURCE_ANNOTATIONS =
             ImmutableList.of(com.yahoo.yqlplus.api.annotations.Key.class,
                     Set.class,
-                    DefaultValue.class,
                     TimeoutMilliseconds.class,
                     Emitter.class);
 

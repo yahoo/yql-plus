@@ -22,6 +22,7 @@ public class RuntimeLinker {
     private final Class<?> clazz;
     private final MethodHandle property;
     private final MethodHandle propertyString;
+    private final MethodHandle propertyStringDefault;
     private final MethodHandle index;
    // private final MethodHandle serializeJson;
    // private final MethodHandle serializeTBin;
@@ -41,6 +42,8 @@ public class RuntimeLinker {
             property = lookup.findVirtual(widget, "propertyObject", MethodType.methodType(Object.class, Object.class, Object.class))
                     .bindTo(widgetInstance);
             propertyString = lookup.findVirtual(widget, "property", MethodType.methodType(Object.class, Object.class, String.class))
+                    .bindTo(widgetInstance);
+            propertyStringDefault = lookup.findVirtual(widget, "property", MethodType.methodType(Object.class, Object.class, String.class, Object.class))
                     .bindTo(widgetInstance);
             index = lookup.findVirtual(widget, "index", MethodType.methodType(Object.class, Object.class, Object.class))
                     .bindTo(widgetInstance);
@@ -113,6 +116,17 @@ public class RuntimeLinker {
             String property = desc.getNameToken(2);
             MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
             return new GuardedInvocation(handle,
+                    Guards.isOfClass(clazz, handle.type()));
+        } else if("getPropDefault".equals(operation) && desc.getNameTokenCount() > 2) {
+            base = this.propertyStringDefault;
+            String property = desc.getNameToken(2);
+            MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
+            return new GuardedInvocation(handle,
+                    Guards.isOfClass(clazz, handle.type()));
+        } else if("getPropDefault".equals(operation)) {
+            String property = desc.getNameToken(2);
+            MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
+            return new GuardedInvocation(propertyStringDefault,
                     Guards.isOfClass(clazz, handle.type()));
         } else if ("getProp".equals(operation)) {
             MethodHandle target = index.asType(targetType);
