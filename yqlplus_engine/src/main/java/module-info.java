@@ -19,8 +19,6 @@ module com.yahoo.yqlplus.engine {
     requires antlr4.runtime;
     requires dynalink;
 
-    exports com.yahoo.yqlplus.engine.scope;
-    exports com.yahoo.yqlplus.engine.tools;
     exports com.yahoo.yqlplus.engine.guice;
     exports com.yahoo.yqlplus.engine.rules;
 }
