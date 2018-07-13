@@ -261,12 +261,12 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
     }
 
     private StreamValue executeRead(OperatorNode<SequenceOperator> top, OperatorNode<SequenceOperator> source) {
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.plan(this, top, source);
     }
 
     private StreamValue executeReadJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<SequenceOperator> top, OperatorNode<SequenceOperator> source) {
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.join(this, leftSide, joinExpression, top, source);
     }
 
@@ -274,7 +274,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
         // {INSERT/UPDATE/UPDATE_ALL/DELETE/DELETE_ALL} SCAN ...
         OperatorNode<SequenceOperator> source = write.getArgument(0);
         Preconditions.checkArgument(source.getOperator() == SequenceOperator.SCAN, "Target of write is not SCAN?: %s ", source);
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.plan(this, top, source);
     }
 

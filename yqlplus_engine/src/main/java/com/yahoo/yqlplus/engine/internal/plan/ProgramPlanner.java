@@ -96,13 +96,13 @@ public class ProgramPlanner implements ViewRegistry {
         this.parentViews = viewNamespace;
     }
 
-    public SourceType findSource(ContextPlanner contextPlanner, OperatorNode<SequenceOperator> source) {
+    public SourceType findSource(OperatorNode<SequenceOperator> source) {
         List<String> path = source.getArgument(0);
         String name = Joiner.on(".").join(path);
         if (resolvedSources.containsKey(name)) {
             return resolvedSources.get(name);
         }
-        SourceType result = sourceNamespace.findSource(source.getLocation(), contextPlanner, path);
+        SourceType result = sourceNamespace.findSource(source.getLocation(), path);
         if (result == null) {
             throw new DependencyNotFoundException(source.getLocation(), "Source '%s' not found", name);
         }
@@ -110,12 +110,12 @@ public class ProgramPlanner implements ViewRegistry {
         return result;
     }
 
-    public ModuleType findModule(Location location, ContextPlanner contextPlanner, List<String> path) {
+    public ModuleType findModule(Location location, List<String> path) {
         String name = Joiner.on(".").join(path);
         if (resolvedModules.containsKey(name)) {
             return resolvedModules.get(name);
         }
-        ModuleType result = moduleNamespace.findModule(location, contextPlanner, path);
+        ModuleType result = moduleNamespace.findModule(location, path);
         if (result == null) {
             throw new DependencyNotFoundException(location, "Module '%s' not found", name);
         }
@@ -127,7 +127,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(location, "PIPE expects at least two-argument path (module name, function name): %s", path);
         }
-        ModuleType module = findModule(location, context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(location, path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         return module.pipe(location, context, name, input, arguments);
     }
@@ -142,7 +142,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(call.getLocation(), "CALL expects at least two-argument path (module name, function name): %s", call);
         }
-        ModuleType module = findModule(call.getLocation(), context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(call.getLocation(), path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         List<OperatorNode<ExpressionOperator>> arguments = call.getArgument(1);
         if (row != null) {
@@ -156,7 +156,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(location, "Module property reference expects at least two-argument path (module name, property name): %s", path);
         }
-        ModuleType module = findModule(location, context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(location, path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         return module.property(location, context, name);
     }

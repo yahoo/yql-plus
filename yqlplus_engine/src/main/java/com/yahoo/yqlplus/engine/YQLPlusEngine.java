@@ -6,15 +6,9 @@
 
 package com.yahoo.yqlplus.engine;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.yahoo.yqlplus.engine.api.Namespace;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
-import com.yahoo.yqlplus.engine.guice.NamespaceAdapter;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
 
 import java.util.List;
 
@@ -25,39 +19,41 @@ public final class YQLPlusEngine {
     private YQLPlusEngine() {
     }
 
-    private static class BaseModule extends AbstractModule {
-        @Override
-        protected void configure() {
+    public static class Builder {
+        final BindingNamespace namespace = new BindingNamespace();
+        final List<TypeAdaptingWidget> adapters = Lists.newArrayList();
 
-            install(new ASMClassSourceModule());
-            bind(ViewRegistry.class).toInstance(new ViewRegistry() {
-                @Override
-                public OperatorNode<SequenceOperator> getView(List<String> name) {
-                    return null;
-                }
-            });
-            bind(SourceNamespace.class).to(NamespaceAdapter.class);
-            bind(ModuleNamespace.class).to(NamespaceAdapter.class);
+        public Builder bind(Object... kvPairs) {
+            namespace.bind(kvPairs);
+            return this;
+        }
 
+        public Builder addAdapter(TypeAdaptingWidget adapter) {
+            this.adapters.add(adapter);
+            return this;
+        }
+
+        public Builder addAdapters(TypeAdaptingWidget... adapters) {
+            for(TypeAdaptingWidget adapter : adapters) {
+                addAdapter(adapter);
+            }
+            return this;
+        }
+
+        public BindingNamespace binder() {
+            return namespace;
+        }
+
+        public YQLPlusCompiler build() {
+            return new YQLPlusCompiler(adapters, namespace, namespace, namespace);
         }
     }
 
-
-    private static final class NamespaceModule extends AbstractModule {
-        private final Namespace namespace;
-
-        private NamespaceModule(Namespace namespace) {
-            this.namespace = namespace;
-        }
-
-        @Override
-        protected void configure() {
-            bind(Namespace.class).toInstance(namespace);
-        }
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public static YQLPlusCompiler createCompiler(Namespace dependencies) {
-        Injector injector = Guice.createInjector(new BaseModule(), new NamespaceModule(dependencies));
-        return injector.getInstance(YQLPlusCompiler.class);
+    public static YQLPlusCompiler createCompiler(ModuleNamespace modules, SourceNamespace sources) {
+        return new YQLPlusCompiler(ImmutableList.of(), sources, modules, name -> null);
     }
 }

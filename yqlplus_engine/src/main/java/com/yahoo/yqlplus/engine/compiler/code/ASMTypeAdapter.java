@@ -31,7 +31,6 @@ import java.lang.reflect.WildcardType;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ASMTypeAdapter implements EngineValueTypeAdapter {
     private final ASMClassSource source;
@@ -42,7 +41,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
     private final Iterable<TypeAdaptingWidget> adapterChain;
     private final Map<TypeWidget, ResultAdapter> resultTypes = Maps.newLinkedHashMap();
 
-    public ASMTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters) {
+    public ASMTypeAdapter(ASMClassSource source, Iterable<TypeAdaptingWidget> adapters) {
         this.source = source;
         this.baseTypeAdapter = new BaseTypeAdapter();
         this.adapterChain = Iterables.concat(ImmutableList.of(new ArrayTypeAdapter()), adapters, ImmutableList.of(new DefaultTypeAdapter()));

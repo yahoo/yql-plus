@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
 public class PlanProgramCompiler {
@@ -49,7 +48,7 @@ public class PlanProgramCompiler {
         private final GambitScope gambitScope;
         private final ProgramPlanner planner;
 
-        private CompilerInstance(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        private CompilerInstance(Iterable<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
             this.classSource = new ASMClassSource(adapters);
             this.gambitScope = new GambitSource(classSource);
             this.planner = new ProgramPlanner(sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
@@ -191,7 +190,7 @@ public class PlanProgramCompiler {
     }
 
 
-    public PlanProgramCompiler(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+    public PlanProgramCompiler(Iterable<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
         this.supplier = () -> new CompilerInstance(adapters, sourceNamespace, moduleNamespace, viewNamespace);
     }
 

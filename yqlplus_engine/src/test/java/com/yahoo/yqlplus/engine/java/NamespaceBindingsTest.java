@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Provider;
-import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.CompiledProgram;
@@ -17,14 +15,10 @@ import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLPlusEngine;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.engine.api.Namespace;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.List;
 
 /**
  * Several ways to tell the engine about sources.
@@ -44,30 +38,14 @@ public class NamespaceBindingsTest {
 
     @Test
     public void testGuicelessEntryPoint() throws Exception {
-        YQLPlusCompiler compiler = YQLPlusEngine.createCompiler(new Namespace() {
-            @Override
-            public Provider<Source> resolveSource(List<String> path) {
-                if (path.size() == 1 && path.get(0).equals("mine")) {
-                    return new Provider<Source>() {
-                        @Override
-                        public Source get() {
-                            return new MySource();
-                        }
-                    };
-                }
-                return null;
-            }
-
-            @Override
-            public Provider<Exports> resolveModule(List<String> path) {
-                return null;
-            }
-
-            @Override
-            public OperatorNode<SequenceOperator> getView(List<String> name) {
-                return null;
-            }
-        });
+        YQLPlusCompiler compiler = YQLPlusEngine.createCompiler(
+                (location, modulePath) -> null,
+                (location, path) -> {
+                    if (path.size() == 1 && path.get(0).equals("mine")) {
+                        return new SourceAdapter("mine", MySource.class);
+                    }
+                    return null;
+                });
         runInvocations(compiler);
     }
 

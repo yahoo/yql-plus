@@ -15,7 +15,6 @@ import com.yahoo.yqlplus.engine.ModuleNamespace;
 import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.engine.SourceNamespace;
 import com.yahoo.yqlplus.engine.SourceType;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.source.ExportModuleAdapter;
 import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -41,7 +40,7 @@ public class MultibinderPlannerNamespace implements SourceNamespace, ModuleNames
     }
 
     @Override
-    public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
+    public ModuleType findModule(Location location, List<String> modulePath) {
         Provider<Exports> moduleProvider = exportsBindings.get(keyFor(modulePath));
         if (moduleProvider == null) {
             return null;
@@ -50,7 +49,7 @@ public class MultibinderPlannerNamespace implements SourceNamespace, ModuleNames
     }
 
     @Override
-    public SourceType findSource(Location location, ContextPlanner planner, List<String> sourcePath) {
+    public SourceType findSource(Location location, List<String> sourcePath) {
         Provider<Source> sourceProvider = sourceBindings.get(keyFor(sourcePath));
         if (sourceProvider == null) {
             return null;

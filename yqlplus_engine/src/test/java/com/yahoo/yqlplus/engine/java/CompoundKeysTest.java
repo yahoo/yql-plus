@@ -12,8 +12,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Insert;
 import com.yahoo.yqlplus.api.annotations.Key;
@@ -23,8 +21,9 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.Record;
+import com.yahoo.yqlplus.engine.internal.bytecode.CompilingTestBase;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Collection;
@@ -32,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CompoundKeysTest {
+public class CompoundKeysTest extends CompilingTestBase {
 
     public static class Toy {
         public final String id;
@@ -120,18 +119,15 @@ public class CompoundKeysTest {
 
     }
 
-    Injector injector;
-
-    @BeforeClass
+    @BeforeMethod(dependsOnGroups = "init")
     public void setUp() {
-        injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("toys", new CompoundToySource(), "serviceMetrics", new ServiceMetricsSource())
-        );
+        super.setUp();
+        namespace.bindSource("toys", new CompoundToySource())
+                .bindSource("serviceMetrics", new ServiceMetricsSource());
     }
 
     private List<Record> execute(String programText, ImmutableMap<String, Object> arguments) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         CompiledProgram program = compiler.compile(programText);
         ProgramResult rez = program.run(arguments);
         return rez.getResult("f1").get().getResult();
@@ -166,7 +162,7 @@ public class CompoundKeysTest {
                             "AND modelId = 'foo' \n"+
                             "OUTPUT AS serviceMetrics; ";
       
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         CompiledProgram program = compiler.compile(programStr);
         ProgramResult rez = program.run(ImmutableMap.of());
         List<ServiceMetrics> serviceMetrics = rez.getResult("serviceMetrics").get().getResult();

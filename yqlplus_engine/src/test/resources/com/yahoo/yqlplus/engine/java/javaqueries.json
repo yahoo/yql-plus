@@ -162,7 +162,7 @@
             }
         },
         {
-            "input": "SELECT * FROM {{sourcespec}} WHERE {{idfield}} IN ('1', '2') OUTPUT AS f1;",
+            "input": "SELECT * FROM {{sourcespec}} WHERE {{idfield}} IN ('1', '2') ORDER BY {{idfield}} OUTPUT AS f1;",
             "output": {
                 "f1": [
                     {
@@ -179,7 +179,7 @@
             }
         },
         {
-            "input": "SELECT * FROM {{sourcespec}} WHERE {{idfield}} = '1' OR {{idfield}} = '2' OUTPUT AS f1;",
+            "input": "SELECT * FROM {{sourcespec}} WHERE {{idfield}} = '1' OR {{idfield}} = '2' ORDER BY {{idfield}} OUTPUT AS f1;",
             "output": {
                 "f1": [
                     {

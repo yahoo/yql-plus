@@ -6,11 +6,10 @@
 
 package com.yahoo.yqlplus.engine;
 
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
 
 public interface ModuleNamespace {
-    ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath);
+    ModuleType findModule(Location location, List<String> modulePath);
 }

@@ -79,6 +79,12 @@ public class SourceAdapter implements SourceType {
         this.supplier = module;
     }
 
+    public SourceAdapter(String sourceName, Class<?> clazz) {
+        this.sourceName = sourceName;
+        this.clazz = clazz;
+        this.supplier = null;
+    }
+
     @Override
     public StreamValue plan(CompileContext planner, OperatorNode<SequenceOperator> query, OperatorNode<SequenceOperator> source) {
         List<OperatorNode<ExpressionOperator>> args = source.getArgument(1);

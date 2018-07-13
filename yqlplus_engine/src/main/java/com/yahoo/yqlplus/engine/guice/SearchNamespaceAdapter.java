@@ -14,7 +14,6 @@ import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.engine.SourceNamespace;
 import com.yahoo.yqlplus.engine.SourceType;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;
@@ -55,18 +54,18 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
     }
 
     @Override
-    public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
+    public ModuleType findModule(Location location, List<String> modulePath) {
         String key = keyFor(modulePath);
         if(moduleMap.containsKey(key)) {
             return moduleMap.get(key);
         }
         SuffixMatch<ModuleNamespace> prefixSearch = prefixSearch(moduleNamespaceMap, modulePath);
         if(prefixSearch != null) {
-            return prefixSearch.module.findModule(location, planner, prefixSearch.suffix);
+            return prefixSearch.module.findModule(location, prefixSearch.suffix);
         }
         for(ModuleNamespace moduleNamespace : moduleNamespaceSet) {
             try {
-                ModuleType moduleType = moduleNamespace.findModule(location, planner, modulePath);
+                ModuleType moduleType = moduleNamespace.findModule(location, modulePath);
                 if (moduleType != null) {
                     return moduleType;
                 }
@@ -89,18 +88,18 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
     }
 
     @Override
-    public SourceType findSource(Location location, ContextPlanner planner, List<String> path) {
+    public SourceType findSource(Location location, List<String> path) {
         String key = keyFor(path);
         if(sourceMap.containsKey(key)) {
             return sourceMap.get(key);
         }
         SuffixMatch<SourceNamespace> prefixSearch = prefixSearch(sourceNamespaceMap, path);
         if(prefixSearch != null) {
-            return prefixSearch.module.findSource(location, planner, prefixSearch.suffix);
+            return prefixSearch.module.findSource(location, prefixSearch.suffix);
         }
         for(SourceNamespace moduleNamespace : sourceNamespaceSet) {
             try {
-                SourceType moduleType = moduleNamespace.findSource(location, planner, path);
+                SourceType moduleType = moduleNamespace.findSource(location, path);
                 if (moduleType != null) {
                     return moduleType;
                 }

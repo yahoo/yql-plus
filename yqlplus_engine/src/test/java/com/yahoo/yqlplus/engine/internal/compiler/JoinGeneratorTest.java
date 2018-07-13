@@ -6,9 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.compiler;
 
-import com.google.inject.Guice;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.JoinTask;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -36,7 +41,7 @@ public class JoinGeneratorTest {
 
     @BeforeMethod
     public void setUp() {
-        source = Guice.createInjector(new ASMClassSourceModule()).getInstance(ASMClassSource.class);
+        source = new ASMClassSource();
         scope = new GambitSource(source);
     }
 

@@ -18,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -29,6 +30,10 @@ public class YQLPlusCompiler {
 
     @Inject
     public YQLPlusCompiler(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        this.compiler = new PlanProgramCompiler(adapters, sourceNamespace, moduleNamespace, viewNamespace);
+    }
+
+    public YQLPlusCompiler(List<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
         this.compiler = new PlanProgramCompiler(adapters, sourceNamespace, moduleNamespace, viewNamespace);
     }
 

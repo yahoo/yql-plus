@@ -6,52 +6,36 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provider;
-import com.google.inject.multibindings.Multibinder;
+import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.Source;
+import com.yahoo.yqlplus.engine.BindingNamespace;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.ModuleNamespace;
 import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.engine.ProgramResult;
-import com.yahoo.yqlplus.engine.SourceNamespace;
-import com.yahoo.yqlplus.engine.SourceType;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
+import com.yahoo.yqlplus.engine.YQLPlusEngine;
 import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
-import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
 import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
 import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
 import com.yahoo.yqlplus.engine.compiler.code.LambdaFactoryBuilder;
 import com.yahoo.yqlplus.engine.compiler.code.NullExpr;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.guice.PhysicalOperatorBuiltinsModule;
-import com.yahoo.yqlplus.engine.guice.SearchNamespaceModule;
-import com.yahoo.yqlplus.engine.guice.SourceApiModule;
 import com.yahoo.yqlplus.engine.internal.generate.PhysicalExprOperatorCompiler;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEnvironment;
 import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
-import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import com.yahoo.yqlplus.language.parser.ProgramParser;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
@@ -62,72 +46,16 @@ import org.testng.annotations.BeforeMethod;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleNamespace {
-    Injector injector;
+public class CompilingTestBase {
     ASMClassSource source;
     GambitScope scope;
-    Map<String, OperatorNode<SequenceOperator>> views;
-    Map<String, OperatorNode<PhysicalExprOperator>> modules;
-    Map<String, Provider<? extends Source>> sources;
-
-
-    public class CompilingTestModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            install(new ASMClassSourceModule());
-            install(new SearchNamespaceModule());
-            install(new SourceApiModule());
-            install(new PhysicalOperatorBuiltinsModule());
-            Multibinder<SourceNamespace> sourceNamespaceMultibinder = Multibinder.newSetBinder(binder(), SourceNamespace.class);
-            Multibinder<ModuleNamespace> moduleNamespaceMultibinder = Multibinder.newSetBinder(binder(), ModuleNamespace.class);
-            sourceNamespaceMultibinder.addBinding().toInstance(CompilingTestBase.this);
-            moduleNamespaceMultibinder.addBinding().toInstance(CompilingTestBase.this);
-            bind(ViewRegistry.class).toInstance(CompilingTestBase.this);
-        }
-    }
-
-    @BeforeMethod
-    public void setUp() {
-        init();
-    }
-
-    public void init(Module... modules) {
-        if(modules == null) {
-            modules = new Module[0];
-        }
-        injector = Guice.createInjector(Iterables.concat(ImmutableList.<Module>of(new CompilingTestModule()), Arrays.asList(modules)));
-        source = injector.getInstance(ASMClassSource.class);
-        scope = new GambitSource(source);
-        this.modules = Maps.newLinkedHashMap();
-        this.views = Maps.newHashMap();
-        this.sources = Maps.newLinkedHashMap();
-    }
-
-    @Override
-    public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
-        if(ImmutableList.of("yql", "sequences").equals(modulePath)) {
-            return new SequenceBuiltinsModule();
-        } else if(ImmutableList.of("yql", "conditionals").equals(modulePath)) {
-            return new ConditionalsBuiltinsModule();
-        }
-        return null;
-    }
-
-    @Override
-    public SourceType findSource(Location location, ContextPlanner planner, List<String> path) {
-        String pathKey = Joiner.on('.').join(path);
-        Provider<? extends Source> source = sources.get(pathKey);
-        if (source == null) {
-            return null;
-        } else {
-            return new SourceAdapter(pathKey, source.get().getClass(), source::get);
-        }
-    }
+    protected BindingNamespace namespace;
+    protected YQLPlusEngine.Builder builder;
+    Map<String, OperatorNode<PhysicalExprOperator>> constants;
 
     protected Callable<Object> compileExpression(OperatorNode<PhysicalExprOperator> expr) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         LambdaFactoryBuilder callable = scope.createInvocableCallable();
@@ -158,6 +86,15 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         }
     }
 
+    @BeforeMethod(groups={"init"})
+    public void setUp() {
+        this.source = new ASMClassSource();
+        this.scope = new GambitSource(source);
+        this.builder = YQLPlusEngine.builder();
+        this.namespace = this.builder.binder();
+        this.constants = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+    }
+
     protected OperatorNode<PhysicalExprOperator> parseExpression(String expr) throws IOException, RecognitionException {
         ProgramParser parser = new ProgramParser();
         OperatorNode<ExpressionOperator> op = parser.parseExpression(expr, ImmutableSet.of(), ImmutableMap.of("map", ImmutableList.of("map")));
@@ -184,7 +121,20 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
 
             @Override
             public OperatorNode<PhysicalExprOperator> property(Location location, List<String> path) {
-                return modules.get(Joiner.on('.').join(path.subList(1, path.size())));
+                String key = Joiner.on('.').join(path);
+                if (constants.containsKey(key)) {
+                    return constants.get(key);
+                }
+                if (path.size() < 2) {
+                    throw new ProgramCompileException(location, "Module property reference expects at least two-argument path (module name, property name): %s", path);
+                }
+                ModuleType module = namespace.findModule(location, path.subList(0, path.size() - 1));
+                if(module != null) {
+                    String name = path.get(path.size() - 1);
+                    return module.property(location, null, name);
+                } else {
+                    throw new ProgramCompileException(location, "Unknown module path %s", Joiner.on('.').join(path));
+                }
             }
 
             @Override
@@ -196,11 +146,6 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
         return eval.apply(op);
     }
 
-    @Override
-    public OperatorNode<SequenceOperator> getView(List<String> name) {
-        return views.get(Joiner.on(".").join(name));
-    }
-
     protected void defineView(String name, String query) throws IOException {
         ProgramParser parser = new ProgramParser();
         OperatorNode<StatementOperator> program = parser.parse("program.yql", "CREATE VIEW " + name + " AS " + query + ";");
@@ -209,24 +154,20 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
             if(statement.getOperator() == StatementOperator.DEFINE_VIEW) {
                 String viewName = statement.getArgument(0);
                 OperatorNode<SequenceOperator> parsedQuery = statement.getArgument(1);
-                views.put(viewName, parsedQuery);
+                namespace.bindView(viewName, parsedQuery);
             }
         }
     }
 
-    protected void defineSource(String name, Provider<Source> sourceProvider) {
-        sources.put(name, sourceProvider);
-    }
-
     protected void defineSource(String name, Class<? extends Source> sourceClazz) {
-        sources.put(name, injector.getProvider(sourceClazz));
+        namespace.bindSource(name, sourceClazz);
     }
 
     protected OperatorNode<StatementOperator> parseQueryProgram(String query) throws IOException {
         ProgramParser parser = new ProgramParser();
         LogicalProgramTransforms transforms = new LogicalProgramTransforms();
         OperatorNode<StatementOperator> program = parser.parse("program.yql", query + " OUTPUT AS f1;");
-        program = transforms.apply(program, this);
+        program = transforms.apply(program, namespace);
         Assert.assertEquals(program.getOperator(), StatementOperator.PROGRAM);
         return program;
     }
@@ -245,7 +186,7 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     }
 
     protected ProgramResult runProgram(String programText) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         CompiledProgram program = compiler.compile("program.yql", programText);
         return program.run(ImmutableMap.of());
 
@@ -256,12 +197,12 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     }
 
     protected CompiledProgram compileProgram(String programName, String program) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         return compiler.compile(programName, program);
     }
 
     protected CompiledProgram compileProgramStream(String programName, InputStream stream) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         return compiler.compile(programName, stream);
     }
 
@@ -279,11 +220,11 @@ public class CompilingTestBase implements ViewRegistry, SourceNamespace, ModuleN
     }
 
     public void putConstant(String name, Object constant) {
-        modules.put(name, constant(constant));
+        constants.put(name, constant(constant));
     }
 
     public void putExpr(String name, OperatorNode<PhysicalExprOperator> expr) {
-        modules.put(name, expr);
+        constants.put(name, expr);
     }
 
 }

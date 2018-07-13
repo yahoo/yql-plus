@@ -6,7 +6,6 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
@@ -21,6 +20,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -53,14 +53,14 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
 
     @Test
     public void requireConstantAdd() throws Exception {
-        putConstant("foo", 2);
+        putConstant("map.foo", 2);
         Callable<Object> invoker = compileExpression(parseExpression("1 + map.foo"));
         Assert.assertEquals(3, invoker.call());
     }
 
     @Test
     public void requireVariableAdd() throws Exception {
-        putConstant("foo", 3);
+        putConstant("map.foo", 3);
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.foo"));
         Assert.assertEquals(4, invoker2.call());
     }
@@ -71,55 +71,55 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
 
     @Test
     public void requirePropref() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(new Hat()), "hat"));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(new Hat()), "hat"));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireIndex() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(new Hat()), constant("hat")));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(new Hat()), constant("hat")));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireIndexDynamic() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(AnyTypeWidget.getInstance(), new Hat()), constant("hat")));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(AnyTypeWidget.getInstance(), new Hat()), constant("hat")));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireMapPropref() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(ImmutableMap.of("hat", 2)), "hat"));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(ImmutableMap.of("hat", 2)), "hat"));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireMapPropefDynamic() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(AnyTypeWidget.getInstance(), ImmutableMap.of("hat", 2)), "hat"));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(AnyTypeWidget.getInstance(), ImmutableMap.of("hat", 2)), "hat"));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireMapIndex() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(ImmutableMap.of("hat", 2)), constant("hat")));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(ImmutableMap.of("hat", 2)), constant("hat")));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     @Test
     public void requireMapIndexDynamic() throws Exception {
-        putExpr("fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(AnyTypeWidget.getInstance(), ImmutableMap.of("hat", 2)), constant("hat")));
+        putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.INDEX, constant(AnyTypeWidget.getInstance(), ImmutableMap.of("hat", 2)), constant("hat")));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
     }
 
     private Map<String, OperatorNode<PhysicalExprOperator>> lr(OperatorNode<PhysicalExprOperator> left, OperatorNode<PhysicalExprOperator> right) {
-        return ImmutableMap.of("left", left, "right", right);
+        return ImmutableMap.of("map.left", left, "map.right", right);
     }
 
     private Object[] row(Object... row) {
@@ -146,7 +146,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         };
         setUp();
         EngineValueTypeAdapter adapter = source.getValueTypeAdapter();
-        List<Object[]> items = Lists.newArrayList();
+        List<Object[]> items = new ArrayList<>();
         for (int i = 0; i < inputs.length; ++i) {
             Object leftValue = inputs[i];
             TypeWidget leftType = adapter.inferConstantType(leftValue);
@@ -181,7 +181,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
 
     @Test(dataProvider = "generateExpressions")
     public void requireExpressions(Map<String, OperatorNode<PhysicalExprOperator>> settings, String expr, Object expected) throws Exception {
-        modules.putAll(settings);
+        constants.putAll(settings);
         Callable<Object> invoker2 = compileExpression(parseExpression(expr));
         Assert.assertEquals(invoker2.call(), expected);
     }
@@ -244,8 +244,8 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
             String expr = "map.left " + getOperator(op) + " map.right";
             boolean expected = Comparisons.INSTANCE.compare(op, left, right);
             setUp();
-            putConstant("left", left);
-            putConstant("right", right);
+            putConstant("map.left", left);
+            putConstant("map.right", right);
             Callable<Object> invoker2 = compileExpression(parseExpression(expr));
             Assert.assertEquals(invoker2.call(), expected);
         }

@@ -171,7 +171,7 @@ public class ASMClassSource {
         this(ImmutableSet.of());
     }
 
-    public ASMClassSource(Set<TypeAdaptingWidget> adapters) {
+    public ASMClassSource(Iterable<TypeAdaptingWidget> adapters) {
         this.uniqueElement = "gen" + ELEMENT_FACTORY.incrementAndGet();
         this.constantTable = new ConstantTable(this);
         this.types = new ASMTypeAdapter(this, adapters);

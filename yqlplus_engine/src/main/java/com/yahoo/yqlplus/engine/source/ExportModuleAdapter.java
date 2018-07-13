@@ -57,6 +57,12 @@ public class ExportModuleAdapter implements ModuleType {
         this.supplier = module;
     }
 
+    public ExportModuleAdapter(String moduleName, Class<?> clazz) {
+        this.moduleName = moduleName;
+        this.clazz = clazz;
+        this.supplier = null;
+    }
+
     protected static boolean isFreeArgument(Class<?> argumentType, Annotation[] annotations) {
         for (Annotation annotate : annotations) {
             for (Class<?> clazz : SOURCE_ANNOTATIONS) {
