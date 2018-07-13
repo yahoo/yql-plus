@@ -32,9 +32,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static com.yahoo.yqlplus.engine.source.SourceApiGenerator.isFreeArgument;
-
 public class ExportModuleAdapter implements ModuleType {
+    private static final List<Class<?>> SOURCE_ANNOTATIONS =
+            ImmutableList.of(Key.class,
+                    Set.class,
+                    TimeoutMilliseconds.class,
+                    Emitter.class);
     private final String moduleName;
     private final Class<?> clazz;
     private final Supplier<?> supplier;
@@ -44,6 +47,17 @@ public class ExportModuleAdapter implements ModuleType {
         this.moduleName = moduleName;
         this.clazz = clazz;
         this.supplier = module;
+    }
+
+    protected static boolean isFreeArgument(Class<?> argumentType, Annotation[] annotations) {
+        for (Annotation annotate : annotations) {
+            for (Class<?> clazz : SOURCE_ANNOTATIONS) {
+                if (clazz.isInstance(annotate)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override

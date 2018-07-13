@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.yahoo.yqlplus.engine.source.SourceApiGenerator.isFreeArgument;
+import static com.yahoo.yqlplus.engine.source.ExportModuleAdapter.isFreeArgument;
 
 public class SourceAdapter implements SourceType {
     private final String sourceName;
@@ -144,17 +144,17 @@ public class SourceAdapter implements SourceType {
             List<StreamValue> outputs = Lists.newArrayList();
             for (IndexKey index : qs.indexes.keySet()) {
                 Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
-                Multimap<IndexKey, IndexedSourceType.IndexQuery> split = ArrayListMultimap.create();
+                Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
                 for (IndexStrategy strategy : strategyCollection) {
                     Preconditions.checkState(strategy.filter == null, "Internal error: index strategy planner for DELETE must use exact index matches");
-                    IndexedSourceType.IndexQuery iq = new IndexedSourceType.IndexQuery();
+                    IndexQuery iq = new IndexQuery();
                     prepareIndexKeyValues(context, null, null, strategy, iq);
                     iq.index = index;
                     iq.handledFilter = true;
                     split.put(iq.index, iq);
                 }
                 for (IndexKey idx : split.keySet()) {
-                    Collection<IndexedSourceType.IndexQuery> todo = split.get(idx);
+                    Collection<IndexQuery> todo = split.get(idx);
                     methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
                 }
             }
@@ -314,9 +314,9 @@ public class SourceAdapter implements SourceType {
             boolean handledFilter = true;
             for (IndexKey index : qs.indexes.keySet()) {
                 Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
-                Multimap<IndexKey, IndexedSourceType.IndexQuery> split = ArrayListMultimap.create();
+                Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
                 for (IndexStrategy strategy : strategyCollection) {
-                    IndexedSourceType.IndexQuery iq = new IndexedSourceType.IndexQuery();
+                    IndexQuery iq = new IndexQuery();
                     prepareIndexKeyValues(context, leftSide, joinExpression, strategy, iq);
                     iq.index = index;
                     iq.filter = strategy.filter;
@@ -329,10 +329,10 @@ public class SourceAdapter implements SourceType {
                     split.put(iq.index, iq);
                 }
                 for (IndexKey idx : split.keySet()) {
-                    Collection<IndexedSourceType.IndexQuery> todo = split.get(idx);
+                    Collection<IndexQuery> todo = split.get(idx);
                     methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
                 }
-                for (IndexedSourceType.IndexQuery iq : split.values()) {
+                for (IndexQuery iq : split.values()) {
                     handledFilter = handledFilter && iq.handledFilter;
                 }
             }
@@ -362,7 +362,7 @@ public class SourceAdapter implements SourceType {
     }
 
 
-    private void prepareIndexKeyValues(ContextPlanner context,OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexedSourceType.IndexQuery iq) {
+    private void prepareIndexKeyValues(ContextPlanner context,OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexQuery iq) {
         if(strategy.indexFilter != null) {
             for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : strategy.indexFilter.entrySet()) {
                 String key = e.getKey();
@@ -693,12 +693,12 @@ public class SourceAdapter implements SourceType {
             keyArguments.add(keyName);
         }
 
-        private StreamValue createKeyCursor(ContextPlanner planner, List<IndexedSourceType.IndexQuery> todo) {
+        private StreamValue createKeyCursor(ContextPlanner planner, List<IndexQuery> todo) {
             if (todo.size() == 1) {
                 return todo.get(0).keyCursor(planner);
             } else {
                 List<StreamValue> cursors = Lists.newArrayListWithExpectedSize(todo.size());
-                for (IndexedSourceType.IndexQuery q : todo) {
+                for (IndexQuery q : todo) {
                     cursors.add(q.keyCursor(planner));
                 }
                 StreamValue val = StreamValue.merge(planner, cursors);
@@ -707,7 +707,7 @@ public class SourceAdapter implements SourceType {
             }
         }
 
-        public void index(List<StreamValue> out, ContextPlanner planner, List<IndexedSourceType.IndexQuery> todo) {
+        public void index(List<StreamValue> out, ContextPlanner planner, List<IndexQuery> todo) {
             StreamValue cursor = createKeyCursor(planner, todo);
             if (batch) {
                 // we're a batch API, so we need to get ALL of the queries (and we're not going to handle any followup filters)
@@ -740,9 +740,9 @@ public class SourceAdapter implements SourceType {
             }
         }
 
-        private void maybeHandleFilter(List<IndexedSourceType.IndexQuery> todo, StreamValue result) {
+        private void maybeHandleFilter(List<IndexQuery> todo, StreamValue result) {
             if (todo.size() == 1) {
-                IndexedSourceType.IndexQuery q = todo.get(0);
+                IndexQuery q = todo.get(0);
                 if (!q.handledFilter) {
                     result.add(q.filterPredicate.getLocation(), StreamOperator.FILTER, q.filterPredicate);
                     q.handledFilter = true;
