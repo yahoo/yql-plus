@@ -11,7 +11,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.api.types.*;
+import com.yahoo.yqlplus.api.types.YQLArrayType;
+import com.yahoo.yqlplus.api.types.YQLBaseType;
+import com.yahoo.yqlplus.api.types.YQLCoreType;
+import com.yahoo.yqlplus.api.types.YQLMapType;
+import com.yahoo.yqlplus.api.types.YQLOptionalType;
+import com.yahoo.yqlplus.api.types.YQLStructType;
+import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.compiler.runtime.Result;
 import com.yahoo.yqlplus.engine.compiler.runtime.YQLError;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -36,10 +42,10 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
     private final Iterable<TypeAdaptingWidget> adapterChain;
     private final Map<TypeWidget, ResultAdapter> resultTypes = Maps.newLinkedHashMap();
 
-    public ASMTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultAdaptingWidget) {
+    public ASMTypeAdapter(ASMClassSource source, Set<TypeAdaptingWidget> adapters) {
         this.source = source;
         this.baseTypeAdapter = new BaseTypeAdapter();
-        this.adapterChain = Iterables.concat(ImmutableList.of(new ArrayTypeAdapter()), adapters, ImmutableList.of(defaultAdaptingWidget));
+        this.adapterChain = Iterables.concat(ImmutableList.of(new ArrayTypeAdapter()), adapters, ImmutableList.of(new DefaultTypeAdapter()));
     }
 
     private ASMTypeAdapter(ASMClassSource source, BaseTypeAdapter baseTypeAdapter, Iterable<TypeAdaptingWidget> adapterChain) {

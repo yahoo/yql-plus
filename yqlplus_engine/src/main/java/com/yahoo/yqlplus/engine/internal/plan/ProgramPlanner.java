@@ -10,7 +10,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yahoo.yqlplus.api.types.*;
+import com.yahoo.yqlplus.api.types.YQLArrayType;
+import com.yahoo.yqlplus.api.types.YQLBaseType;
+import com.yahoo.yqlplus.api.types.YQLMapType;
+import com.yahoo.yqlplus.api.types.YQLOptionalType;
+import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
@@ -29,7 +33,11 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import com.yahoo.yqlplus.language.parser.ProgramParser;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 import org.antlr.v4.runtime.RecognitionException;
 
 import java.io.IOException;
@@ -73,8 +81,8 @@ public class ProgramPlanner implements ViewRegistry {
     private final Map<String, SourceType> resolvedSources = Maps.newHashMap();
     private final Map<String, ModuleType> resolvedModules = Maps.newHashMap();
 
-    public ProgramPlanner(LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace) {
-        this.logicalTransforms = transforms;
+    public ProgramPlanner(SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace) {
+        this.logicalTransforms = new LogicalTransforms();
         this.sourceNamespace = sourceNamespace;
         this.moduleNamespace = moduleNamespace;
         this.rootContext = new ContextPlanner(this);

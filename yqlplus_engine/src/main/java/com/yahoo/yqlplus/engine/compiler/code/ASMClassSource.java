@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.engine.compiler.code;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -14,15 +15,24 @@ import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import javax.inject.Inject;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.invoke.*;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
@@ -157,11 +167,14 @@ public class ASMClassSource {
     }
 
 
-    @Inject
-    public ASMClassSource(Set<TypeAdaptingWidget> adapters, TypeAdaptingWidget defaultTypeAdapter) {
+    public ASMClassSource() {
+        this(ImmutableSet.of());
+    }
+
+    public ASMClassSource(Set<TypeAdaptingWidget> adapters) {
         this.uniqueElement = "gen" + ELEMENT_FACTORY.incrementAndGet();
         this.constantTable = new ConstantTable(this);
-        this.types = new ASMTypeAdapter(this, adapters, defaultTypeAdapter);
+        this.types = new ASMTypeAdapter(this, adapters);
         this.compoundClassLoader = new CompoundClassLoader();
         this.generatedClassLoader = new GeneratedClassLoader(compoundClassLoader);
         this.invocableUnit = new InvocableUnit("invocables_" + generateUniqueElement(), this);

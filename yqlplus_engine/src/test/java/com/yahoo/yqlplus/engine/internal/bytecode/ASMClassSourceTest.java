@@ -13,7 +13,17 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeSequence;
+import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.engine.compiler.code.ConstructorGenerator;
+import com.yahoo.yqlplus.engine.compiler.code.FieldDefinition;
+import com.yahoo.yqlplus.engine.compiler.code.MethodGenerator;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.UnitGenerator;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.testng.Assert;
@@ -51,7 +61,7 @@ public class ASMClassSourceTest {
     }
 
     private ASMClassSource createASMClassSource() {
-        return Guice.createInjector(new ASMClassSourceModule()).getInstance(ASMClassSource.class);
+        return new ASMClassSource();
     }
 
     @Test

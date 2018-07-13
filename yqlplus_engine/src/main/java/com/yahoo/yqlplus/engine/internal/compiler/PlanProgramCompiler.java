@@ -10,20 +10,26 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.TaskGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.ProgramPlanner;
 import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
-import com.yahoo.yqlplus.engine.rules.LogicalTransforms;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -35,22 +41,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PlanProgramCompiler implements ProgramCompiler {
     private Provider<CompilerInstance> provider;
 
     static class CompilerInstance {
-        private final Injector injector;
         private final ASMClassSource classSource;
         private final GambitScope gambitScope;
         private final ProgramPlanner planner;
 
         @Inject
-        CompilerInstance(ASMClassSource classSource, Injector injector, LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
-            this.classSource = classSource;
+        CompilerInstance(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+            this.classSource = new ASMClassSource(adapters);
             this.gambitScope = new GambitSource(classSource);
-            this.planner = new ProgramPlanner(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
-            this.injector = injector;
+            this.planner = new ProgramPlanner(sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
         }
 
         private CompiledProgram compilePlan(ProgramEnvironment environment, OperatorNode<TaskOperator> plan) {
