@@ -21,7 +21,6 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
     private final Type type;
     private final TypeLiteral<?> typeLiteral;
     private final Class<?> clazz;
-    private final MethodDispatcher dispatcher;
     private PropertyAdapter propertyAdapter;
 
     public ReflectiveJavaTypeWidget(EngineValueTypeAdapter adapter, Class<?> clazz) {
@@ -37,7 +36,6 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
         this.adapter = adapter;
         this.type = Type.getType(typeLiteral.getRawType());
         this.typeLiteral = typeLiteral;
-        this.dispatcher = new MethodDispatcher(typeLiteral);
     }
 
     @Override

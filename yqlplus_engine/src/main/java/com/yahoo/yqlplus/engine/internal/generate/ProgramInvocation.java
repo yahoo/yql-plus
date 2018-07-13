@@ -11,7 +11,10 @@ import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
 import com.yahoo.yqlplus.engine.compiler.runtime.YQLRuntimeException;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public abstract class ProgramInvocation {
@@ -20,39 +23,6 @@ public abstract class ProgramInvocation {
 
     protected void missingArgument(String name, YQLType expectedType) {
         throw new IllegalArgumentException("Missing required program argument '" + name + "' (type '" + expectedType + "')");
-    }
-
-    public <ROW> void addAll(List<ROW> rows, List<ROW> inputs) {
-        if (inputs == null) {
-            return;
-        }
-        for (ROW row : inputs) {
-            if (row != null) {
-                rows.add(row);
-            }
-        }
-    }
-
-    public <ROW> void addAll(List<ROW> rows, Iterable<ROW> inputs) {
-        if (inputs == null) {
-            return;
-        }
-        for (ROW row : inputs) {
-            if (row != null) {
-                rows.add(row);
-            }
-        }
-    }
-
-    public <ROW> void addAll(List<ROW> rows, Collection<ROW> inputs) {
-        if (inputs == null) {
-            return;
-        }
-        for (ROW row : inputs) {
-            if (row != null) {
-                rows.add(row);
-            }
-        }
     }
 
     public List<Object> singleton(Object input) {
