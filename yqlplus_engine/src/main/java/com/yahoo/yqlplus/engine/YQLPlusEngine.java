@@ -11,8 +11,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.guice.NamespaceAdapter;
-import com.yahoo.yqlplus.engine.guice.PlannerCompilerModule;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -31,7 +31,7 @@ public final class YQLPlusEngine {
         @Override
         protected void configure() {
 
-            install(new PlannerCompilerModule());
+            install(new ASMClassSourceModule());
             bind(ViewRegistry.class).toInstance(new ViewRegistry() {
                 @Override
                 public OperatorNode<SequenceOperator> getView(List<String> name) {

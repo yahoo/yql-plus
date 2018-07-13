@@ -9,8 +9,6 @@ package com.yahoo.yqlplus.engine.internal.compiler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
 import com.yahoo.yqlplus.engine.TaskContext;
@@ -42,17 +40,17 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class PlanProgramCompiler implements ProgramCompiler {
-    private Provider<CompilerInstance> provider;
+    private Supplier<CompilerInstance> supplier;
 
-    static class CompilerInstance {
+    private static class CompilerInstance {
         private final ASMClassSource classSource;
         private final GambitScope gambitScope;
         private final ProgramPlanner planner;
 
-        @Inject
-        CompilerInstance(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        private CompilerInstance(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
             this.classSource = new ASMClassSource(adapters);
             this.gambitScope = new GambitSource(classSource);
             this.planner = new ProgramPlanner(sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
@@ -194,24 +192,23 @@ public class PlanProgramCompiler implements ProgramCompiler {
     }
 
 
-    @Inject
-    PlanProgramCompiler(Provider<CompilerInstance> provider) {
-        this.provider = provider;
+    public PlanProgramCompiler(Set<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        this.supplier = () -> new CompilerInstance(adapters, sourceNamespace, moduleNamespace, viewNamespace);
     }
 
 
     public CompiledProgram compile(String programName, String program) throws IOException, RecognitionException {
-        return provider.get().compile(programName, program);
+        return supplier.get().compile(programName, program);
     }
 
 
     public CompiledProgram compile(String programName, InputStream program) throws IOException, RecognitionException {
-        return provider.get().compile(programName, program);
+        return supplier.get().compile(programName, program);
     }
 
     @Override
     public CompiledProgram compile(OperatorNode<StatementOperator> program) throws IOException {
-        return provider.get().compile(program);
+        return supplier.get().compile(program);
     }
 
 

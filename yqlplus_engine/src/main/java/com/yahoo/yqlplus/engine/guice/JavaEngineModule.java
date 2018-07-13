@@ -7,12 +7,13 @@
 package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
 
 public class JavaEngineModule extends AbstractModule {
     @Override
     protected void configure() {
         // This is now an assembly
-        install(new PlannerCompilerModule());
+        install(new ASMClassSourceModule());
         install(new SearchNamespaceModule());
         install(new PhysicalOperatorBuiltinsModule());
         install(new SourceApiModule());
