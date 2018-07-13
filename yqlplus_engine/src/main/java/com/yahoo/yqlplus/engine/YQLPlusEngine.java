@@ -13,8 +13,6 @@ import com.yahoo.yqlplus.engine.api.Namespace;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.compiler.code.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.guice.NamespaceAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 

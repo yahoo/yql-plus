@@ -317,7 +317,12 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     @Override
     public TypeWidget adaptInternal(java.lang.reflect.Type type) {
-        return adaptInternal(TypeLiteral.get((type instanceof WildcardType)? type.getClass():type));
+        return adaptInternal(type, true);
+    }
+
+    @Override
+    public TypeWidget adaptInternal(java.lang.reflect.Type type, boolean nullable) {
+        return adaptInternal(TypeLiteral.get((type instanceof WildcardType)? type.getClass():type), nullable);
     }
 
     @Override

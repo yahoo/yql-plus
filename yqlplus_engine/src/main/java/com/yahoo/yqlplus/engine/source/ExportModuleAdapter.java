@@ -10,17 +10,25 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Emitter;
+import com.yahoo.yqlplus.api.annotations.Export;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.CompileContext;
+import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
@@ -61,13 +69,12 @@ public class ExportModuleAdapter implements ModuleType {
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> call(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
+    public OperatorNode<PhysicalExprOperator> call(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
         return adaptInvoke(location, context, name, null, arguments, null);
     }
 
-    private OperatorNode<PhysicalExprOperator> adaptInvoke(Location location, ContextPlanner context, String name, OperatorNode<PhysicalExprOperator> streamInput, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
-        DynamicExpressionEvaluator eval = row == null ? new DynamicExpressionEvaluator(context) : new DynamicExpressionEvaluator(context, row);
-        List<OperatorNode<PhysicalExprOperator>> inputArgs = eval.applyAll(arguments);
+    private OperatorNode<PhysicalExprOperator> adaptInvoke(Location location, CompileContext context, String name, OperatorNode<PhysicalExprOperator> streamInput, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
+        List<OperatorNode<PhysicalExprOperator>> inputArgs = context.evaluateAllInRowContext(arguments, row);
         if(streamInput != null) {
             inputArgs.add(0, streamInput);
         }
@@ -135,11 +142,11 @@ public class ExportModuleAdapter implements ModuleType {
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
+    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
         return adaptInvoke(location, context, name, null, arguments, row);
     }
 
-    private OperatorNode<PhysicalExprOperator> getModule(Location location, ContextPlanner planner) {
+    private OperatorNode<PhysicalExprOperator> getModule(Location location, CompileContext planner) {
         if (module == null) {
             if (supplier != null) {
                 OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
@@ -161,12 +168,12 @@ public class ExportModuleAdapter implements ModuleType {
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> property(Location location, ContextPlanner context, String name) {
+    public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {
         return callInRowContext(location, context, name, ImmutableList.of(), null);
     }
 
     @Override
-    public StreamValue pipe(Location location, ContextPlanner context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
+    public StreamValue pipe(Location location, CompileContext context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
         return StreamValue.iterate(context, adaptInvoke(location, context, name, input.materializeValue(), arguments, null));
     }
 

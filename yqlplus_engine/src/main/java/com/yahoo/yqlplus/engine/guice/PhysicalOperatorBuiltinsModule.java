@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.RecordsBuiltinsModule;
 import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;

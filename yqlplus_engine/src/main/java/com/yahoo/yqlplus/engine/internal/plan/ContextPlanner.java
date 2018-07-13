@@ -8,9 +8,14 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.engine.ChainState;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.SourceType;
+import com.yahoo.yqlplus.engine.Sourcer;
 import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.Sequences;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.engine.rules.ReadFieldAliasAnnotate;
@@ -19,14 +24,22 @@ import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.ExprScope;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 
+import java.lang.reflect.Type;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class ContextPlanner implements DynamicExpressionEnvironment {
+public class ContextPlanner implements DynamicExpressionEnvironment, CompileContext {
     private final ProgramPlanner program;
     private final OperatorNode<PhysicalExprOperator> contextExpr;
     private final DynamicExpressionEvaluator eval;
@@ -43,6 +56,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         this.eval = eval;
     }
 
+    @Override
     public OperatorValue evaluateValue(OperatorNode<PhysicalExprOperator> input) {
         switch (input.getOperator()) {
             case VALUE:
@@ -55,8 +69,28 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     }
 
     @Override
+    public TypeWidget adapt(Type type, boolean nullable) {
+        return program.getValueTypeAdapter().adaptInternal(type, nullable);
+    }
+
+    @Override
     public OperatorNode<PhysicalExprOperator> evaluate(OperatorNode<ExpressionOperator> value) {
         return eval.apply(value);
+    }
+
+    @Override
+    public OperatorNode<PhysicalExprOperator> evaluateInRowContext(OperatorNode<ExpressionOperator> value, OperatorNode<PhysicalExprOperator> row) {
+        return new DynamicExpressionEvaluator(this, row).apply(value);
+    }
+
+    @Override
+    public List<OperatorNode<PhysicalExprOperator>> evaluateAll(List<OperatorNode<ExpressionOperator>> values) {
+        return eval.applyAll(values);
+    }
+
+    @Override
+    public List<OperatorNode<PhysicalExprOperator>> evaluateAllInRowContext(List<OperatorNode<ExpressionOperator>> values, OperatorNode<PhysicalExprOperator> row) {
+        return new DynamicExpressionEvaluator(this, row).applyAll(values);
     }
 
     @Override
@@ -68,6 +102,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return OperatorStep.create(program.getValueTypeAdapter(), PhysicalOperator.EVALUATE, contextExpr, OperatorNode.create(PhysicalExprOperator.CONSTANT, getValueTypeAdapter().inferConstantType(value), value));
     }
 
+    @Override
     public OperatorNode<PhysicalExprOperator> computeExpr(OperatorNode<PhysicalExprOperator> op) {
         if (op.getOperator() == PhysicalExprOperator.VALUE || op.getOperator() == PhysicalExprOperator.CONSTANT) {
             return op;
@@ -75,6 +110,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return OperatorNode.create(op.getLocation(), PhysicalExprOperator.VALUE, evaluateValue(op));
     }
 
+    @Override
     public List<OperatorNode<PhysicalExprOperator>> computeExprs(List<OperatorNode<PhysicalExprOperator>> op) {
         return op.stream().map(this::computeExpr).collect(Collectors.toList());
     }
@@ -187,6 +223,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         }
     }
 
+    @Override
     public StreamValue execute(OperatorNode<SequenceOperator> query) {
         OperatorNode<SequenceOperator> source = chainSource(query);
         switch (source.getOperator()) {
@@ -241,6 +278,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return type.plan(this, top, source);
     }
 
+    @Override
     public List<OperatorNode<PhysicalExprOperator>> evaluateList(List<OperatorNode<ExpressionOperator>> args) {
         return eval.applyAll(args);
     }
@@ -284,10 +322,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
                 OperatorNode.create(PhysicalExprOperator.END_CONTEXT, OperatorNode.create(PhysicalExprOperator.VALUE, value)));
     }
 
-    public StreamValue merge(List<StreamValue> outputs) {
-        return StreamValue.merge(this, outputs);
-    }
-
+    @Override
     public OperatorNode<PhysicalExprOperator> getContextExpr() {
         return contextExpr;
     }
@@ -297,6 +332,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return program.constant(value);
     }
 
+    @Override
     public EngineValueTypeAdapter getValueTypeAdapter() {
         return program.getValueTypeAdapter();
     }
@@ -305,11 +341,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return program.getGambitScope();
     }
 
-
-    public interface Sourcer {
-        StreamValue execute(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query);
-    }
-
+    @Override
     public StreamValue executeSource(OperatorNode<SequenceOperator> sequence, Sourcer source) {
         return new PlanChain(this) {
             @Override

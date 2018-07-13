@@ -9,12 +9,12 @@ package com.yahoo.yqlplus.engine.guice;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.yahoo.yqlplus.engine.ModuleNamespace;
+import com.yahoo.yqlplus.engine.ModuleType;
+import com.yahoo.yqlplus.engine.SourceNamespace;
+import com.yahoo.yqlplus.engine.SourceType;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;

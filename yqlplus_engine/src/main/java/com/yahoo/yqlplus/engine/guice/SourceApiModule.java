@@ -11,8 +11,8 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
+import com.yahoo.yqlplus.engine.ModuleNamespace;
+import com.yahoo.yqlplus.engine.SourceNamespace;
 
 /**
  * Implement the Namespace binding with a Guice MapBinder.

@@ -1,12 +1,17 @@
-package com.yahoo.yqlplus.engine.internal.plan;
+package com.yahoo.yqlplus.engine.indexed;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +25,7 @@ public class IndexQuery {
     public StreamValue joinKeyStream;
     public List<String> joinKeys;
 
-    public StreamValue keyCursor(ContextPlanner planner) {
+    public StreamValue keyCursor(CompileContext planner) {
         // TODO: how to handle joinKeyStream along with this key sequence?
         // if only joinKeyStream, use it
         // else
@@ -44,7 +49,7 @@ public class IndexQuery {
         }
     }
 
-    private StreamValue prepareKeyStream(ContextPlanner planner) {
+    private StreamValue prepareKeyStream(CompileContext planner) {
         List<String> keys = index.columnOrder;
         List<OperatorNode<PhysicalExprOperator>> valueLists = Lists.newArrayList();
         for (String key : keys) {

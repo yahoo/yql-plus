@@ -10,7 +10,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.ProgramCompiler;
+import com.yahoo.yqlplus.engine.ModuleNamespace;
+import com.yahoo.yqlplus.engine.SourceNamespace;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
@@ -24,9 +25,7 @@ import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.TaskGenerator;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.ProgramPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -42,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class PlanProgramCompiler implements ProgramCompiler {
+public class PlanProgramCompiler {
     private Supplier<CompilerInstance> supplier;
 
     private static class CompilerInstance {
@@ -206,10 +205,7 @@ public class PlanProgramCompiler implements ProgramCompiler {
         return supplier.get().compile(programName, program);
     }
 
-    @Override
     public CompiledProgram compile(OperatorNode<StatementOperator> program) throws IOException {
         return supplier.get().compile(program);
     }
-
-
 }

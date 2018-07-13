@@ -22,20 +22,19 @@ import com.yahoo.yqlplus.api.index.IndexColumn;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
+import com.yahoo.yqlplus.engine.ChainState;
+import com.yahoo.yqlplus.engine.CompileContext;
+import com.yahoo.yqlplus.engine.SourceType;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
 import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.ChainState;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
-import com.yahoo.yqlplus.engine.internal.plan.IndexKey;
-import com.yahoo.yqlplus.engine.internal.plan.IndexQuery;
-import com.yahoo.yqlplus.engine.internal.plan.IndexStrategy;
-import com.yahoo.yqlplus.engine.internal.plan.IndexedQueryPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.QueryStrategy;
-import com.yahoo.yqlplus.engine.internal.plan.SourceType;
+import com.yahoo.yqlplus.engine.indexed.IndexKey;
+import com.yahoo.yqlplus.engine.indexed.IndexQuery;
+import com.yahoo.yqlplus.engine.indexed.IndexStrategy;
+import com.yahoo.yqlplus.engine.indexed.IndexedQueryPlanner;
+import com.yahoo.yqlplus.engine.indexed.QueryStrategy;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -81,7 +80,7 @@ public class SourceAdapter implements SourceType {
     }
 
     @Override
-    public StreamValue plan(ContextPlanner planner, OperatorNode<SequenceOperator> query, OperatorNode<SequenceOperator> source) {
+    public StreamValue plan(CompileContext planner, OperatorNode<SequenceOperator> query, OperatorNode<SequenceOperator> source) {
         List<OperatorNode<ExpressionOperator>> args = source.getArgument(1);
         List<OperatorNode<PhysicalExprOperator>> argsExprs = planner.evaluateList(args);
         List<OperatorNode<PhysicalExprOperator>> argsEvaled = planner.computeExprs(argsExprs);
@@ -89,14 +88,14 @@ public class SourceAdapter implements SourceType {
     }
 
     @Override
-    public StreamValue join(ContextPlanner planner, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<SequenceOperator> right, OperatorNode<SequenceOperator> source) {
+    public StreamValue join(CompileContext planner, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<SequenceOperator> right, OperatorNode<SequenceOperator> source) {
         List<OperatorNode<ExpressionOperator>> args = source.getArgument(1);
         List<OperatorNode<PhysicalExprOperator>> argsExprs = planner.evaluateList(args);
         List<OperatorNode<PhysicalExprOperator>> argsEvaled = planner.computeExprs(argsExprs);
         return planner.executeSource(right, (ctx, st, q) -> executeSourceJoin(leftSide, joinExpression, argsEvaled, ctx, st, q));
     }
 
-    private StreamValue executeSourceJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
+    private StreamValue executeSourceJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state, OperatorNode<SequenceOperator> query) {
         switch(query.getOperator()) {
             case SCAN:
                 return executeSelect(query, leftSide, joinExpression, args, context, state);
@@ -109,7 +108,7 @@ public class SourceAdapter implements SourceType {
                 throw new ProgramCompileException(query.getLocation(), "Operator %s is not supported on right side of join", query.getOperator());
         }
     }
-    private StreamValue executeSource(List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
+    private StreamValue executeSource(List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state, OperatorNode<SequenceOperator> query) {
         switch(query.getOperator()) {
             case SCAN:
                 return executeSelect(query, args, context, state);
@@ -144,8 +143,8 @@ public class SourceAdapter implements SourceType {
     }
 
 
-    private StreamValue executeDelete(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, OperatorNode<ExpressionOperator> filter) {
-        List<QM> candidates = visitMethods(Delete.class, context.getGambitScope()::adapt, getSource(context), args, new Visitor() {
+    private StreamValue executeDelete(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, OperatorNode<ExpressionOperator> filter) {
+        List<QM> candidates = visitMethods(Delete.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
@@ -155,7 +154,7 @@ public class SourceAdapter implements SourceType {
         return executeIndexWrite(Delete.class, query, context, filter, candidates);
     }
 
-    private StreamValue executeIndexWrite(Class<? extends Annotation> annotation, OperatorNode<SequenceOperator> query, ContextPlanner context, OperatorNode<ExpressionOperator> filter, List<QM> candidates) {
+    private StreamValue executeIndexWrite(Class<? extends Annotation> annotation, OperatorNode<SequenceOperator> query, CompileContext context, OperatorNode<ExpressionOperator> filter, List<QM> candidates) {
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching method for %s (e.g. @%s methods with matching @Key parameters)", sourceName, query.toString(), annotation.getSimpleName());
         } else {
@@ -198,14 +197,14 @@ public class SourceAdapter implements SourceType {
             if (outputs.size() == 1) {
                 result = outputs.get(0);
             } else {
-                result = context.merge(outputs);
+                result = StreamValue.merge(context, outputs);
             }
             return result;
         }
     }
 
-    private StreamValue executeDeleteAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context) {
-        List<QM> candidates = visitMethods(Delete.class, context.getGambitScope()::adapt, getSource(context), args, new Visitor() {
+    private StreamValue executeDeleteAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context) {
+        List<QM> candidates = visitMethods(Delete.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget setType) {
                 // delete all does not consider any methods with filter arguments
@@ -220,8 +219,8 @@ public class SourceAdapter implements SourceType {
         }
     }
 
-    private StreamValue executeUpdateAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, Map<String, OperatorNode<PhysicalExprOperator>> record) {
-        List<QM> candidates = visitMethods(Update.class, context.getGambitScope()::adapt, getSource(context), args, new UpdateVisitor(record, context));
+    private StreamValue executeUpdateAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, Map<String, OperatorNode<PhysicalExprOperator>> record) {
+        List<QM> candidates = visitMethods(Update.class, context, args, new UpdateVisitor(record, context));
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
         } else {
@@ -230,8 +229,8 @@ public class SourceAdapter implements SourceType {
         }
     }
 
-    private StreamValue executeUpdate(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, Map<String, OperatorNode<PhysicalExprOperator>> record, OperatorNode<ExpressionOperator> filter) {
-        List<QM> candidates = visitMethods(Update.class, context.getGambitScope()::adapt, getSource(context), args, new UpdateVisitor(record, context) {
+    private StreamValue executeUpdate(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, Map<String, OperatorNode<PhysicalExprOperator>> record, OperatorNode<ExpressionOperator> filter) {
+        List<QM> candidates = visitMethods(Update.class, context, args, new UpdateVisitor(record, context) {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
@@ -244,10 +243,10 @@ public class SourceAdapter implements SourceType {
         return executeIndexWrite(Update.class, query, context, filter, candidates);
     }
 
-    private StreamValue executeInsertStream(OperatorNode<SequenceOperator> query, StreamValue records, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state) {
+    private StreamValue executeInsertStream(OperatorNode<SequenceOperator> query, StreamValue records, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         ExprScope function = new ExprScope();
         OperatorNode<PhysicalExprOperator> row = function.addArgument("$row");
-        List<QM> candidates = visitMethods(Insert.class, context.getGambitScope()::adapt, getSource(context), args, new Visitor() {
+        List<QM> candidates = visitMethods(Insert.class, context, args, new Visitor() {
             @Override
             public boolean visitSet(QM qm, String keyName, Object defaultValue, Class<?> parameterType, TypeWidget setType) {
                 if(defaultValue != null) {
@@ -272,10 +271,10 @@ public class SourceAdapter implements SourceType {
         }
     }
 
-    private StreamValue executeInsertSet(OperatorNode<SequenceOperator> query, List<Map<String, OperatorNode<PhysicalExprOperator>>> records, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state) {
+    private StreamValue executeInsertSet(OperatorNode<SequenceOperator> query, List<Map<String, OperatorNode<PhysicalExprOperator>>> records, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         List<QM> invocations = Lists.newArrayList();
         for(Map<String, OperatorNode<PhysicalExprOperator>> record : records) {
-            List<QM> candidates = visitMethods(Insert.class, context.getGambitScope()::adapt, getSource(context), args, new RecordWriteVisitor(record, context));
+            List<QM> candidates = visitMethods(Insert.class, context, args, new RecordWriteVisitor(record, context));
             if(candidates.isEmpty()) {
                 throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
             } else {
@@ -309,12 +308,12 @@ public class SourceAdapter implements SourceType {
 
     }
 
-    private StreamValue executeSelect(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state) {
+    private StreamValue executeSelect(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         return executeSelect(query,null, null, args, context, state);
     }
 
-    private StreamValue executeSelect(OperatorNode<SequenceOperator> query, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, ContextPlanner context, ChainState state) {
-        List<QM> candidates = visitMethods(Query.class, context.getGambitScope()::adapt, getSource(context), args, new Visitor() {
+    private StreamValue executeSelect(OperatorNode<SequenceOperator> query, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
+        List<QM> candidates = visitMethods(Query.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
@@ -381,7 +380,7 @@ public class SourceAdapter implements SourceType {
             if (outputs.size() == 1) {
                 result = outputs.get(0);
             } else {
-                result = context.merge(outputs);
+                result = StreamValue.merge(context, outputs);
             }
             if (handledFilter) {
                 state.setFilterHandled(true);
@@ -390,17 +389,16 @@ public class SourceAdapter implements SourceType {
         }
     }
 
-    protected OperatorNode<FunctionOperator> compileFilter(ContextPlanner context, OperatorNode<ExpressionOperator> filter) {
+    protected OperatorNode<FunctionOperator> compileFilter(CompileContext context, OperatorNode<ExpressionOperator> filter) {
         ExprScope scoper = new ExprScope();
-        scoper.addArgument("item");
-        DynamicExpressionEvaluator eval = new DynamicExpressionEvaluator(context, OperatorNode.create(PhysicalExprOperator.LOCAL, "item"));
-        OperatorNode<PhysicalExprOperator> predicate = eval.apply(filter);
+        OperatorNode<PhysicalExprOperator> item = scoper.addArgument("item");
+        OperatorNode<PhysicalExprOperator> predicate = context.evaluateInRowContext(filter, item);
         predicate = OperatorNode.create(filter.getLocation(), PhysicalExprOperator.BOOL, predicate);
         return scoper.createFunction(predicate);
     }
 
 
-    private void prepareIndexKeyValues(ContextPlanner context,OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexQuery iq) {
+    private void prepareIndexKeyValues(CompileContext context,OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexQuery iq) {
         if(strategy.indexFilter != null) {
             for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : strategy.indexFilter.entrySet()) {
                 String key = e.getKey();
@@ -431,13 +429,12 @@ public class SourceAdapter implements SourceType {
             ExprScope scope = new ExprScope();
             scope.addArgument("$row");
             final OperatorNode<PhysicalExprOperator> rowReference = OperatorNode.create(PhysicalExprOperator.LOCAL, "$row");
-            DynamicExpressionEvaluator eval = new DynamicExpressionEvaluator(context, rowReference);
             List<OperatorNode<PhysicalExprOperator>> nullTests = Lists.newArrayListWithExpectedSize(join.size());
             for(JoinExpression expr : join) {
                 String rightField = expr.getRightField();
                 if(strategy.joinColumns.contains(rightField)) {
                     fields.add(rightField);
-                    expressions.add(eval.apply(expr.left));
+                    expressions.add(context.evaluateInRowContext(expr.left, rowReference));
                     final OperatorNode<PhysicalExprOperator> fieldValue = OperatorNode.create(PhysicalExprOperator.PROPREF, rowReference, rightField);
                     com.yahoo.yqlplus.api.index.IndexColumn column = strategy.descriptor.getColumn(rightField);
                     if(column.isSkipNull() || column.isSkipEmpty()) {
@@ -513,7 +510,7 @@ public class SourceAdapter implements SourceType {
     }
 
 
-    private Map<String, OperatorNode<PhysicalExprOperator>> decodeExpressionMap(ContextPlanner context, OperatorNode<ExpressionOperator> map) {
+    private Map<String, OperatorNode<PhysicalExprOperator>> decodeExpressionMap(CompileContext context, OperatorNode<ExpressionOperator> map) {
         Preconditions.checkArgument(map.getOperator() == ExpressionOperator.MAP);
         List<String> names = map.getArgument(0);
         List<OperatorNode<ExpressionOperator>> values = map.getArgument(1);
@@ -526,7 +523,7 @@ public class SourceAdapter implements SourceType {
         return b;
     }
 
-    private List<Map<String, OperatorNode<PhysicalExprOperator>>> decodeInsertSequenceMaps(ContextPlanner context, OperatorNode<SequenceOperator> records) {
+    private List<Map<String, OperatorNode<PhysicalExprOperator>>> decodeInsertSequenceMaps(CompileContext context, OperatorNode<SequenceOperator> records) {
         if(records.getOperator() == SequenceOperator.EVALUATE) {
             OperatorNode<ExpressionOperator> expr = records.getArgument(0);
             if(expr.getOperator() == ExpressionOperator.ARRAY) {
@@ -561,8 +558,9 @@ public class SourceAdapter implements SourceType {
         }
     }
 
-    private List<QM> visitMethods(Class<? extends Annotation> annotationClass, Adapter types, OperatorNode<PhysicalExprOperator> source, List<OperatorNode<PhysicalExprOperator>> inputArgs, Visitor visitor) {
+    private List<QM> visitMethods(Class<? extends Annotation> annotationClass, CompileContext types, List<OperatorNode<PhysicalExprOperator>> inputArgs, Visitor visitor) {
         List<QM> candidates = Lists.newArrayList();
+        OperatorNode<PhysicalExprOperator> sourceExpr = getSource(types);
         methods:
         for(Method method : clazz.getMethods()) {
             if(!Modifier.isPublic(method.getModifiers()) || method.getAnnotation(annotationClass) == null) {
@@ -582,7 +580,7 @@ public class SourceAdapter implements SourceType {
                 singleton = false;
                 rowType = rowType.getIterableAdapter().getValue();
             }
-            QM m = new QM(annotationClass, method, source, singleton, rowType);
+            QM m = new QM(annotationClass, method, sourceExpr, singleton, rowType);
 
             if (!rowType.hasProperties()) {
                 throw new YQLTypeException("Source method " + method + " does not return a STRUCT type: " + rowType);
@@ -700,7 +698,7 @@ public class SourceAdapter implements SourceType {
             }
         }
 
-        StreamValue stream(ContextPlanner planner) {
+        StreamValue stream(CompileContext planner) {
             StreamValue val = StreamValue.iterate(planner, invokeIterable());
             val.add(Location.NONE, StreamOperator.RESOLVE);
             return val;
@@ -731,7 +729,7 @@ public class SourceAdapter implements SourceType {
             keyArguments.add(keyName);
         }
 
-        private StreamValue createKeyCursor(ContextPlanner planner, List<IndexQuery> todo) {
+        private StreamValue createKeyCursor(CompileContext planner, List<IndexQuery> todo) {
             if (todo.size() == 1) {
                 return todo.get(0).keyCursor(planner);
             } else {
@@ -745,7 +743,7 @@ public class SourceAdapter implements SourceType {
             }
         }
 
-        public void index(List<StreamValue> out, ContextPlanner planner, List<IndexQuery> todo) {
+        public void index(List<StreamValue> out, CompileContext planner, List<IndexQuery> todo) {
             StreamValue cursor = createKeyCursor(planner, todo);
             if (batch) {
                 // we're a batch API, so we need to get ALL of the queries (and we're not going to handle any followup filters)
@@ -827,7 +825,7 @@ public class SourceAdapter implements SourceType {
         return OperatorNode.create(PhysicalExprOperator.STREAM_EXECUTE, keys, OperatorNode.create(StreamOperator.TRANSFORM, accumulate(), function));
     }
 
-    private OperatorNode<PhysicalExprOperator> getSource(ContextPlanner planner) {
+    private OperatorNode<PhysicalExprOperator> getSource(CompileContext planner) {
         if (source == null) {
             if (supplier != null) {
                 OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), PhysicalOperator.EVALUATE,
@@ -924,9 +922,9 @@ public class SourceAdapter implements SourceType {
 
     private class RecordWriteVisitor implements Visitor {
         private final Map<String, OperatorNode<PhysicalExprOperator>> record;
-        private final ContextPlanner context;
+        private final CompileContext context;
 
-        RecordWriteVisitor(Map<String, OperatorNode<PhysicalExprOperator>> record, ContextPlanner context) {
+        RecordWriteVisitor(Map<String, OperatorNode<PhysicalExprOperator>> record, CompileContext context) {
             this.record = record;
             this.context = context;
         }
@@ -952,7 +950,7 @@ public class SourceAdapter implements SourceType {
     }
 
     private class UpdateVisitor extends RecordWriteVisitor {
-        UpdateVisitor(Map<String, OperatorNode<PhysicalExprOperator>> record, ContextPlanner context) {
+        UpdateVisitor(Map<String, OperatorNode<PhysicalExprOperator>> record, CompileContext context) {
             super(record, context);
         }
 

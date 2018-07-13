@@ -8,9 +8,9 @@ package com.yahoo.yqlplus.engine.internal.plan.ast;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.engine.CompileContext;
+import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.ConstantExpressionEvaluator;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
 import com.yahoo.yqlplus.engine.internal.plan.NotConstantExpressionException;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -25,22 +25,22 @@ import java.util.List;
 
 public class SequenceBuiltinsModule implements ModuleType {
     @Override
-    public OperatorNode<PhysicalExprOperator> call(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
+    public OperatorNode<PhysicalExprOperator> call(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
         return null;
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
+    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
         return null;
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> property(Location location, ContextPlanner context, String name) {
+    public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {
         return null;
     }
 
     @Override
-    public StreamValue pipe(Location location, ContextPlanner context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
+    public StreamValue pipe(Location location, CompileContext context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
         if("groupby".equals(name)) {
             if(arguments.size() != 3) {
                 throw new ProgramCompileException(location, "groupby(group-field, output-group-field, output-group-rows): argument count mismatch");

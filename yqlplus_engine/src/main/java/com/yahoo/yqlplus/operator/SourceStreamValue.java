@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
 import java.util.Collection;
@@ -15,7 +15,7 @@ import java.util.Collection;
 public class SourceStreamValue extends StreamValue {
     private OperatorNode<PhysicalExprOperator> source;
 
-    public SourceStreamValue(ContextPlanner context, OperatorNode<PhysicalExprOperator> source) {
+    public SourceStreamValue(CompileContext context, OperatorNode<PhysicalExprOperator> source) {
         super(context);
         this.source = source;
     }

@@ -9,7 +9,12 @@ package com.yahoo.yqlplus.engine.compiler.code;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.trace.Timeout;
-import com.yahoo.yqlplus.api.types.*;
+import com.yahoo.yqlplus.api.types.YQLArrayType;
+import com.yahoo.yqlplus.api.types.YQLBaseType;
+import com.yahoo.yqlplus.api.types.YQLCoreType;
+import com.yahoo.yqlplus.api.types.YQLMapType;
+import com.yahoo.yqlplus.api.types.YQLOptionalType;
+import com.yahoo.yqlplus.api.types.YQLType;
 import org.objectweb.asm.Type;
 
 import java.nio.ByteBuffer;
@@ -202,6 +207,11 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
     @Override
     public TypeWidget adaptInternal(TypeLiteral<?> typeLiteral) {
         return adaptInternal(typeLiteral.getRawType());
+    }
+
+    @Override
+    public TypeWidget adaptInternal(java.lang.reflect.Type type, boolean nullable) {
+        return adaptInternal(TypeLiteral.get(type).getRawType(), nullable);
     }
 
     @Override

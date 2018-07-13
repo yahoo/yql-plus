@@ -7,7 +7,7 @@
 package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableMap;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 
@@ -15,26 +15,26 @@ import java.util.Collection;
 import java.util.List;
 
 public abstract class StreamValue {
-    public static StreamValue merge(ContextPlanner planner, List<StreamValue> inputStreams) {
+    public static StreamValue merge(CompileContext planner, List<StreamValue> inputStreams) {
         return new MergeStreamValue(planner, inputStreams);
     }
 
-    public static StreamValue singleton(ContextPlanner context, OperatorNode<PhysicalExprOperator> input) {
+    public static StreamValue singleton(CompileContext context, OperatorNode<PhysicalExprOperator> input) {
         return new SourceStreamValue(context, OperatorNode.create(input.getLocation(), PhysicalExprOperator.SINGLETON, input));
     }
 
-    public static StreamValue iterate(ContextPlanner context, OperatorNode<PhysicalExprOperator> input) {
+    public static StreamValue iterate(CompileContext context, OperatorNode<PhysicalExprOperator> input) {
         return new SourceStreamValue(context, input);
     }
 
-    public static StreamValue iterate(ContextPlanner context, OperatorValue input) {
+    public static StreamValue iterate(CompileContext context, OperatorValue input) {
         return iterate(context, OperatorNode.create(PhysicalExprOperator.VALUE, input));
     }
 
-    protected ContextPlanner context;
+    protected CompileContext context;
     OperatorNode<StreamOperator> stream;
 
-    protected StreamValue(ContextPlanner context) {
+    protected StreamValue(CompileContext context) {
         this.context = context;
         this.stream = OperatorNode.create(StreamOperator.SINK, OperatorNode.create(SinkOperator.ACCUMULATE));
     }

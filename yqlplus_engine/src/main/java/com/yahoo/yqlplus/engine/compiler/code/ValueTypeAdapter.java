@@ -16,6 +16,8 @@ public interface ValueTypeAdapter {
 
     TypeWidget adaptInternal(Type type);
 
+    TypeWidget adaptInternal(Type type, boolean nullable);
+
     TypeWidget adaptInternal(Class<?> clazz);
 
     TypeWidget adaptInternal(Class<?> clazz, boolean nullable);

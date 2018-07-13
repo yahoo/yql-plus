@@ -4,8 +4,9 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan;
+package com.yahoo.yqlplus.engine;
 
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
 import com.yahoo.yqlplus.language.parser.Location;
 
 import java.util.List;

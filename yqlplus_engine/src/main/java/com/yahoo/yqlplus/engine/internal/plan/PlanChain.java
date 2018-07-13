@@ -8,16 +8,23 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.engine.ChainState;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.ProjectOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.logical.SortOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.ExprScope;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 
-public abstract class PlanChain {
+abstract class PlanChain {
     private ContextPlanner context;
 
     protected PlanChain(ContextPlanner context) {
@@ -183,10 +190,10 @@ public abstract class PlanChain {
                     return StreamValue.iterate(context, expr);
                 } else {
                     OperatorNode<SequenceOperator> source = query.getArgument(0);
-                    state.filter = query.getArgument(1);
+                    state.setFilter(query.getArgument(1));
                     StreamValue result = execute(state, source);
-                    if (!state.filtered) {
-                        result.add(query.getLocation(), StreamOperator.FILTER, compileFilter(state.filter));
+                    if (!state.isFiltered()) {
+                        result.add(query.getLocation(), StreamOperator.FILTER, compileFilter(state.getFilter()));
                     }
                     return result;
                 }
@@ -194,9 +201,9 @@ public abstract class PlanChain {
             case SORT: {
                 OperatorNode<SequenceOperator> source = query.getArgument(0);
                 List<OperatorNode<SortOperator>> orderby = query.getArgument(1);
-                state.transforms.add(query);
+                state.getTransforms().add(query);
                 StreamValue result = execute(state, source);
-                if (!state.handled.contains(query)) {
+                if (!state.getHandled().contains(query)) {
                     result.add(query.getLocation(), StreamOperator.ORDERBY, compileComparator(orderby));
                 }
                 return result;
@@ -204,9 +211,9 @@ public abstract class PlanChain {
             case LIMIT: {
                 OperatorNode<SequenceOperator> source = query.getArgument(0);
                 OperatorNode<ExpressionOperator> limit = query.getArgument(1);
-                state.transforms.add(query);
+                state.getTransforms().add(query);
                 StreamValue result = execute(state, source);
-                if (!state.handled.contains(query)) {
+                if (!state.getHandled().contains(query)) {
                     result.add(query.getLocation(), StreamOperator.LIMIT, programEvaluate(limit));
                 }
                 return result;
@@ -214,9 +221,9 @@ public abstract class PlanChain {
             case OFFSET: {
                 OperatorNode<SequenceOperator> source = query.getArgument(0);
                 OperatorNode<ExpressionOperator> limit = query.getArgument(1);
-                state.transforms.add(query);
+                state.getTransforms().add(query);
                 StreamValue result = execute(state, source);
-                if (!state.handled.contains(query)) {
+                if (!state.getHandled().contains(query)) {
                     result.add(query.getLocation(), StreamOperator.OFFSET, programEvaluate(limit));
                 }
                 return result;
@@ -225,9 +232,9 @@ public abstract class PlanChain {
                 OperatorNode<SequenceOperator> source = query.getArgument(0);
                 OperatorNode<ExpressionOperator> offset = query.getArgument(1);
                 OperatorNode<ExpressionOperator> limit = query.getArgument(2);
-                state.transforms.add(query);
+                state.getTransforms().add(query);
                 StreamValue result = execute(state, source);
-                if (!state.handled.contains(query)) {
+                if (!state.getHandled().contains(query)) {
                     result.add(query.getLocation(), StreamOperator.SLICE, programEvaluate(offset), programEvaluate(limit));
                 }
                 return result;

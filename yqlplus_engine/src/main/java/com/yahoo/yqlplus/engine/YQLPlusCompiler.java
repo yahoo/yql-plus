@@ -9,8 +9,6 @@ package com.yahoo.yqlplus.engine;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
 import com.yahoo.yqlplus.engine.internal.compiler.PlanProgramCompiler;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.ProgramParser;

@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan;
+package com.yahoo.yqlplus.engine.indexed;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;

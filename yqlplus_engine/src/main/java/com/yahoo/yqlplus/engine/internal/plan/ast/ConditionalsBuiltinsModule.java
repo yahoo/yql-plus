@@ -6,9 +6,8 @@
 
 package com.yahoo.yqlplus.engine.internal.plan.ast;
 
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
+import com.yahoo.yqlplus.engine.CompileContext;
+import com.yahoo.yqlplus.engine.ModuleType;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -20,18 +19,17 @@ import java.util.List;
 
 public class ConditionalsBuiltinsModule implements ModuleType {
     @Override
-    public OperatorNode<PhysicalExprOperator> call(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
+    public OperatorNode<PhysicalExprOperator> call(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments) {
         return callInRowContext(location, context, name, arguments, null);
     }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, ContextPlanner context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
-        DynamicExpressionEvaluator eval = new DynamicExpressionEvaluator(context, row);
+    public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
         if("coalesce".equals(name)) {
-            List<OperatorNode<PhysicalExprOperator>> args = eval.applyAll(arguments);
+            List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
             return OperatorNode.create(location, PhysicalExprOperator.COALESCE, args);
         } else if("case".equals(name)) {
-            List<OperatorNode<PhysicalExprOperator>> args = eval.applyAll(arguments);
+            List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
             if(arguments.size() % 2 != 1) {
                 throw new ProgramCompileException(location, "case(condition-1, value-1, condition-2, value-2, ..., condition-n, value-n, default-value): arguments to CASE must be odd in number");
             }
@@ -47,12 +45,12 @@ public class ConditionalsBuiltinsModule implements ModuleType {
         throw new ProgramCompileException(location, "Unknown conditionals function '%s'", name);    }
 
     @Override
-    public OperatorNode<PhysicalExprOperator> property(Location location, ContextPlanner context, String name) {
+    public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {
         return null;
     }
 
     @Override
-    public StreamValue pipe(Location location, ContextPlanner context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
+    public StreamValue pipe(Location location, CompileContext context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
         return null;
     }
 }

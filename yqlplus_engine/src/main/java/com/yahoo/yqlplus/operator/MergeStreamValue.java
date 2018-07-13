@@ -8,7 +8,7 @@ package com.yahoo.yqlplus.operator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
 import java.util.Collection;
@@ -17,7 +17,7 @@ import java.util.List;
 public class MergeStreamValue extends StreamValue {
     private final List<StreamValue> inputStreams;
 
-    public MergeStreamValue(ContextPlanner context, List<StreamValue> inputStreams) {
+    public MergeStreamValue(CompileContext context, List<StreamValue> inputStreams) {
         super(context);
         this.inputStreams = inputStreams;
     }
