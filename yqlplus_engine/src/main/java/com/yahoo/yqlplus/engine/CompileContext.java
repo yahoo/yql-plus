@@ -7,7 +7,6 @@ import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 

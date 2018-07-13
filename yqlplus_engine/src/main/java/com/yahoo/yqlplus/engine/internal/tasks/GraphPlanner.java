@@ -6,7 +6,13 @@
 
 package com.yahoo.yqlplus.engine.internal.tasks;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.yahoo.yqlplus.operator.Step;
+import com.yahoo.yqlplus.operator.Value;
 
 import java.util.List;
 import java.util.Map;

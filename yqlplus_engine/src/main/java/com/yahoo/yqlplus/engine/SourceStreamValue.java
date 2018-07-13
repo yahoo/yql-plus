@@ -4,11 +4,15 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.operator;
+package com.yahoo.yqlplus.engine;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
 
 import java.util.Collection;
 

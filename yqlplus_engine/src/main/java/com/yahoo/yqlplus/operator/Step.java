@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.tasks;
+package com.yahoo.yqlplus.operator;
 
 import java.util.Set;
 

@@ -7,6 +7,8 @@
 package com.yahoo.yqlplus.engine.internal.tasks;
 
 import com.google.common.collect.Sets;
+import com.yahoo.yqlplus.operator.Step;
+import com.yahoo.yqlplus.operator.Value;
 
 import java.util.List;
 import java.util.Set;

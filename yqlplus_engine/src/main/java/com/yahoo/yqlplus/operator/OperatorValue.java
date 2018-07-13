@@ -7,8 +7,6 @@
 package com.yahoo.yqlplus.operator;
 
 import com.yahoo.yqlplus.api.types.Annotations;
-import com.yahoo.yqlplus.engine.internal.tasks.Step;
-import com.yahoo.yqlplus.engine.internal.tasks.Value;
 
 public class OperatorValue implements Value {
     private String name;

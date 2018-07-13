@@ -9,6 +9,7 @@ package com.yahoo.yqlplus.engine.internal.plan;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.engine.ChainState;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.ProjectOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -20,7 +21,6 @@ import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
 import com.yahoo.yqlplus.operator.StreamOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 

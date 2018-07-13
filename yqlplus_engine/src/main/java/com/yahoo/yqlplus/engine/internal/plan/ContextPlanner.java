@@ -13,6 +13,7 @@ import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.SourceType;
 import com.yahoo.yqlplus.engine.Sourcer;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
@@ -31,7 +32,6 @@ import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 import com.yahoo.yqlplus.operator.PhysicalOperator;
 import com.yahoo.yqlplus.operator.StreamOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.lang.reflect.Type;
 import java.util.EnumSet;

@@ -10,7 +10,6 @@ import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 
 public interface SourceType {
     StreamValue plan(CompileContext planner, OperatorNode<SequenceOperator> query, OperatorNode<SequenceOperator> source);

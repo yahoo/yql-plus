@@ -20,6 +20,7 @@ import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.ModuleType;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
@@ -28,7 +29,6 @@ import com.yahoo.yqlplus.operator.OperatorStep;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 import com.yahoo.yqlplus.operator.PhysicalOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;

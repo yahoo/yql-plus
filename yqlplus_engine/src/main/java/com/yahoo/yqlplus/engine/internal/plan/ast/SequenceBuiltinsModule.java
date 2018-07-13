@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.ModuleType;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.engine.internal.plan.ConstantExpressionEvaluator;
 import com.yahoo.yqlplus.engine.internal.plan.NotConstantExpressionException;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
@@ -19,7 +20,6 @@ import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import com.yahoo.yqlplus.operator.FunctionOperator;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 import com.yahoo.yqlplus.operator.StreamOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 
 import java.util.List;
 

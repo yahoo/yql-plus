@@ -25,6 +25,7 @@ import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.ChainState;
 import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.SourceType;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
@@ -49,7 +50,6 @@ import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 import com.yahoo.yqlplus.operator.PhysicalOperator;
 import com.yahoo.yqlplus.operator.SinkOperator;
 import com.yahoo.yqlplus.operator.StreamOperator;
-import com.yahoo.yqlplus.operator.StreamValue;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
