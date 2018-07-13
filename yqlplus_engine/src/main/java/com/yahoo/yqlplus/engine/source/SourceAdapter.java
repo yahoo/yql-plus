@@ -1,11 +1,23 @@
 package com.yahoo.yqlplus.engine.source;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Delete;
+import com.yahoo.yqlplus.api.annotations.Emitter;
+import com.yahoo.yqlplus.api.annotations.Insert;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
+import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexColumn;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
@@ -15,20 +27,41 @@ import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
 import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.*;
+import com.yahoo.yqlplus.engine.internal.plan.ChainState;
+import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.DynamicExpressionEvaluator;
+import com.yahoo.yqlplus.engine.internal.plan.IndexKey;
+import com.yahoo.yqlplus.engine.internal.plan.IndexQuery;
+import com.yahoo.yqlplus.engine.internal.plan.IndexStrategy;
+import com.yahoo.yqlplus.engine.internal.plan.IndexedQueryPlanner;
+import com.yahoo.yqlplus.engine.internal.plan.QueryStrategy;
+import com.yahoo.yqlplus.engine.internal.plan.SourceType;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.ExprScope;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.StreamValue;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -192,6 +225,7 @@ public class SourceAdapter implements SourceType {
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
         } else {
+            candidates.get(0).verifySetArguments(record);
             return candidates.get(0).stream(context);
         }
     }
@@ -204,6 +238,9 @@ public class SourceAdapter implements SourceType {
                 return true;
             }
         });
+        if(!candidates.isEmpty()) {
+            candidates.get(0).verifySetArguments(record);
+        }
         return executeIndexWrite(Update.class, query, context, filter, candidates);
     }
 
@@ -242,6 +279,7 @@ public class SourceAdapter implements SourceType {
             if(candidates.isEmpty()) {
                 throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
             } else {
+                candidates.get(0).verifySetArguments(record);
                 invocations.add(candidates.get(0));
             }
         }
@@ -765,6 +803,16 @@ public class SourceAdapter implements SourceType {
             setArguments.add(keyName);
             invokeArguments.add(exprOperatorOperatorNode);
         }
+
+        public void verifySetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
+            // verify no unknown fields are present in the input
+            for(String key : record.keySet()) {
+                if(!setArguments.contains(key)) {
+                    throw new IllegalArgumentException(String.format("%s::%s Unexpected additional property '%s'", method.getDeclaringClass().getName(), method.getName(), key));
+                }
+            }
+
+        }
     }
 
     private OperatorNode<StreamOperator> accumulate() {
@@ -912,7 +960,6 @@ public class SourceAdapter implements SourceType {
         public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget setType) {
             // delete all does not consider any methods with filter arguments
             return false;
-
         }
     }
 }

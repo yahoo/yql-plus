@@ -9,11 +9,9 @@ package com.yahoo.yqlplus.engine.compiler.code;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 
 public class NotFoundSequence implements BytecodeSequence {
-    private final BytecodeExpression target;
     private final BytecodeExpression propertyName;
 
-    public NotFoundSequence(BytecodeExpression target, BytecodeExpression propertyName) {
-        this.target = target;
+    public NotFoundSequence(BytecodeExpression propertyName) {
         this.propertyName = propertyName;
     }
 

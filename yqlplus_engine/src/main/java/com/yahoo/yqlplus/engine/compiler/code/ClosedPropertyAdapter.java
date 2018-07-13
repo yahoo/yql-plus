@@ -182,7 +182,7 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
                     public BytecodeSequence visit(BytecodeExpression target, String propertyName) {
                         return property(target, propertyName).write(value);
                     }
-                }, new NotFoundSequence(target, propertyName));
+                }, new NotFoundSequence(propertyName));
             }
 
             @Override
@@ -192,7 +192,7 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
                     public BytecodeSequence visit(BytecodeExpression target, String propertyName) {
                         return property(target, propertyName).write(top);
                     }
-                }, new NotFoundSequence(target, propertyName));
+                }, new NotFoundSequence(propertyName));
             }
 
             @Override
