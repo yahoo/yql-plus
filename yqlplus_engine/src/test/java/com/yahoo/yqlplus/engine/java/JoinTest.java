@@ -6,15 +6,15 @@
 
 package com.yahoo.yqlplus.engine.java;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.Record;
+import com.yahoo.yqlplus.engine.sources.InnerSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -22,14 +22,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class JoinTest {
+public class JoinTest extends ProgramTestBase {
 
 	private static final boolean DEBUG_DUMP = false;
-	
+
+	private YQLPlusCompiler createJoinCompiler() {
+	    return createCompiler(
+	            "people", createPeopleTable(),
+               "minions", new MinionSource(ImmutableList.of(new Minion("1", "2"), new Minion("1", "3"))),
+               "innersource", InnerSource.class,
+               "moreMinions", createMoreMinionsTable(),
+               "peopleWithNullId", new PersonSource(ImmutableList.of(new Person(null, "bob", 0), new Person("2", "joe", 1), new Person("3", "smith", 2))),
+               "peopleWithEmptyId", new PersonSource(ImmutableList.of(new Person("", "bob", 0), new Person("2", "joe", 1), new Person("3", "smith", 2))),
+               "noMatchMinions", new MinionSource(ImmutableList.of(new Minion("4", "2"), new Minion("4", "3"), new Minion("5", "1"))),
+                "minionsWithSkipNullSetToFalse", new MinionSourceWithSkipNullSetToFalse(ImmutableList.of(new Minion(null, "2"), new Minion("1", "3"), new Minion("2", "1"))),
+                "images", new ImageSource(ImmutableList.of(new Image("1", "1.jpg"), new Image("3", "3.jpg")))
+        );
+    }
+
 	@Test
 	public void testJoin() throws Exception {
-		Injector injector = Guice.createInjector(new JavaTestModule());
-		YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+		YQLPlusCompiler compiler = createJoinCompiler();
 		CompiledProgram program = compiler.compile("SELECT people.value master_name, people2.value minion_name " +
 				"FROM people " +
 				"JOIN minions ON people.id = minions.master_id " +
@@ -48,8 +61,7 @@ public class JoinTest {
 
 	@Test
 	public void testVariableJoin() throws Exception {
-		Injector injector = Guice.createInjector(new JavaTestModule());
-		YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
 		CompiledProgram program = compiler.compile(
 				"SELECT people.value master_name, people.id master_id FROM people OUTPUT AS p1;" +
 						"SELECT minions.master_id, minions.minion_id FROM minions OUTPUT AS m1;" +
@@ -71,8 +83,7 @@ public class JoinTest {
 
 	@Test
 	public void testInner() throws Exception {
-		Injector injector = Guice.createInjector(new JavaTestModule());
-		YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
 		CompiledProgram program = compiler.compile("SELECT * from innersource OUTPUT as foo;" +
 				"SELECT * FROM innersource WHERE id = '1' OUTPUT AS b1;" +
 				"SELECT * FROM innersource WHERE id = '2' OUTPUT as b2;" +
@@ -107,8 +118,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWithNullKeySkipped() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.value master_name, moreMinions.minion_id minion_name " +
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
@@ -142,8 +152,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWithNullKeyNotSkipped() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT peopleWithNullId.value master_name, minionsWithSkipNullSetToFalse.minion_id minion_name " +
                 "FROM peopleWithNullId " +
                 "JOIN minionsWithSkipNullSetToFalse ON peopleWithNullId.id = minionsWithSkipNullSetToFalse.master_id " +
@@ -160,8 +169,7 @@ public class JoinTest {
 
     @Test
     public void testJoinEmptyStringKeyWithSkipEmptyOrZeroSetToTrue() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.value master_name, moreMinions.minion_id minion_name " +
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
@@ -196,8 +204,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWildcardOnLeftTable() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.minion_id minion_name " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -247,8 +254,7 @@ public class JoinTest {
      */
     @Test
     public void testLeftJoinWildcardOnLeftTable() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.minion_id minion_name " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -310,8 +316,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWildcardOnLeftTableNoMatchingRows() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, noMatchMinions.minion_id minion_name " +
                 "FROM people JOIN noMatchMinions ON people.id = noMatchMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -326,8 +331,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWildcardOnRightTable() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.value master_name, moreMinions.* " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -366,8 +370,7 @@ public class JoinTest {
      */
     @Test
     public void testJoinWildcardOnLeftAndRightTables() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.* " +
                 "FROM people JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -421,8 +424,7 @@ public class JoinTest {
      */
     @Test
     public void testLeftJoinWildcardOnLeftAndRightTables() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions.* " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -455,8 +457,7 @@ public class JoinTest {
      */
     @Test
     public void testMultiJoinWildcard() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, images.*, moreMinions.* " +
                 "FROM people " +
                 "JOIN moreMinions ON people.id = moreMinions.master_id " +
@@ -504,8 +505,7 @@ public class JoinTest {
      */
     @Test
     public void testProjectJoinRecord() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people.*, moreMinions " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -550,8 +550,7 @@ public class JoinTest {
      */
     @Test
     public void testProjectJoinRecordAlias() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT p.*, m " +
                 "FROM people p LEFT JOIN moreMinions m ON p.id = m.master_id " +
                 "OUTPUT AS foo;");
@@ -594,8 +593,7 @@ public class JoinTest {
      */
     @Test
     public void testProjectJoinRecords() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people, moreMinions " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");
@@ -642,8 +640,7 @@ public class JoinTest {
      */
     @Test
     public void testProjectJoinRecordsWithSelectAlias() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile("SELECT people AS pp, moreMinions AS mm " +
                 "FROM people LEFT JOIN moreMinions ON people.id = moreMinions.master_id " +
                 "OUTPUT AS foo;");

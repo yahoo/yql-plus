@@ -14,9 +14,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
 
@@ -28,7 +25,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Singleton
 public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     private final Map<String, Person> idMap = Maps.newHashMap();
     private final Map<Integer, Person> iidMap = Maps.newHashMap();
@@ -36,8 +32,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     private final List<Person> persons = Lists.newArrayList();
     private final ScheduledExecutorService toyWorker;
 
-    @Inject
-    ToyPersonSource(@Named("toy") ScheduledExecutorService toyWorker) {
+    public ToyPersonSource(ScheduledExecutorService toyWorker) {
         this.toyWorker = toyWorker;
         try {
             load(ToyPersonSource.class.getResourceAsStream("persons.json"), Person.class);

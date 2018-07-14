@@ -11,17 +11,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.yahoo.yqlplus.api.Source;
@@ -31,7 +25,6 @@ import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.JavaEngineModule;
 import com.yahoo.yqlplus.engine.sources.NullIterableSource;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -42,11 +35,7 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,7 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Test
-public class JavaEngineTest {
+public class JavaEngineTest extends ProgramTestBase {
     static final MappingJsonFactory JSON_FACTORY = new MappingJsonFactory();
 
     public static class Spec {
@@ -266,11 +255,11 @@ public class JavaEngineTest {
 
     @Test
     public void requireProblematicQuery() throws Exception {
-        run("SELECT value FROM person(100) WHERE id IN ('100', '101', '102') LIMIT 1 OFFSET 1 OUTPUT AS f1;", createModules());
+        run("SELECT value FROM person(100) WHERE id IN ('100', '101', '102') LIMIT 1 OFFSET 1 OUTPUT AS f1;");
     }
 
     protected void runParseTree(String input, JsonNode expectedOutput) throws Exception {
-        Map<String, JsonNode> result = run(input, createModules());
+        Map<String, JsonNode> result = run(input);
         Set<String> have = Sets.newTreeSet(result.keySet());
         Iterator<String> fields = expectedOutput.fieldNames();
         Set<String> expect = Sets.newTreeSet();
@@ -283,17 +272,12 @@ public class JavaEngineTest {
         }
     }
 
-    protected Map<String, JsonNode> run(String script, final com.google.inject.Module... modules) throws Exception {
-        Injector injector = Guice.createInjector(new JavaEngineModule(),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        for (com.google.inject.Module module : modules) {
-                            install(module);
-                        }
-                    }
-                });
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+    protected Map<String, JsonNode> run(String script) throws Exception {
+        ToyPersonSource source = new ToyPersonSource(Executors.newSingleThreadScheduledExecutor());
+        YQLPlusCompiler compiler = createCompiler(
+                "person", source,
+                "failuresource", FailureSource.class
+        );
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
         ProgramResult result = program.run(Maps.newHashMap());
@@ -322,8 +306,7 @@ public class JavaEngineTest {
      */
     @Test
     public void testNullListCausesTimeout() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new NullIterableSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new NullIterableSource());
         CompiledProgram program = compiler.compile("PROGRAM (); \n" +
                 "SELECT * FROM source WHERE id IN (1, 2, 3) " +
                 "OUTPUT AS out;");
