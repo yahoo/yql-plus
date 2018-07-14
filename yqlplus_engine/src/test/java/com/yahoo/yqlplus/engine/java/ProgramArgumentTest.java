@@ -8,13 +8,12 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.Record;
+import com.yahoo.yqlplus.engine.sources.InnerSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -23,13 +22,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ProgramArgumentTest {
+public class ProgramArgumentTest extends ProgramTestBase {
 	private static final boolean DEBUG_DUMP = false;
 	
 	@Test
     public void testArgument() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("innersource", InnerSource.class);
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a string);" +
                 "SELECT * FROM innersource WHERE id = @a OUTPUT AS b1;");
@@ -43,8 +41,7 @@ public class ProgramArgumentTest {
 
     @Test
     public void testRecursiveResolve() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("innersource", InnerSource.class);
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a int32);" +
                 "SELECT id FROM innersource WHERE iid = @a OUTPUT AS b1;" +
@@ -62,8 +59,7 @@ public class ProgramArgumentTest {
 
     @Test
     public void testInt32Argument() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("innersource", InnerSource.class);
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a int32);" +
                 "SELECT * FROM innersource WHERE iid = @a OUTPUT AS b1;");
@@ -77,8 +73,7 @@ public class ProgramArgumentTest {
 
     @Test
     public void testInt32ArgumentUnboxed() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("innersource", InnerSource.class);
         CompiledProgram program = compiler.compile("" +
                 "PROGRAM (@a int32);" +
                 "SELECT * FROM innersource WHERE iidprimitive = @a OUTPUT AS b1;");
@@ -92,8 +87,7 @@ public class ProgramArgumentTest {
     
     @Test
     public void testArrayArgument() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("people", createPeopleTable());
         CompiledProgram program = compiler.compile("PROGRAM (@ids array<string>, @codes array<int32>);" +
                 "SELECT * FROM people WHERE id IN (@ids) OUTPUT AS f1;" +
                 "SELECT * FROM people WHERE score in (@codes) OUTPUT AS f2;");
@@ -104,8 +98,7 @@ public class ProgramArgumentTest {
     
     @Test
     public void testArgumentMissAlpha() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("innersource", InnerSource.class);
         String errorMessage = null;
         try {
             CompiledProgram program = compiler.compile("" +
@@ -119,8 +112,7 @@ public class ProgramArgumentTest {
     
     @Test
     public void testOverrideDefaultValues() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler();
         String programStr = "PROGRAM (@strArg array<string> = ['Bob Bill']," +
                                 "@intArg array<int32>" +
                                 " = [1,2,3]); " +
@@ -135,8 +127,7 @@ public class ProgramArgumentTest {
     
     @Test
     public void testSignedDouble() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule());
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler();
         String programStr = "PROGRAM (@doubleArg double=-0.1," +
                                 "@intArg array<int32>" +
                                 " = [1,2,3]); " +
