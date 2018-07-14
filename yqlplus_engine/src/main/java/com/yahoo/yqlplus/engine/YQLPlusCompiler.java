@@ -40,14 +40,12 @@ public class YQLPlusCompiler {
 
     public CompiledProgram compile(final String programName, final InputStream stream) throws IOException, RecognitionException {
         ProgramParser parser = new ProgramParser();
-        CompiledProgram compiledProgram = compile(parser.parse(programName, stream));
-        return compiledProgram;
+        return compile(parser.parse(programName, stream));
     }
 
     public CompiledProgram compile(final String programName, final String program) throws RecognitionException, IOException {
         ProgramParser parser = new ProgramParser();
-        CompiledProgram compiledProgram = compile(parser.parse(programName, program));
-        return compiledProgram;
+        return compile(parser.parse(programName, program));
     }
 
     public CompiledProgram compile(final InputStream stream) throws IOException, RecognitionException {
