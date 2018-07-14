@@ -13,24 +13,16 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
-import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
-import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
-import com.yahoo.yqlplus.engine.compiler.code.BytecodeSequence;
-import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
-import com.yahoo.yqlplus.engine.compiler.code.ConstructorGenerator;
-import com.yahoo.yqlplus.engine.compiler.code.FieldDefinition;
-import com.yahoo.yqlplus.engine.compiler.code.MethodGenerator;
-import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.compiler.code.UnitGenerator;
+import com.yahoo.yqlplus.engine.compiler.code.*;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 
 public class ASMClassSourceTest {
 
@@ -58,6 +50,22 @@ public class ASMClassSourceTest {
         Class<? extends Computor> clazz = (Class<? extends Computor>) toy.getGeneratedClass();
         Computor foo = clazz.newInstance();
         Assert.assertEquals(foo.compute(), 0);
+    }
+
+    public interface Animal {
+        String speak();
+    }
+
+    @Test
+    public void requireLambda() throws Throwable {
+        ASMClassSource source = createASMClassSource();
+        LambdaBuilder builder = new LambdaBuilder(source, new FunctionalInterfaceContract(source.adaptInternal(Animal.class), "speak", BaseTypeAdapter.STRING, new ArrayList<>()));
+        builder.complete(new StringConstantExpression("MOO"));
+        source.build();
+        MethodHandle mh =  builder.getFactory();
+        Animal animal = (Animal) mh.invoke();
+        Assert.assertEquals(animal.speak(), "MOO");
+
     }
 
     private ASMClassSource createASMClassSource() {
