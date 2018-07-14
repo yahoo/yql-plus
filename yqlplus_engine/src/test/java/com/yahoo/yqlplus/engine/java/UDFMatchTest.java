@@ -7,8 +7,6 @@
 package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
@@ -27,7 +25,7 @@ import java.util.concurrent.ExecutionException;
  * Test matching of argument lists to UDFs.
  */
 @Test
-public class UDFMatchTest {
+public class UDFMatchTest extends ProgramTestBase {
     public static class PrimitiveUnboxedFunctionHolder implements Exports {
         @Export
         public long add(long left, long right) {
@@ -68,12 +66,7 @@ public class UDFMatchTest {
 
     @Test
     public void testSource() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
-                new LongRecord(1L, null),
-                new LongRecord(2L, 2L)
-
-        )));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT a, b FROM source OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
@@ -86,12 +79,7 @@ public class UDFMatchTest {
     @Test(expectedExceptions = {ExecutionException.class})
     public void testFunctionNPE() throws Exception {
         // this is going to fail with a NPE with the current engine due to lack of automatic-nullification of expressions when inputs are null
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
-                new LongRecord(1L, null),
-                new LongRecord(2L, 2L)
-
-        )));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT func.add(a, b) rez FROM source OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
@@ -103,28 +91,24 @@ public class UDFMatchTest {
 
     @Test
     public void testFunctionNPESafe() throws Exception {
-        // this is going to fail with a NPE with the current engine due to lack of automatic-nullification of expressions when inputs are null
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
-                new LongRecord(1L, null),
-                new LongRecord(2L, 2L)
-
-        )));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT func.add(a, b) rez FROM source WHERE b IS NOT NULL OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
         Assert.assertEquals(records.get(0).get("rez"), 4L);
     }
 
+    private YQLPlusCompiler createFuncCompiler() {
+        return createCompiler("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
+                    new LongRecord(1L, null),
+                    new LongRecord(2L, 2L)
+
+            ));
+    }
+
     @Test
     public void testFunction() throws Exception {
-        // this is going to fail with a NPE with the current engine due to lack of automatic-nullification of expressions when inputs are null
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
-                new LongRecord(1L, null),
-                new LongRecord(2L, 2L)
-
-        )));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT func.safeadd(a, b) rez FROM source OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 2);
@@ -134,13 +118,7 @@ public class UDFMatchTest {
 
     @Test
     public void testFunctionNull() throws Exception {
-        // this is going to fail with a NPE with the current engine due to lack of automatic-nullification of expressions when inputs are null
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class, "source", new LongSource(
-                new LongRecord(1L, null),
-                new LongRecord(2L, 2L)
-
-        )));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT func.safeadd(a, b) rez FROM source WHERE b IS NULL OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
@@ -149,9 +127,7 @@ public class UDFMatchTest {
 
     @Test
     public void testFunctionWiden() throws Exception {
-        // this is going to fail with a NPE with the current engine due to lack of automatic-nullification of expressions when inputs are null
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("func", PrimitiveUnboxedFunctionHolder.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createFuncCompiler();
         CompiledProgram program = compiler.compile("SELECT func.safeadd(1, 1) rez1, func.add(1, 1) rez2 OUTPUT AS f1;");
         List<Record> records = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
         Assert.assertEquals(records.size(), 1);
