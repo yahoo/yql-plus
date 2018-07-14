@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
@@ -17,15 +15,14 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 @Test
-public class PrimitiveComparisonTest {
+public class PrimitiveComparisonTest extends ProgramTestBase {
 
 
     @Test
     public void testInt32() throws Exception {
         PrimitiveRecord record = new PrimitiveRecord('a', (byte) 1, (short) 2, 2, 4L, true, 1.0f, 2.0);
         PrimitiveRecord other = new PrimitiveRecord('b', (byte) 4, (short) 3, 3, 1L, true, 2.0f, 1.0);
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new PrimitiveSource(ImmutableList.of(record, other))));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new PrimitiveSource(ImmutableList.of(record, other)));
         CompiledProgram program = compiler.compile("PROGRAM (@arg_int int32, @arr_int array<int32>);" +
                 "SELECT * FROM source WHERE p_int = 2        OUTPUT AS f1;" +
                 "SELECT * FROM source WHERE b_int = 2        OUTPUT AS f2;" +
