@@ -24,8 +24,11 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static org.testng.Assert.assertEquals;
+
 @Test
-public class FilterPlanningTest {
+public class FilterPlanningTest extends ProgramTestBase {
 
     public static class MagazineSource implements Source {
         int call_scan;
@@ -47,73 +50,65 @@ public class FilterPlanningTest {
     @Test
     public void requireNonRowDependantOptimizationScan() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", false));
+        ProgramResult myResult = program.run(of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     @Test
     public void requireNonRowDependantInvokedScan() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", true));
+        ProgramResult myResult = program.run(of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 1);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 1, "Expected 1 call to scan()");
+        assertEquals(foo.size(), 1);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 1, "Expected 1 call to scan()");
     }
 
     @Test
     public void requireNonRowDependantOptimizationIndexed() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", false));
+        ProgramResult myResult = program.run(of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     @Test
     public void requireNonRowDependantInvokedIndexed() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.of("call", true));
+        ProgramResult myResult = program.run(of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 1, "Expected 1 call to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 1, "Expected 1 call to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     public static class Decider implements Exports {
