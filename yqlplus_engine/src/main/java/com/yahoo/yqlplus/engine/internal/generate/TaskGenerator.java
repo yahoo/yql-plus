@@ -26,7 +26,6 @@ public class TaskGenerator {
     private final ProgramGenerator programGenerator;
     private final LambdaFactoryBuilder builder;
     private final ScopedBuilder runBody;
-    List<String> argumentNames = Lists.newArrayList();
 
     public TaskGenerator(ProgramGenerator program, GambitScope scope) {
         builder = scope.createLambdaBuilder(Runnable.class, "run", void.class, false);
@@ -38,22 +37,18 @@ public class TaskGenerator {
         runBody = body.block();
         body.exec(new ReturnCode());
         ScopedBuilder handler = catcher.on("$e", Throwable.class);
-        handler.exec(new BytecodeSequence() {
-            @Override
-            public void generate(CodeEmitter code) {
-                code.exec(code.getLocal("$program"));
-                code.exec(code.getLocal("$e"));
-                code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(ProgramInvocation.class), "fail",
-                        Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Throwable.class)), false);
-                code.getMethodVisitor().visitInsn(Opcodes.RETURN);
-            }
+        handler.exec(code -> {
+            code.exec(code.getLocal("$program"));
+            code.exec(code.getLocal("$e"));
+            code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(ProgramInvocation.class), "fail",
+                    Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Throwable.class)), false);
+            code.getMethodVisitor().visitInsn(Opcodes.RETURN);
         });
         builder.exec(catcher.build());
     }
 
     public void addArgument(OperatorValue arg) {
         builder.addArgument(arg.getName(), programGenerator.getValue(arg));
-        argumentNames.add(arg.getName());
     }
 
     public void executeStep(OperatorStep step) {
