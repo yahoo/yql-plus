@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewRegistry {
-    private final Map<String, SourceType> sources;
-    private final Map<String, ModuleType> modules;
+    private final Map<String, Supplier<SourceType>> sources;
+    private final Map<String, Supplier<ModuleType>> modules;
     private final Map<String, OperatorNode<SequenceOperator>> views;
 
     public BindingNamespace() {
@@ -77,47 +77,56 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
         return this;
     }
 
-    public BindingNamespace bindSource(String name, SourceType sourceType) {
+    public BindingNamespace bindSource(String name, Supplier<SourceType> sourceType) {
         this.sources.put(name, sourceType);
         return this;
     }
 
     public BindingNamespace bindSource(String name, Class<? extends Source> source) {
-        return bindSource(name, new SourceAdapter(name, source));
+        return bindSource(name, () -> new SourceAdapter(name, source));
+    }
+
+    public BindingNamespace bindSource(String name, SourceType source) {
+        return bindSource(name, () -> source);
     }
 
     public BindingNamespace bindSource(String name, Source source) {
-        return bindSource(name, new SourceAdapter(name, source.getClass(), () -> source));
+        return bindSource(name, () -> new SourceAdapter(name, source.getClass(), () -> source));
     }
 
-    public BindingNamespace bindSource(String name, Supplier<Source> sourceSupplier) {
-        return bindSource(name, new SourceAdapter(name, sourceSupplier.get().getClass(), sourceSupplier));
+    public BindingNamespace bindSourceSupplier(String name, Supplier<Source> sourceSupplier) {
+        return bindSource(name, () -> new SourceAdapter(name, sourceSupplier.get().getClass(), sourceSupplier));
     }
 
     private BindingNamespace bindSource(String name, Class<? extends Source> clazz, Supplier<Source> sourceSupplier) {
-        return bindSource(name, new SourceAdapter(name, clazz, sourceSupplier));
+        return bindSource(name, () -> new SourceAdapter(name, clazz, sourceSupplier));
     }
 
-    public BindingNamespace bindModule(String name, ModuleType sourceType) {
+    public BindingNamespace bindModule(String name, Supplier<ModuleType> sourceType) {
         this.modules.put(name, sourceType);
         return this;
     }
 
+    public BindingNamespace bindModule(String name, ModuleType sourceType) {
+        this.modules.put(name, () -> sourceType);
+        return this;
+    }
+
     public BindingNamespace bindModule(String name, Exports module) {
-        return bindModule(name, new ExportModuleAdapter(name, module.getClass(), () -> module));
+        return bindModule(name, () -> new ExportModuleAdapter(name, module.getClass(), () -> module));
     }
 
     public BindingNamespace bindModule(String name, Class<? extends Exports> source) {
-        return bindModule(name, new ExportModuleAdapter(name, source));
+        return bindModule(name, () -> new ExportModuleAdapter(name, source));
     }
 
     private BindingNamespace bindModule(String name, Class<? extends Exports> clazz, Supplier<Exports> moduleSupplier) {
-        return bindModule(name, new ExportModuleAdapter(name, clazz, moduleSupplier));
+        return bindModule(name, () -> new ExportModuleAdapter(name, clazz, moduleSupplier));
     }
 
 
-    public BindingNamespace bindModule(String name, Supplier<Exports> moduleSupplier) {
-        return bindModule(name, new ExportModuleAdapter(name, moduleSupplier.get().getClass(), moduleSupplier));
+    public BindingNamespace bindModuleSupplier(String name, Supplier<Exports> moduleSupplier) {
+        return bindModule(name, () -> new ExportModuleAdapter(name, moduleSupplier.get().getClass(), moduleSupplier));
     }
 
     public BindingNamespace bindView(String name, OperatorNode<SequenceOperator> view) {
@@ -127,12 +136,20 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
 
     @Override
     public ModuleType findModule(Location location, List<String> modulePath) {
-        return this.modules.get(Joiner.on('.').join(modulePath));
+        Supplier<ModuleType> moduleTypeSupplier = this.modules.get(Joiner.on('.').join(modulePath));
+        if(moduleTypeSupplier == null) {
+            return null;
+        }
+        return moduleTypeSupplier.get();
     }
 
     @Override
     public SourceType findSource(Location location, List<String> path) {
-        return this.sources.get(Joiner.on('.').join(path));
+        Supplier<SourceType> sourceTypeSupplier = this.sources.get(Joiner.on('.').join(path));
+        if(sourceTypeSupplier == null) {
+            return null;
+        }
+        return sourceTypeSupplier.get();
     }
 
     @Override
