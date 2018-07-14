@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
@@ -23,7 +21,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
-public class DeepJoinTest {
+public class DeepJoinTest extends ProgramTestBase  {
 
     public static class Zone {
         private String id;
@@ -259,11 +257,7 @@ public class DeepJoinTest {
 
     @Test
     public void testDeepJoin() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("zones", ZoneSource.class,
-                        "models", ModelSource.class,
-                        "machines", MachineSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile(
                         "SELECT p.*" +
                         "FROM zones c " +
@@ -275,14 +269,16 @@ public class DeepJoinTest {
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 12);
     }
-    
+
+    private YQLPlusCompiler createJoinCompiler() {
+        return createCompiler("zones", ZoneSource.class,
+                        "models", ModelSource.class,
+                        "machines", MachineSource.class);
+    }
+
     @Test
     public void testDeepJoinCaseInsensitive() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("zones", ZoneSource.class,
-                        "models", ModelSource.class,
-                        "machines", MachineSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile(
                         " SELECT p.*" +
                         " FROM zones c " +
@@ -297,11 +293,7 @@ public class DeepJoinTest {
 
     @Test
     public void testCompoundKey() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("zones", ZoneSource.class,
-                        "models", ModelSource.class,
-                        "machines", MachineSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createJoinCompiler();
         CompiledProgram program = compiler.compile(
                 "SELECT * " +
                         "FROM machines " +
@@ -315,11 +307,9 @@ public class DeepJoinTest {
 
     @Test
     public void testGeneratemachines() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("zones", ZoneSource.class,
-                        "models", ModelSource.class,
-                        "machines", GenerateMachinesource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("zones", ZoneSource.class,
+                "models", ModelSource.class,
+                "machines", GenerateMachinesource.class);
         CompiledProgram program = compiler.compile(
                 "SELECT * " +
                         "FROM machines " +
