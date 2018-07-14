@@ -11,8 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
@@ -29,16 +27,12 @@ import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 
-public class UDFsTest {
+public class UDFsTest extends ProgramTestBase {
 
     public static class CoolModule implements Exports {
 
@@ -99,8 +93,7 @@ public class UDFsTest {
 	
     @Test
     public void testConvertNullLongUDF() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", NullLongSource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", NullLongSource.class, "cool", CoolModule.class);
         String programStr = "PROGRAM (@id array<int64>); \n"
                  + "CREATE TEMP TABLE sample AS (SELECT * FROM source WHERE id IN (@id)); \n"
                  + "SELECT cool.second2Millisec(sample.id) AS convertedId FROM sample  OUTPUT as f1;";
@@ -118,10 +111,7 @@ public class UDFsTest {
 	
     @Test
     public void testStaticUDF() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("source", SingleKeySource.class,
-                        "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("PROGRAM (@str string); \n"
                 + "SELECT cool.convertString(@str) upperStr OUTPUT as arg;");
         ProgramResult rez = program.run(
@@ -133,8 +123,7 @@ public class UDFsTest {
     
     @Test
     public void testUDFsImportFrom() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("" +
                 "FROM cool IMPORT joeify;" +
                 "SELECT joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
@@ -146,8 +135,7 @@ public class UDFsTest {
 
     @Test
     public void testUDFsImportAlias() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("" +
                 "IMPORT cool.joeify AS baz;" +
                 "SELECT baz(value) name from source WHERE id = '1' OUTPUT as f1;");
@@ -159,8 +147,7 @@ public class UDFsTest {
 
     @Test
     public void testUDFsImportPlain() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("" +
                 "IMPORT cool;" +
                 "SELECT cool.joeify(value) name from source WHERE id = '1' OUTPUT as f1;");
@@ -172,8 +159,7 @@ public class UDFsTest {
 
     @Test
     public void testPipe() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", SingleKeySource.class, "cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE id IN ('1', '10') | cool.doubleScores OUTPUT as f1;");
         ProgramResult rez = program.run(ImmutableMap.of());
         AssertJUnit.assertEquals(rez.getResult("f1").get().getResult(), ImmutableList.of(new Person("1", "1", 2), new Person("10", "10", 20)));
@@ -181,8 +167,7 @@ public class UDFsTest {
 
     @Test
     public void testTemporaryTableWithUDF() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("cool", UDFsTest.CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("people", createPeopleTable(), "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("CREATE TEMPORARY TABLE frobaz AS (SELECT * FROM people WHERE id IN ('1', '2', '3', '4') | cool.removeEvenPeople());" +
                 "SELECT id FROM frobaz OUTPUT AS foo;");
         ProgramResult myResult = program.run(ImmutableMap.of());
@@ -195,9 +180,7 @@ public class UDFsTest {
 
     @Test
     public void testLimitOffsetUDF() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", BatchKeySource.class),
-            new SourceBindingModule("cool", CoolModule.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", BatchKeySource.class, "cool", CoolModule.class);
         CompiledProgram program = compiler.compile("PROGRAM (@lmt int32, @off int32);" +
             "CREATE VIEW foo AS SELECT * FROM source WHERE id IN ('1', '2', '3', '4', '5');" +
             "SELECT * FROM foo LIMIT cool.incr(@lmt) OUTPUT AS f1;" +
