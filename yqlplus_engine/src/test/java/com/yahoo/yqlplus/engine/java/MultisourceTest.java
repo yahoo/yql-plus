@@ -11,8 +11,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.CompiledProgram;
@@ -27,7 +25,7 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public class MultisourceTest {
+public class MultisourceTest extends ProgramTestBase {
 
     // this is a little contrived
     public static class Resource {
@@ -55,9 +53,7 @@ public class MultisourceTest {
 
     @Test
     public void testMultisource() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(),
-                new SourceBindingModule("resource", ResourceSource.class));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("resource", ResourceSource.class);
         CompiledProgram program = compiler.compile("" +
                 "CREATE VIEW movies AS SELECT * FROM resource('movies.json');" +
                 "CREATE VIEW hats AS SELECT * FROM resource('hats.json');" +
