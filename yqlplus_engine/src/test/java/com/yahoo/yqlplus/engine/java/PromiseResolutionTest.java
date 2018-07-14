@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
-public class PromiseResolutionTest {
+public class PromiseResolutionTest extends ProgramTestBase {
     public static class IntegerKeyed {
         public int woeid;
 
@@ -78,8 +76,7 @@ public class PromiseResolutionTest {
 
     @Test
     public void requireFutureResolution() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new FutureSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new FutureSource());
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
         ProgramResult myResult = program.run(ImmutableMap.of());
@@ -89,8 +86,7 @@ public class PromiseResolutionTest {
 
     @Test
     public void requireCompletableFutureResolution() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new CompletableFutureSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new CompletableFutureSource());
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
         ProgramResult myResult = program.run(ImmutableMap.of());
