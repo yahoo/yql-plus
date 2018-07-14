@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
@@ -143,12 +141,10 @@ public class FilterPlanningTest extends ProgramTestBase {
 
     @Test
     public void requireFilteringUdf() throws Exception {
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("namer", PersonNamer.class,
-                        "decider", Decider.class)
+        YQLPlusCompiler compiler = createCompiler(
+                "namer", PersonNamer.class,
+                "decider", Decider.class
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@choice int32);" +
                 "CREATE TEMPORARY TABLE modules AS ( EVALUATE decider.modules(@choice) );" +
                 "CREATE TEMPORARY TABLE articles AS ( " +
@@ -219,12 +215,8 @@ public class FilterPlanningTest extends ProgramTestBase {
 
     @Test
     public void testSourceNotInvokedIfNotRowDependentFilterExpressionEvalsToFalse() throws Exception {
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("namer1", PersonNamer1.class, "namer2", PersonNamer2.class, "namer3", PersonNamer3.class,
-                        "namer4", PersonNamer4.class, "decider", Decider.class)
-        );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("namer1", PersonNamer1.class, "namer2", PersonNamer2.class, "namer3", PersonNamer3.class,
+                        "namer4", PersonNamer4.class, "decider", Decider.class);
         CompiledProgram program = compiler.compile("PROGRAM (@choice int32);" +
                 "CREATE TEMPORARY TABLE modules AS ( EVALUATE decider.modules(@choice) );" +
                 "CREATE TEMPORARY TABLE articles AS ( " +
