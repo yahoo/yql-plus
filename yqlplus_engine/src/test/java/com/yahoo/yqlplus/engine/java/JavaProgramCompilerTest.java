@@ -1563,7 +1563,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = {ExecutionException.class, IllegalArgumentException.class}, expectedExceptionsMessageRegExp = ".*com.yahoo.yqlplus.engine.sources.MovieSource::insertMovie Missing required property 'title' [(]java.lang.String[)]")
+    @Test(expectedExceptions = {ProgramCompileException.class}, expectedExceptionsMessageRegExp = ".*Source 'source' has no matching @Insert method for .*")
     public void testMissingInsertArgumentWithoutDefaultValue() throws Exception {
         YQLPlusCompiler compiler = createCompiler(
                 "source", new MovieSource()
@@ -1590,7 +1590,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = {ExecutionException.class, IllegalArgumentException.class}, expectedExceptionsMessageRegExp = ".*com.yahoo.yqlplus.engine.sources.MovieSource::insertMovie Missing required property 'title' [(]java.lang.String[)]")
+    @Test(expectedExceptions = {ProgramCompileException.class}, expectedExceptionsMessageRegExp = ".*Source 'source' has no matching @Insert method for .*")
     public void testMissingBatchInsertArgumentWithoutDefaultValue() throws Exception {
         YQLPlusCompiler compiler = createCompiler(
                 "source", new MovieSource()
@@ -1695,7 +1695,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
      * @throws Exception
      * @Set annotated
      */
-    @Test
+    @Test(expectedExceptions = ProgramCompileException.class, expectedExceptionsMessageRegExp = "Source 'source' has no matching @Insert method for .*")
     public void testInsertMissingSetAnnotation() throws Exception {
         YQLPlusCompiler compiler = createCompiler(
                 "source", new InsertSourceMissingSetAnnotation()
@@ -2086,7 +2086,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = ProgramCompileException.class, expectedExceptionsMessageRegExp = ".*unknown field 'extra' for method class com.yahoo.yqlplus.engine.sources.MovieSource:updateMovie")
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = ".*Unexpected additional property 'extra'.*")
     public void testUpdateFieldWithoutMatchingSet() throws Exception {
         YQLPlusCompiler compiler = createCompiler(
                 "source", new MovieSource()
@@ -2126,7 +2126,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
      *
      * @throws Exception
      */
-    @Test(expectedExceptions = YQLTypeException.class, expectedExceptionsMessageRegExp = ".*com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet.*")
+    @Test(expectedExceptions = {ProgramCompileException.class}, expectedExceptionsMessageRegExp = ".*Source 'source' has no matching method for .*")
     public void testUpdateDefaultValueWithoutSet() throws Exception {
         YQLPlusCompiler compiler = createCompiler(
                 "source", new MovieSourceDefaultValueWithoutSet()

@@ -1,23 +1,11 @@
 package com.yahoo.yqlplus.engine.source;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
-import com.yahoo.yqlplus.api.annotations.DefaultValue;
-import com.yahoo.yqlplus.api.annotations.Delete;
-import com.yahoo.yqlplus.api.annotations.Emitter;
-import com.yahoo.yqlplus.api.annotations.Insert;
-import com.yahoo.yqlplus.api.annotations.Key;
-import com.yahoo.yqlplus.api.annotations.Query;
+import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.annotations.Set;
-import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
-import com.yahoo.yqlplus.api.annotations.Update;
 import com.yahoo.yqlplus.api.index.IndexColumn;
 import com.yahoo.yqlplus.api.index.IndexDescriptor;
 import com.yahoo.yqlplus.api.trace.Tracer;
@@ -31,36 +19,20 @@ import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
 import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
-import com.yahoo.yqlplus.engine.indexed.IndexKey;
-import com.yahoo.yqlplus.engine.indexed.IndexQuery;
-import com.yahoo.yqlplus.engine.indexed.IndexStrategy;
-import com.yahoo.yqlplus.engine.indexed.IndexedQueryPlanner;
-import com.yahoo.yqlplus.engine.indexed.QueryStrategy;
+import com.yahoo.yqlplus.engine.indexed.*;
 import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.ExprScope;
-import com.yahoo.yqlplus.operator.FunctionOperator;
-import com.yahoo.yqlplus.operator.OperatorStep;
-import com.yahoo.yqlplus.operator.OperatorValue;
-import com.yahoo.yqlplus.operator.PhysicalExprOperator;
-import com.yahoo.yqlplus.operator.PhysicalOperator;
-import com.yahoo.yqlplus.operator.SinkOperator;
-import com.yahoo.yqlplus.operator.StreamOperator;
+import com.yahoo.yqlplus.operator.*;
 import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -220,6 +192,8 @@ public class SourceAdapter implements SourceType {
         });
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Delete method for %s", sourceName, query.toString());
+        } else if (candidates.size() > 1) {
+            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Delete methods for %s (%d)", sourceName, query.toString(), candidates.size());
         } else {
             return candidates.get(0).stream(context);
         }
@@ -228,7 +202,9 @@ public class SourceAdapter implements SourceType {
     private StreamValue executeUpdateAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, Map<String, OperatorNode<PhysicalExprOperator>> record) {
         List<QM> candidates = visitMethods(Update.class, context, args, new UpdateVisitor(record, context));
         if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
+            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Update method for %s", sourceName, query.toString());
+        } else if (candidates.size() > 1) {
+            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Update methods for %s (%d)", sourceName, query.toString(), candidates.size());
         } else {
             candidates.get(0).verifySetArguments(record);
             return candidates.get(0).stream(context);
@@ -243,6 +219,7 @@ public class SourceAdapter implements SourceType {
                 return true;
             }
         });
+        candidates.sort((l, r) -> (-Integer.compare(l.checkSetArguments(record), r.checkSetArguments(record))));
         if(!candidates.isEmpty()) {
             candidates.get(0).verifySetArguments(record);
         }
@@ -266,6 +243,8 @@ public class SourceAdapter implements SourceType {
         });
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
+        } else if (candidates.size() > 1) {
+            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Insert method for %s (%d)", sourceName, query.toString(), candidates.size());
         } else {
             QM m = candidates.get(0);
             OperatorNode<FunctionOperator> func = function.createFunction(m.invoke());
@@ -284,6 +263,7 @@ public class SourceAdapter implements SourceType {
             if(candidates.isEmpty()) {
                 throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
             } else {
+                candidates.sort((l, r) -> (-Integer.compare(l.checkSetArguments(record), r.checkSetArguments(record))));
                 candidates.get(0).verifySetArguments(record);
                 invocations.add(candidates.get(0));
             }
@@ -586,7 +566,10 @@ public class SourceAdapter implements SourceType {
                 singleton = false;
                 rowType = rowType.getIterableAdapter().getValue();
             }
-            QM m = new QM(annotationClass, method, sourceExpr, singleton, rowType);
+            OperatorNode<PhysicalExprOperator> dimensions = OperatorNode.create(PhysicalExprOperator.RECORD,
+                    ImmutableList.of("source", "method"),
+                    ImmutableList.of(types.constant(sourceName), types.constant(method.getName())));
+            QM m = new QM(annotationClass, method, sourceExpr, singleton, rowType, dimensions);
 
             if (!rowType.hasProperties()) {
                 throw new YQLTypeException("Source method " + method + " does not return a STRUCT type: " + rowType);
@@ -664,7 +647,8 @@ public class SourceAdapter implements SourceType {
         TypeWidget rowType;
         PropertyAdapter rowProperties;
         String methodType;
-        QM(Class<? extends Annotation> annotationClass, Method method, OperatorNode<PhysicalExprOperator> source, boolean singleton, TypeWidget rowType) {
+        OperatorNode<PhysicalExprOperator> dimensions;
+        QM(Class<? extends Annotation> annotationClass, Method method, OperatorNode<PhysicalExprOperator> source, boolean singleton, TypeWidget rowType, OperatorNode<PhysicalExprOperator> dimensions) {
             this.annotationClass = annotationClass;
             this.methodType = annotationClass.getSimpleName();
             this.method = method;
@@ -684,6 +668,7 @@ public class SourceAdapter implements SourceType {
             this.singleton = singleton;
             this.rowType = rowType;
             this.rowProperties = rowType.getPropertyAdapter();
+            this.dimensions = dimensions;
             this.batch = false;
         }
 
@@ -692,7 +677,9 @@ public class SourceAdapter implements SourceType {
         }
 
         OperatorNode<PhysicalExprOperator> invoke() {
-            return OperatorNode.create(callOperator, method.getGenericReturnType(), Type.getType(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method), invokeArguments);
+            OperatorNode<PhysicalExprOperator> ctx = OperatorNode.create(PhysicalExprOperator.TRACE_CONTEXT, this.dimensions);
+            OperatorNode<PhysicalExprOperator> invocation = OperatorNode.create(callOperator, method.getGenericReturnType(), Type.getType(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method), invokeArguments);
+            return OperatorNode.create(PhysicalExprOperator.WITH_CONTEXT, ctx, invocation);
         }
 
         OperatorNode<PhysicalExprOperator> invokeIterable() {
@@ -815,7 +802,16 @@ public class SourceAdapter implements SourceType {
                     throw new IllegalArgumentException(String.format("%s::%s Unexpected additional property '%s'", method.getDeclaringClass().getName(), method.getName(), key));
                 }
             }
+        }
 
+        public int checkSetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
+            int out = 0;
+            for(String key : record.keySet()) {
+                if(setArguments.contains(key)) {
+                    out += 1;
+                }
+            }
+            return out;
         }
     }
 
