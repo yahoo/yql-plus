@@ -46,6 +46,11 @@ public class UDFsTest extends ProgramTestBase {
             return input + "joe";
         }
 
+        @Export("batman")
+        public String wayne(String input) {
+            return "holy " + input;
+        }
+
         @Export
         public List<Person> doubleScores(Iterable<Person> persons) {
             return ImmutableList.copyOf(Iterables.transform(persons, new Function<Person, Person>() {
@@ -131,6 +136,18 @@ public class UDFsTest extends ProgramTestBase {
         List<Record> record = rez.getResult("f1").get().getResult();
         AssertJUnit.assertEquals(record.size(), 1);
         AssertJUnit.assertEquals(record.get(0).get("name"), "1joe");
+    }
+
+    @Test
+    public void requireExportNameOverrideSupport() throws Exception {
+        YQLPlusCompiler compiler = createCompiler("source", SingleKeySource.class, "cool", CoolModule.class);
+        CompiledProgram program = compiler.compile("" +
+                "FROM cool IMPORT batman;" +
+                "SELECT batman(value) name from source WHERE id = '1' OUTPUT as f1;");
+        ProgramResult rez = program.run(ImmutableMap.of());
+        List<Record> record = rez.getResult("f1").get().getResult();
+        AssertJUnit.assertEquals(record.size(), 1);
+        AssertJUnit.assertEquals(record.get(0).get("name"), "holy 1");
     }
 
     @Test

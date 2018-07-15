@@ -10,12 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
-import com.yahoo.yqlplus.api.annotations.DefaultValue;
-import com.yahoo.yqlplus.api.annotations.Emitter;
-import com.yahoo.yqlplus.api.annotations.Export;
-import com.yahoo.yqlplus.api.annotations.Key;
-import com.yahoo.yqlplus.api.annotations.Set;
-import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
+import com.yahoo.yqlplus.api.annotations.*;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.CompileContext;
@@ -89,8 +84,15 @@ public class ExportModuleAdapter implements ModuleType {
             if (!method.isAnnotationPresent(Export.class)) {
                 continue;
             }
-            if (!name.equalsIgnoreCase(method.getName())) {
-                continue;
+            Export export = method.getAnnotation(Export.class);
+            if(!"".equals(export.value())) {
+                if(!name.equalsIgnoreCase(export.value())) {
+                    continue;
+                }
+            } else {
+                if (!name.equalsIgnoreCase(method.getName())) {
+                    continue;
+                }
             }
             List<OperatorNode<PhysicalExprOperator>> invokeArguments = Lists.newArrayList();
             PhysicalExprOperator callOperator = PhysicalExprOperator.INVOKEVIRTUAL;
