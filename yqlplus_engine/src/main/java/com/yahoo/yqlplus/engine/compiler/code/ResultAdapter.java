@@ -13,10 +13,4 @@ public interface ResultAdapter {
     BytecodeExpression createSuccess(BytecodeExpression input);
 
     BytecodeExpression createFailureThrowable(BytecodeExpression input);
-
-    BytecodeExpression createFailureYQLError(BytecodeExpression input);
-
-    BytecodeExpression resolve(BytecodeExpression target);
-
-    BytecodeExpression isSuccess(BytecodeExpression target);
 }

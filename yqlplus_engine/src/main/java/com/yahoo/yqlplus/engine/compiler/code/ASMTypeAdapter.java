@@ -18,12 +18,8 @@ import com.yahoo.yqlplus.api.types.YQLMapType;
 import com.yahoo.yqlplus.api.types.YQLOptionalType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.engine.compiler.runtime.Result;
-import com.yahoo.yqlplus.engine.compiler.runtime.YQLError;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
@@ -427,31 +423,15 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
     }
 
     private ResultAdapter createResultType(final TypeWidget valueType) {
-        TypeWidget resultType = new BaseTypeWidget(Type.getType(Result.class)) {
-            @Override
-            public YQLCoreType getValueCoreType() {
-                return YQLCoreType.PROMISE;
-            }
-
-            @Override
-            public boolean isPromise() {
-                return true;
-            }
-
-            @Override
-            public PromiseAdapter getPromiseAdapter() {
-                return new ResultType(this, valueType);
-            }
-
-        };
+        CompletableFutureResultType resultType = new CompletableFutureResultType(valueType);
         return new ResultType(resultType, valueType);
     }
 
-    private class ResultType implements ResultAdapter, PromiseAdapter {
-        private final TypeWidget ownerType;
+    private class ResultType implements ResultAdapter {
+        private final CompletableFutureResultType ownerType;
         private final TypeWidget valueType;
 
-        public ResultType(TypeWidget ownerType, TypeWidget valueType) {
+        public ResultType(CompletableFutureResultType ownerType, TypeWidget valueType) {
             this.ownerType = ownerType;
             this.valueType = valueType;
         }
@@ -468,49 +448,20 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
         @Override
         public BytecodeExpression createSuccess(BytecodeExpression input) {
-            return ownerType.construct(new BytecodeCastExpression(AnyTypeWidget.getInstance(), input));
+            return ExactInvocation.exactInvoke(Opcodes.INVOKESTATIC,
+                            "completedFuture",
+                            ownerType,
+                            ownerType,
+                            ImmutableList.of(AnyTypeWidget.getInstance())).invoke(Location.NONE, input);
         }
 
         @Override
         public BytecodeExpression createFailureThrowable(BytecodeExpression input) {
-            return ownerType.construct(new BytecodeCastExpression(adapt(Throwable.class), input));
-        }
-
-        @Override
-        public BytecodeExpression createFailureYQLError(BytecodeExpression input) {
-            return ownerType.construct(new BytecodeCastExpression(adapt(YQLError.class), input));
-        }
-
-        @Override
-        public BytecodeExpression resolve(BytecodeExpression target) {
-            GambitCreator.Invocable invocable = ExactInvocation.boundInvoke(Opcodes.INVOKEVIRTUAL, "resolve", ownerType, AnyTypeWidget.getInstance(), target);
-            return new BytecodeCastExpression(valueType, invocable.invoke(Location.NONE, ImmutableList.of()));
-        }
-
-        @Override
-        public BytecodeExpression resolve(ScopedBuilder scope, BytecodeExpression timeout, BytecodeExpression target) {
-            return resolve(target);
-        }
-
-        @Override
-        public BytecodeExpression isSuccess(final BytecodeExpression target) {
-            return new BaseTypeExpression(BaseTypeAdapter.BOOLEAN) {
-                @Override
-                public void generate(CodeEmitter code) {
-                    Label isFalse = new Label();
-                    target.generate(code);
-                    code.cast(ownerType, target.getType(), isFalse);
-                    MethodVisitor mv = code.getMethodVisitor();
-                    mv.visitFieldInsn(Opcodes.GETFIELD, ownerType.getJVMType().getInternalName(), "failure", Type.getInternalName(YQLError.class));
-                    mv.visitJumpInsn(Opcodes.IFNONNULL, isFalse);
-                    code.emitBooleanConstant(true);
-                    Label done = new Label();
-                    mv.visitJumpInsn(Opcodes.GOTO, done);
-                    mv.visitLabel(isFalse);
-                    code.emitBooleanConstant(false);
-                    mv.visitLabel(done);
-                }
-            };
+            return ExactInvocation.exactInvoke(Opcodes.INVOKESTATIC,
+                    "failedFuture",
+                    ownerType,
+                    ownerType,
+                    ImmutableList.of(adapt(Throwable.class))).invoke(Location.NONE, input);
         }
     }
 }
