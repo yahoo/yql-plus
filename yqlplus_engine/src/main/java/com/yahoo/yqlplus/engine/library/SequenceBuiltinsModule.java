@@ -36,13 +36,31 @@ public class SequenceBuiltinsModule implements ModuleType {
 
     @Override
     public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {
+        if (name.equals("row")) {
+            return OperatorNode.create(location, PhysicalExprOperator.LOCAL, "$$row");
+        } else if (name.equals("key")) {
+            return OperatorNode.create(location, PhysicalExprOperator.LOCAL, "$$key");
+        } else if (name.equals("rows")) {
+            return OperatorNode.create(location, PhysicalExprOperator.LOCAL, "$$rows");
+        }
         return null;
+    }
+
+    private StreamValue dynamicGroupby(Location location, CompileContext context, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
+        List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAll(arguments);
+        input.add(location, StreamOperator.GROUPBY,
+                OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), args.get(0)),
+                OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$key", "$$rows"), args.get(1))
+        );
+        return input;
     }
 
     @Override
     public StreamValue pipe(Location location, CompileContext context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
         if("groupby".equals(name)) {
-            if(arguments.size() != 3) {
+            if(arguments.size() == 2) {
+                return dynamicGroupby(location, context, input, arguments);
+            } else if(arguments.size() != 3) {
                 throw new ProgramCompileException(location, "groupby(group-field, output-group-field, output-group-rows): argument count mismatch");
             }
             ConstantExpressionEvaluator eval = new ConstantExpressionEvaluator();
@@ -73,6 +91,36 @@ public class SequenceBuiltinsModule implements ModuleType {
                     OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$row"), OperatorNode.create(PhysicalExprOperator.LOCAL, "$row")),
                     OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$key", "$rows"), OperatorNode.create(PhysicalExprOperator.LOCAL, "$key"))
             );
+            return input;
+        } else if ("flatten".equals(name)) {
+            if (arguments.size() != 0) {
+                throw new ProgramCompileException(location, "flatten(): argument count mismatch");
+            }
+            input.add(location, StreamOperator.FLATTEN);
+            return input;
+        } else if ("transform".equals(name)) {
+            if(arguments.size() != 1) {
+                throw new ProgramCompileException(location, "transform(<expr>): argument count mismatch");
+            }
+            OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));
+            input.add(location, StreamOperator.TRANSFORM,
+                    OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), arg));
+            return input;
+        } else if ("scatter".equals(name)) {
+            if(arguments.size() != 1) {
+                throw new ProgramCompileException(location, "scatter(<expr>): argument count mismatch");
+            }
+            OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));
+            input.add(location, StreamOperator.SCATTER,
+                    OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), arg));
+            return input;
+        } else if ("filter".equals(name)) {
+            if(arguments.size() != 1) {
+                throw new ProgramCompileException(location, "filter(<expr>): argument count mismatch");
+            }
+            OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));
+            input.add(location, StreamOperator.FILTER,
+                    OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), arg));
             return input;
         }
         throw new ProgramCompileException(location, "Unknown sequences function '%s'", name);

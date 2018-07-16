@@ -42,6 +42,20 @@ public final class Maths {
         }
     }
 
+    public String binaryMath(ArithmeticOperation op, String l, String r) {
+        switch(op) {
+            case ADD:
+                return l + r;
+            case SUB:
+            case MULT:
+            case DIV:
+            case MOD:
+            case POW:
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
     public long binaryMath(ArithmeticOperation op, long l, long r) {
         switch (op) {
             case ADD:
