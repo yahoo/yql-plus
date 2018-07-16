@@ -70,7 +70,7 @@ public class ASMClassSourceLinker implements GuardingDynamicLinker {
         EngineValueTypeAdapter typeAdapter = childEnvironment.getValueTypeAdapter();
         TypeWidget widget = getTypeWidget(clazz);
         if (widget == null) {
-            widget = typeAdapter.adaptInternal(clazz);
+            widget = typeAdapter.adapt(clazz);
         }
         RuntimeAdapter adapter = new StandardRuntimeAdapter(widget);
         RuntimeWidgetGenerator generator = new RuntimeWidgetGenerator(clazz.getName().replace(".", "_") + "_adapter", childEnvironment);

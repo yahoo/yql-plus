@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.operator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.TypeLiteral;
-import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
 import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
@@ -20,6 +19,8 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorNodeVisitor;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -76,9 +77,7 @@ public enum PhysicalExprOperator implements Operator {
     PROPREF(PhysicalExprOperator.class, String.class),
     PROPREF_DEFAULT(PhysicalExprOperator.class, String.class, PhysicalExprOperator.class),
 
-    RECORD_AS(TypeWidget.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
-    CALL(TypeWidget.class, String.class, PlanOperatorTypes.EXPRS),
-    INVOKE(GambitCreator.Invocable.class, PlanOperatorTypes.EXPRS),
+    RECORD_AS(Type.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     // (returnType, owner, methodName, methodDescriptor)
     INVOKEVIRTUAL(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKESTATIC(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
@@ -114,6 +113,35 @@ public enum PhysicalExprOperator implements Operator {
         checker = TypeCheckers.make(this, types);
     }
 
+    public static MethodInvoker createInvoker(Method method) {
+        PhysicalExprOperator callOperator = determineCallOperator(method);
+        java.lang.reflect.Type returnType = method.getGenericReturnType();
+        // (returnType, owner, methodName, methodDescriptor)
+        Type owner = Type.getType(method.getDeclaringClass());
+        String methodName = method.getName();
+        String methodDescriptor = Type.getMethodDescriptor(method);
+        return new MethodInvoker() {
+            @Override
+            public boolean isStatic() {
+                return callOperator == PhysicalExprOperator.INVOKESTATIC;
+            }
+
+            @Override
+            public OperatorNode<PhysicalExprOperator> invoke(List<OperatorNode<PhysicalExprOperator>> args) {
+                return OperatorNode.create(callOperator, returnType, owner, methodName, methodDescriptor, args);
+            }
+        };
+    }
+
+    private static PhysicalExprOperator determineCallOperator(Method method) {
+        PhysicalExprOperator callOperator = PhysicalExprOperator.INVOKEVIRTUAL;
+        if (Modifier.isStatic(method.getModifiers())) {
+            callOperator = PhysicalExprOperator.INVOKESTATIC;
+        } else if(method.getDeclaringClass().isInterface()) {
+            callOperator = PhysicalExprOperator.INVOKEINTERFACE;
+        }
+        return callOperator;
+    }
 
     @Override
     public void checkArguments(Object... args) {

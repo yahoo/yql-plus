@@ -79,7 +79,7 @@ public class StructGenerator extends UnitGenerator {
         ImmutableList.Builder<String> fieldNames = ImmutableList.builder();
         fieldNames.addAll(fields.keySet());
         BytecodeExpression expr = constant(fieldNames.build());
-        fieldNamesGenerator.setReturnType(getValueTypeAdapter().adaptInternal(new TypeLiteral<Iterable<String>>() {
+        fieldNamesGenerator.setReturnType(getValueTypeAdapter().adapt(new TypeLiteral<Iterable<String>>() {
         }));
         fieldNamesGenerator.add(expr);
         fieldNamesGenerator.add(new ReturnCode(Opcodes.ARETURN));

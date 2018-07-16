@@ -23,7 +23,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.GOTO;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_1;
+import static org.objectweb.asm.Opcodes.IFNE;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 public final class UnitCodeEmitter implements CodeEmitter {
     UnitGenerator unit;
@@ -222,12 +228,12 @@ public final class UnitCodeEmitter implements CodeEmitter {
 
     @Override
     public TypeWidget adapt(Class<?> clazz) {
-        return unit.getEnvironment().getValueTypeAdapter().adaptInternal(clazz);
+        return unit.getEnvironment().getValueTypeAdapter().adapt(clazz);
     }
 
     @Override
     public TypeWidget adapt(java.lang.reflect.Type clazz) {
-        return unit.getEnvironment().getValueTypeAdapter().adaptInternal(clazz);
+        return unit.getEnvironment().getValueTypeAdapter().adapt(clazz);
     }
 
     @Override

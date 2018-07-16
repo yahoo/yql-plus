@@ -30,7 +30,7 @@ public class DefaultTypeAdapter implements TypeAdaptingWidget {
 
             @Override
             public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
-                return typeAdapter.adaptInternal(JVMTypes.getRawType(type).getSuperclass());
+                return typeAdapter.adapt(JVMTypes.getRawType(type).getSuperclass());
             }
         });
         adapters.add(new TypeAdaptingWidget() {
@@ -52,7 +52,7 @@ public class DefaultTypeAdapter implements TypeAdaptingWidget {
 
             @Override
             public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
-                TypeWidget valueType = typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0));
+                TypeWidget valueType = typeAdapter.adapt(JVMTypes.getTypeArgument(type, 0));
                 Class<?> rawType = JVMTypes.getRawType(type);
                 if(ListenableFuture.class.isAssignableFrom(rawType)) {
                     return new ListenableFutureResultType(valueType);
@@ -71,7 +71,7 @@ public class DefaultTypeAdapter implements TypeAdaptingWidget {
 
             @Override
             public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
-                return new MapTypeWidget(getPackageSafeRawType(type, Map.class), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0)), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 1)));
+                return new MapTypeWidget(getPackageSafeRawType(type, Map.class), typeAdapter.adapt(JVMTypes.getTypeArgument(type, 0)), typeAdapter.adapt(JVMTypes.getTypeArgument(type, 1)));
             }
         });
         adapters.add(new TypeAdaptingWidget() {
@@ -82,7 +82,7 @@ public class DefaultTypeAdapter implements TypeAdaptingWidget {
 
             @Override
             public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
-                return new ListTypeWidget(getPackageSafeRawType(type, List.class), typeAdapter.adaptInternal(JVMTypes.getTypeArgument(type, 0)));
+                return new ListTypeWidget(getPackageSafeRawType(type, List.class), typeAdapter.adapt(JVMTypes.getTypeArgument(type, 0)));
             }
         });
         adapters.add(new TypeAdaptingWidget() {

@@ -259,7 +259,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
             return AnyTypeWidget.getInstance();
         }
         Class<?> clazz = value.getClass();
-        TypeWidget adapted = baseTypeAdapter.adaptInternal(clazz);
+        TypeWidget adapted = baseTypeAdapter.adapt(clazz);
         if (adapted != null) {
             if (adapted.unboxed() != adapted) {
                 return adapted.unboxed();
@@ -290,12 +290,21 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
             }
             return new MapTypeWidget(unifyTypes(keyTypes), unifyTypes(valueTypes));
         }
-        return NotNullableTypeWidget.create(adaptInternal(clazz));
+        return NotNullableTypeWidget.create(adapt(clazz));
     }
 
     @Override
-    public TypeWidget adaptInternal(TypeLiteral<?> typeLiteral) {
-        TypeWidget out = baseTypeAdapter.adaptInternal(typeLiteral);
+    public TypeWidget adapt(TypeLiteral<?> typeLiteral, boolean nullable) {
+        if(nullable) {
+            return adapt(typeLiteral);
+        } else {
+            return NotNullableTypeWidget.create(adapt(typeLiteral));
+        }
+    }
+
+    @Override
+    public TypeWidget adapt(TypeLiteral<?> typeLiteral) {
+        TypeWidget out = baseTypeAdapter.adapt(typeLiteral);
         if (out != null) {
             return out;
         }
@@ -315,18 +324,18 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
     }
 
     @Override
-    public TypeWidget adaptInternal(java.lang.reflect.Type type) {
-        return adaptInternal(type, true);
+    public TypeWidget adapt(java.lang.reflect.Type type) {
+        return adapt(type, true);
     }
 
     @Override
-    public TypeWidget adaptInternal(java.lang.reflect.Type type, boolean nullable) {
+    public TypeWidget adapt(java.lang.reflect.Type type, boolean nullable) {
         return adaptInternal(TypeLiteral.get((type instanceof WildcardType)? type.getClass():type), nullable);
     }
 
     @Override
-    public TypeWidget adaptInternal(Class<?> clazz) {
-        return adaptInternal(TypeLiteral.get(clazz));
+    public TypeWidget adapt(Class<?> clazz) {
+        return adapt(TypeLiteral.get(clazz));
     }
 
     @Override
@@ -398,13 +407,13 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     @Override
     public TypeWidget adaptInternal(TypeLiteral<?> typeLiteral, boolean nullable) {
-        TypeWidget output = adaptInternal(typeLiteral);
+        TypeWidget output = adapt(typeLiteral);
         return nullable ? NullableTypeWidget.create(output) : NotNullableTypeWidget.create(output);
     }
 
     @Override
-    public TypeWidget adaptInternal(Class<?> clazz, boolean nullable) {
-        TypeWidget output = adaptInternal(clazz);
+    public TypeWidget adapt(Class<?> clazz, boolean nullable) {
+        TypeWidget output = adapt(clazz);
         return nullable ? NullableTypeWidget.create(output) : NotNullableTypeWidget.create(output);
     }
 
@@ -464,12 +473,12 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
         @Override
         public BytecodeExpression createFailureThrowable(BytecodeExpression input) {
-            return ownerType.construct(new BytecodeCastExpression(adaptInternal(Throwable.class), input));
+            return ownerType.construct(new BytecodeCastExpression(adapt(Throwable.class), input));
         }
 
         @Override
         public BytecodeExpression createFailureYQLError(BytecodeExpression input) {
-            return ownerType.construct(new BytecodeCastExpression(adaptInternal(YQLError.class), input));
+            return ownerType.construct(new BytecodeCastExpression(adapt(YQLError.class), input));
         }
 
         @Override

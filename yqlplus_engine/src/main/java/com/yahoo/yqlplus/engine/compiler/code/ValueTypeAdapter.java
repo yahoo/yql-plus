@@ -10,15 +10,17 @@ import com.google.inject.TypeLiteral;
 
 import java.lang.reflect.Type;
 
-public interface ValueTypeAdapter {
+public interface ValueTypeAdapter{
 
-    TypeWidget adaptInternal(TypeLiteral<?> typeLiteral);
+    TypeWidget adapt(TypeLiteral<?> typeLiteral);
 
-    TypeWidget adaptInternal(Type type);
+    TypeWidget adapt(TypeLiteral<?> typeLiteral, boolean nullable);
 
-    TypeWidget adaptInternal(Type type, boolean nullable);
+    TypeWidget adapt(Type type);
 
-    TypeWidget adaptInternal(Class<?> clazz);
+    TypeWidget adapt(Type type, boolean nullable);
 
-    TypeWidget adaptInternal(Class<?> clazz, boolean nullable);
+    TypeWidget adapt(Class<?> clazz);
+
+    TypeWidget adapt(Class<?> clazz, boolean nullable);
 }

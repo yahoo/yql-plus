@@ -23,7 +23,7 @@ public class DynamicBootstrapUnit extends UnitGenerator {
     public void init() {
         EngineValueTypeAdapter types = environment.getValueTypeAdapter();
         BytecodeExpression classSource = types.constant(getEnvironment());
-        TypeWidget dynamicLinker = types.adaptInternal(DynamicLinker.class);
+        TypeWidget dynamicLinker = types.adapt(DynamicLinker.class);
         FieldDefinition field = createField(dynamicLinker, "bootstrap");
         field.addModifier(Opcodes.ACC_STATIC | Opcodes.ACC_FINAL);
         MethodGenerator sl = createMethod("<clinit>");
@@ -47,9 +47,9 @@ public class DynamicBootstrapUnit extends UnitGenerator {
         });
 
         MethodGenerator mgen = createStaticMethod(Dynamic.DYNAMIC_BOOTSTRAP_METHOD);
-        TypeWidget callSite = types.adaptInternal(CallSite.class);
-        TypeWidget lookup = types.adaptInternal(MethodHandles.Lookup.class);
-        TypeWidget methodType = types.adaptInternal(MethodType.class);
+        TypeWidget callSite = types.adapt(CallSite.class);
+        TypeWidget lookup = types.adapt(MethodHandles.Lookup.class);
+        TypeWidget methodType = types.adapt(MethodType.class);
         mgen.setReturnType(callSite);
         AssignableValue lu = mgen.addArgument("lookup", lookup);
         AssignableValue name = mgen.addArgument("name", BaseTypeAdapter.STRING);

@@ -68,9 +68,9 @@ public class BytecodeCatchBuilder implements GambitCreator.CatchBuilder {
     @Override
     public ScopedBuilder on(String varName, Class<?> exceptionType, Class<?>... moreExceptionTypes) {
         CatchClause catchClause = new CatchClause(source, parent.child());
-        TypeWidget unifiedType = source.getValueTypeAdapter().adaptInternal(exceptionType);
+        TypeWidget unifiedType = source.getValueTypeAdapter().adapt(exceptionType);
         for (Class<?> c : Lists.asList(exceptionType, moreExceptionTypes)) {
-            TypeWidget t = source.getValueTypeAdapter().adaptInternal(c);
+            TypeWidget t = source.getValueTypeAdapter().adapt(c);
             catchClause.exceptionInternalNames.add(t.getJVMType().getInternalName());
             unifiedType = source.getValueTypeAdapter().unifyTypes(unifiedType, t);
         }

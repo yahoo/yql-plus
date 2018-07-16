@@ -18,7 +18,7 @@ public class ArrayTypeAdapter implements TypeAdaptingWidget {
     public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
         Class<?> arrayType = JVMTypes.getRawType(type);
         Class<?> componentType = arrayType.getComponentType();
-        TypeWidget componentAdapted = typeAdapter.adaptInternal(componentType);
+        TypeWidget componentAdapted = typeAdapter.adapt(componentType);
         return new ArrayTypeWidget(arrayType, componentAdapted);
     }
 }

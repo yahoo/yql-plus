@@ -205,28 +205,34 @@ public class BaseTypeAdapter implements ValueTypeAdapter {
     }
 
     @Override
-    public TypeWidget adaptInternal(TypeLiteral<?> typeLiteral) {
-        return adaptInternal(typeLiteral.getRawType());
+    public TypeWidget adapt(TypeLiteral<?> typeLiteral) {
+        return adapt(typeLiteral.getRawType());
     }
 
     @Override
-    public TypeWidget adaptInternal(java.lang.reflect.Type type, boolean nullable) {
-        return adaptInternal(TypeLiteral.get(type).getRawType(), nullable);
+    public TypeWidget adapt(TypeLiteral<?> typeLiteral, boolean nullable) {
+        TypeWidget result = adapt(typeLiteral);
+        return nullable ? result : NotNullableTypeWidget.create(result);
     }
 
     @Override
-    public TypeWidget adaptInternal(java.lang.reflect.Type type) {
-        return adaptInternal(TypeLiteral.get(type).getRawType());
+    public TypeWidget adapt(java.lang.reflect.Type type, boolean nullable) {
+        return adapt(TypeLiteral.get(type).getRawType(), nullable);
     }
 
     @Override
-    public TypeWidget adaptInternal(Class<?> clazz) {
+    public TypeWidget adapt(java.lang.reflect.Type type) {
+        return adapt(TypeLiteral.get(type).getRawType());
+    }
+
+    @Override
+    public TypeWidget adapt(Class<?> clazz) {
         return STATIC_MAPPINGS.get(Type.getDescriptor(clazz));
     }
 
     @Override
-    public TypeWidget adaptInternal(Class<?> clazz, boolean nullable) {
-        TypeWidget output = adaptInternal(clazz);
+    public TypeWidget adapt(Class<?> clazz, boolean nullable) {
+        TypeWidget output = adapt(clazz);
         return nullable ? NullableTypeWidget.create(output) : NotNullableTypeWidget.create(output);
     }
 }

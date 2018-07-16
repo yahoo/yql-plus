@@ -16,6 +16,7 @@ import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.compiler.runtime.Comparisons;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import org.objectweb.asm.Type;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -95,6 +96,22 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(ImmutableMap.of("hat", 2)), "hat"));
         Callable<Object> invoker2 = compileExpression(parseExpression("1 + map.fancy.hat"));
         Assert.assertEquals(3, invoker2.call());
+    }
+
+    public static class MyRecord {
+        public int id;
+        public String name;
+    }
+
+    @Test
+    public void requireRecordAs() throws Exception {
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_AS,
+                Type.getType(MyRecord.class),
+                ImmutableList.of("id", "name"),
+                ImmutableList.of(constant(1), constant("hat"))));
+        MyRecord record = (MyRecord) invoker.call();
+        Assert.assertEquals(record.id, 1);
+        Assert.assertEquals(record.name, "hat");
     }
 
     @Test

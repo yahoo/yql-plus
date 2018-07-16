@@ -38,6 +38,8 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
 
     private static Map<String, PropertyReader> readProperties(TypeLiteral<?> typeLiteral, EngineValueTypeAdapter adapter) {
         Map<String, PropertyReader> builder = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+        Map<String, MethodPropertyReader> readers = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+        Map<String, Method> writers = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
         for (Method method : typeLiteral.getRawType().getMethods()) {
             if (Object.class.equals(method.getDeclaringClass())) {
                 continue;
@@ -51,12 +53,12 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
             if (method.getName().startsWith("get") && method.getName().length() > 3) {
                 String fieldName = method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4);
                 TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adaptInternal(returnType);
+                TypeWidget ty = adapter.adapt(returnType);
                 builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
             } else if (method.getName().startsWith("is") && method.getName().length() > 2 && (Boolean.class.isAssignableFrom(method.getReturnType()) || boolean.class.isAssignableFrom(method.getReturnType()))) {
                 String fieldName = method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3);
                 TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adaptInternal(returnType);
+                TypeWidget ty = adapter.adapt(returnType);
                 builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
             }
         }
@@ -65,7 +67,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
                 continue;
             }
             TypeLiteral<?> returnType = typeLiteral.getFieldType(field);
-            TypeWidget ty = adapter.adaptInternal(returnType);
+            TypeWidget ty = adapter.adapt(returnType);
             builder.put(field.getName(), new FieldPropertyReader(field, ty));
         }
         return builder;
@@ -105,16 +107,16 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
     }
 
     private static class MethodPropertyReader extends PropertyReader {
-        private final Method method;
+        private final Method reader;
 
         public MethodPropertyReader(String name, Method method, TypeWidget ty) {
             super(new Property(name, ty));
-            this.method = method;
+            this.reader = method;
         }
 
         @Override
         public AssignableValue read(BytecodeExpression target) {
-            return new MethodAssignableValue(method, property.type, target);
+            return new MethodAssignableValue(reader, property.type, target);
         }
     }
 }

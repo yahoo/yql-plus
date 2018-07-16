@@ -13,7 +13,35 @@ import com.google.common.collect.Maps;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.yqlplus.api.trace.Timeout;
 import com.yahoo.yqlplus.engine.TaskContext;
-import com.yahoo.yqlplus.engine.compiler.code.*;
+import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.AssignableValue;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BooleanCompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeArithmeticExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeCastExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeNegateExpression;
+import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.engine.compiler.code.CompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.EqualsExpression;
+import com.yahoo.yqlplus.engine.compiler.code.ExactInvocation;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitTypes;
+import com.yahoo.yqlplus.engine.compiler.code.InvocableBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.IterateAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.LambdaFactoryBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.LambdaInvocable;
+import com.yahoo.yqlplus.engine.compiler.code.ListTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.MulticompareExpression;
+import com.yahoo.yqlplus.engine.compiler.code.NotNullableTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.NullTestedExpression;
+import com.yahoo.yqlplus.engine.compiler.code.NullableTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.PropertyAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.compiler.runtime.KeyGenerator;
@@ -21,13 +49,25 @@ import com.yahoo.yqlplus.engine.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
-import com.yahoo.yqlplus.operator.*;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalProjectOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -44,21 +84,6 @@ public class PhysicalExprOperatorCompiler {
 
     public BytecodeExpression evaluateExpression(final BytecodeExpression program, final BytecodeExpression context, final OperatorNode<PhysicalExprOperator> expr) {
         switch (expr.getOperator()) {
-            case INVOKE: {
-                GambitCreator.Invocable invocable = expr.getArgument(0);
-                List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(1);
-                List<BytecodeExpression> arguments = evaluateExpressions(program, context, args);
-                BytecodeExpression result = invocable.invoke(expr.getLocation(), arguments);
-                return scope.resolve(expr.getLocation(), getTimeout(context, expr.getLocation()), result);
-            }
-            case CALL: {
-                TypeWidget outputType = expr.getArgument(0);
-                String name = expr.getArgument(1);
-                List<OperatorNode<PhysicalExprOperator>> arguments = expr.getArgument(2);
-                List<BytecodeExpression> argumentExprs = evaluateExpressions(program, context, arguments);
-                TypeWidget widget = argumentExprs.get(0).getType();
-                return widget.invoke(argumentExprs.get(0), outputType, name, argumentExprs.subList(1, argumentExprs.size()));
-            }
             case INVOKEVIRTUAL:
                 return handleInvoke(Opcodes.INVOKEVIRTUAL, program, context, expr);
             case INVOKESTATIC:
@@ -273,7 +298,8 @@ public class PhysicalExprOperatorCompiler {
                 return recordBuilder.build();
             }
             case RECORD_AS: {
-                TypeWidget recordType = expr.getArgument(0);
+                Type t = expr.getArgument(0);
+                TypeWidget recordType = scope.adapt(t, false);
                 List<String> names = expr.getArgument(1);
                 List<OperatorNode<PhysicalExprOperator>> exprs = expr.getArgument(2);
                 List<BytecodeExpression> evaluated = evaluateExpressions(program, context, exprs);

@@ -70,7 +70,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
 
     @Override
     public TypeWidget adapt(Type type, boolean nullable) {
-        return program.getValueTypeAdapter().adaptInternal(type, nullable);
+        return program.getValueTypeAdapter().adapt(type, nullable);
     }
 
     @Override

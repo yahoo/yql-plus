@@ -10,7 +10,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yahoo.cloud.metrics.api.MetricEmitter;
 import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
-import com.yahoo.yqlplus.api.annotations.*;
+import com.yahoo.yqlplus.api.annotations.DefaultValue;
+import com.yahoo.yqlplus.api.annotations.Emitter;
+import com.yahoo.yqlplus.api.annotations.Export;
+import com.yahoo.yqlplus.api.annotations.Key;
+import com.yahoo.yqlplus.api.annotations.Set;
+import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.CompileContext;
@@ -20,6 +25,7 @@ import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import com.yahoo.yqlplus.operator.MethodInvoker;
 import com.yahoo.yqlplus.operator.OperatorStep;
 import com.yahoo.yqlplus.operator.OperatorValue;
 import com.yahoo.yqlplus.operator.PhysicalExprOperator;
@@ -95,13 +101,8 @@ public class ExportModuleAdapter implements ModuleType {
                 }
             }
             List<OperatorNode<PhysicalExprOperator>> invokeArguments = Lists.newArrayList();
-            PhysicalExprOperator callOperator = PhysicalExprOperator.INVOKEVIRTUAL;
-            if (Modifier.isStatic(method.getModifiers())) {
-                callOperator = PhysicalExprOperator.INVOKESTATIC;
-            } else if(clazz.isInterface()) {
-                callOperator = PhysicalExprOperator.INVOKEINTERFACE;
-                invokeArguments.add(getModule(location, context));
-            } else {
+            MethodInvoker invoker = PhysicalExprOperator.createInvoker(method);
+            if (!invoker.isStatic()) {
                 invokeArguments.add(getModule(location, context));
             }
             Class<?>[] argumentTypes = method.getParameterTypes();
@@ -137,7 +138,7 @@ public class ExportModuleAdapter implements ModuleType {
                     }
                 }
             }
-            return OperatorNode.create(callOperator, method.getGenericReturnType(), Type.getType(method.getDeclaringClass()), method.getName(), Type.getMethodDescriptor(method), invokeArguments);
+            return invoker.invoke(invokeArguments);
         }
         for (Field field : clazz.getFields()) {
             if (!field.isAnnotationPresent(Export.class) || !Modifier.isPublic(field.getModifiers()) || !name.equalsIgnoreCase(field.getName())) {

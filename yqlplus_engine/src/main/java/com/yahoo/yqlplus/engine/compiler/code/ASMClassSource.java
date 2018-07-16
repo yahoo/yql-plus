@@ -356,7 +356,7 @@ public class ASMClassSource {
 
     public TypeWidget adaptInternal(Class<?> clazz) {
         addClass(clazz);
-        return types.adaptInternal(clazz);
+        return types.adapt(clazz);
     }
 
     public TypeWidget resolveStruct(YQLStructType valueType) {
@@ -364,7 +364,7 @@ public class ASMClassSource {
     }
 
     public TypeWidget adaptInternal(java.lang.reflect.Type type) {
-        return types.adaptInternal(type);
+        return types.adapt(type);
     }
 
     private class CompoundClassLoader extends ClassLoader {

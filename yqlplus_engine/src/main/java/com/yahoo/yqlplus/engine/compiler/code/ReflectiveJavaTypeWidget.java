@@ -74,7 +74,7 @@ public class ReflectiveJavaTypeWidget extends BaseTypeWidget {
         if (isIterable()) {
             try {
                 TypeLiteral<?> iteratorType = typeLiteral.getReturnType(clazz.getMethod("iterator"));
-                return new JavaIterableAdapter(adapter.adaptInternal(JVMTypes.getTypeArgument(iteratorType.getType(), 0)));
+                return new JavaIterableAdapter(adapter.adapt(JVMTypes.getTypeArgument(iteratorType.getType(), 0)));
             } catch (NoSuchMethodException e) {
                 throw new UnsupportedOperationException();
             }
