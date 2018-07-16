@@ -12,7 +12,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.inject.Module;
 import com.yahoo.sample.EngineContainerInterface;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -48,11 +47,6 @@ public class JavaEngineClassloaderIntegrationTest {
                 return Pattern.quote(input);
             }
         })) + ").*");
-    }
-
-    // whitelist patterns for this classloader
-    public static class GuardLoader extends ClassLoader {
-
     }
 
     public static class MyLoader extends ClassLoader {
@@ -152,8 +146,8 @@ public class JavaEngineClassloaderIntegrationTest {
 
         Class<?> containerClass = containerLoader.loadClass("com.yahoo.sample.Container");
         EngineContainerInterface container = (EngineContainerInterface) containerClass.newInstance();
-        Class<?> moduleClass = sourceLoader.loadClass("com.yahoo.sample.integration.SourceModule1");
-        Map<String, JsonNode> result = container.run("SELECT * FROM simple OUTPUT as f1;", (Module) moduleClass.newInstance());
+        Class<?> sourceClass = sourceLoader.loadClass("com.yahoo.sample.integration.SimpleSource");
+        Map<String, JsonNode> result = container.run("SELECT * FROM simple OUTPUT as f1;", "simple", sourceClass);
         JsonNode node = result.get("f1");
         JsonNode tree = JSON_FACTORY.createParser("[{\"id\":\"1\",\"value\":\"joe\",\"score\":0}]").readValueAsTree();
         Assert.assertEquals(node, tree);

@@ -16,7 +16,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>yqlplus_engine</artifactId>
+    <artifactId>yqlplus_guice</artifactId>
 
     <dependencies>
         <dependency>
@@ -30,14 +30,14 @@
             <version>${yqlplus.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.yahoo.monitor</groupId>
-            <artifactId>metrics_api</artifactId>
-            <version>1.0.1</version>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_engine</artifactId>
+            <version>${yqlplus.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dynalang</groupId>
-            <artifactId>dynalink</artifactId>
-            <version>0.7</version>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_stdlib</artifactId>
+            <version>${yqlplus.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -60,27 +60,8 @@
             <artifactId>jsr305</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-util</artifactId>
-            <version>6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-analysis</artifactId>
-            <version>6.2</version>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
     </dependencies>
 
@@ -96,7 +77,7 @@
     </repositories>
 
     <build>
-        <finalName>yqlplus_engine</finalName>
+        <finalName>yqlplus_guice</finalName>
         <plugins>
             <plugin>
                 <groupId>org.antlr</groupId>
@@ -142,7 +123,7 @@
         <repository>
             <id>bintray-yahoo-maven</id>
             <name>yahoo-maven</name>
-            <url>https://api.bintray.com/maven/yahoo/maven/yqlplus_engine/;publish=1</url>
+            <url>https://api.bintray.com/maven/yahoo/maven/yqlplus_guice/;publish=1</url>
         </repository>
     </distributionManagement>
 </project>

@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.guice;
+package com.yahoo.yqlplus.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;

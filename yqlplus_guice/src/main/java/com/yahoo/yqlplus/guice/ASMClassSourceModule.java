@@ -4,10 +4,11 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.compiler.code;
+package com.yahoo.yqlplus.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
 
 public class ASMClassSourceModule extends AbstractModule {
     @Override

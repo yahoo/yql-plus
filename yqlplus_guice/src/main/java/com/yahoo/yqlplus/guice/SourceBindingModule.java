@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.java;
+package com.yahoo.yqlplus.guice;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;

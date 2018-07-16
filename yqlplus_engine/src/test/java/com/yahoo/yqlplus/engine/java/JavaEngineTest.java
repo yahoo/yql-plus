@@ -14,20 +14,15 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.sources.NullIterableSource;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -219,30 +214,7 @@ public class JavaEngineTest extends ProgramTestBase {
         }
         return result;
     }
-
-    protected com.google.inject.Module[] createModules() {
-        return new com.google.inject.Module[]{
-                new SourceBindingModule(
-                        "person", ToyPersonSource.class,
-                        "failuresource", FailureSource.class
-                ),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ScheduledExecutorService.class).annotatedWith(Names.named("toy")).toInstance(
-                                Executors.newSingleThreadScheduledExecutor()
-                        );
-                        bind(ViewRegistry.class).toInstance(new ViewRegistry() {
-                            @Override
-                            public OperatorNode<SequenceOperator> getView(List<String> name) {
-                                return null;
-                            }
-                        });
-                    }
-                }
-        };
-    }
-
+    
     @DataProvider(name = "queries", parallel = true)
     public Object[][] loadParseTrees() throws IOException {
         return loadParseTrees("javaqueries.json");

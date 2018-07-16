@@ -4,34 +4,21 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.util;
+package com.yahoo.yqlplus.stdlib;
 
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.multibindings.MapBinder;
-import com.yahoo.cloud.metrics.api.MetricDimension;
-import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
-import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
+import com.yahoo.yqlplus.engine.YQLPlusEngine;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.JavaEngineModule;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalQuery;
@@ -40,9 +27,11 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class DateTimeTest {
-    
-    private Injector injector = Guice.createInjector(new JavaEngineModule(), new MetricModule(),
-            new StandardLibraryModule(), new MyDummyModule(), new ViewRegistryModule());
+    public YQLPlusCompiler createCompiler(Object... bindings) {
+        YQLPlusEngine.Builder builder = YQLPlusEngine.builder();
+        builder.bind("datetime", DateTime.class, "mydummymodule", MyDummyExport.class);
+        return builder.bind(bindings).build();
+    }
 
     @Test
     public void requireThatCurDateWorks() throws Exception {
@@ -283,10 +272,10 @@ public class DateTimeTest {
     }
 
     @Test(expectedExceptions= ExecutionException.class, expectedExceptionsMessageRegExp= "java\\.lang\\.IllegalArgumentException: " +
-            "com\\.yahoo\\.yqlplus\\.util\\.DateTimeTest\\$MyDummyExport\\$MyTemporalAccessor.*is not supported\\.")
+            "com\\.yahoo\\.yqlplus\\.stdlib\\.DateTimeTest\\$MyDummyExport\\$MyTemporalAccessor.*is not supported\\.")
     public void requireThatAddThrowsIllegalArgumentException() throws Exception {
         String query = "SELECT datetime.add(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler();
         CompiledProgram program = compiler.compile(query);
         ProgramResult result = program.run(ImmutableMap.of());
         result.getResult("d1").get().getResult();
@@ -318,10 +307,10 @@ public class DateTimeTest {
     }
 
     @Test(expectedExceptions= ExecutionException.class, expectedExceptionsMessageRegExp= "java\\.lang\\.IllegalArgumentException: " +
-            "com\\.yahoo\\.yqlplus\\.util\\.DateTimeTest\\$MyDummyExport\\$MyTemporalAccessor.*is not supported\\.")
+            "com\\.yahoo\\.yqlplus\\.stdlib\\.DateTimeTest\\$MyDummyExport\\$MyTemporalAccessor.*is not supported\\.")
     public void requireThatSubThrowsIllegalArgumentException() throws Exception {
         String query = "SELECT datetime.sub(mydummymodule.get_mytemporal_accessor(), \"PT1H1M1S\" ) sub_date OUTPUT AS d1;";
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler();
         CompiledProgram program = compiler.compile(query);
         ProgramResult result = program.run(ImmutableMap.of());
         result.getResult("d1").get().getResult();
@@ -401,35 +390,9 @@ public class DateTimeTest {
     }
 
     private ProgramResult getProgramResult(String query) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler();
         CompiledProgram program = compiler.compile(query);
         return program.run(ImmutableMap.of());
-    }
-    
-    public static class MetricModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(TaskMetricEmitter.class).toInstance(
-                    new StandardRequestEmitter(new MetricDimension(),
-                            arg0 -> {
-                            }).start(new MetricDimension()));
-        }
-    }
-    
-    private static class ViewRegistryModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(ViewRegistry.class).toInstance(name -> null);
-        }
-    }
-
-    public static class MyDummyModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            MapBinder<String, Exports> exportsBindings = MapBinder.newMapBinder(binder(), String.class, Exports.class);
-            exportsBindings.addBinding("mydummymodule").to(MyDummyExport.class);
-        }
     }
 
     public static class MyDummyExport implements Exports {

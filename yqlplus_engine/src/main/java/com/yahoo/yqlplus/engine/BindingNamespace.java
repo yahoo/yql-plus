@@ -5,9 +5,9 @@ import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.ast.RecordsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.ConditionalsBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.RecordsBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.SequenceBuiltinsModule;
 import com.yahoo.yqlplus.engine.source.ExportModuleAdapter;
 import com.yahoo.yqlplus.engine.source.SourceAdapter;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
@@ -40,6 +40,9 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
 
     @SuppressWarnings("unchecked")
     public BindingNamespace bind(Object... kvPairs) {
+        if(kvPairs == null) {
+            return this;
+        }
         for (int i = 0; i < kvPairs.length; i += 2) {
             String key = (String) kvPairs[i];
             Object value = kvPairs[i + 1];

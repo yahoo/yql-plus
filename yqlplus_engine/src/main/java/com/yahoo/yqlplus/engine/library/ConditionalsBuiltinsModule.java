@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.plan.ast;
+package com.yahoo.yqlplus.engine.library;
 
 import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.ModuleType;

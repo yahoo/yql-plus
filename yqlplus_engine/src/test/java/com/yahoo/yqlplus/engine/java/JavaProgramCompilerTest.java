@@ -2596,7 +2596,6 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
         movieSource.insertMovie("1234", "Vertigo", "Mystery", "1950", 120, ImmutableList.of("Great!", "Awesome!"), true, (byte) 0x12, null);
         MetricTestSink metricSink = new MetricTestSink();
         StandardRequestEmitter requestEmitter  = new StandardRequestEmitter(new MetricDimension().with("key1", "value1").with("key2", "value2"), metricSink);
-        JavaTestModule javaTestModule = new JavaTestModule();
         YQLPlusCompiler compiler = createCompiler("movieSourceWithEmitter", movieSource);
         CompiledProgram program = compiler.compile("PROGRAM ();\n" +
                 "DELETE FROM movieSourceWithEmitter WHERE uuid = '1234' RETURNING category, duration OUTPUT AS out;");

@@ -24,6 +24,7 @@
     <modules>
         <module>yqlplus_language</module>
         <module>yqlplus_engine</module>
+        <module>yqlplus_guice</module>
         <module>yqlplus_source_api</module>
         <module>yqlplus_stdlib</module>
         <module>yqlplus_javadocs</module>

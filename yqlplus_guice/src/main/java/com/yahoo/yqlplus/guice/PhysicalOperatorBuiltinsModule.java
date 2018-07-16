@@ -4,14 +4,14 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.guice;
+package com.yahoo.yqlplus.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.yahoo.yqlplus.engine.ModuleType;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ConditionalsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.ast.RecordsBuiltinsModule;
-import com.yahoo.yqlplus.engine.internal.plan.ast.SequenceBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.ConditionalsBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.RecordsBuiltinsModule;
+import com.yahoo.yqlplus.engine.library.SequenceBuiltinsModule;
 
 public class PhysicalOperatorBuiltinsModule extends AbstractModule {
     @Override

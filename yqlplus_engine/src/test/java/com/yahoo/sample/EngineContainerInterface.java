@@ -7,10 +7,9 @@
 package com.yahoo.sample;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Module;
 
 import java.util.Map;
 
 public interface EngineContainerInterface {
-    Map<String, JsonNode> run(String script, final Module... modules) throws Exception;
+    Map<String, JsonNode> run(String script, Object... bindings) throws Exception;
 }

@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.guice;
+package com.yahoo.yqlplus.guice;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
