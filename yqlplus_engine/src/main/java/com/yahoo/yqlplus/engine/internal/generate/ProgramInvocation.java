@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.engine.internal.generate;
 import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.compiler.runtime.YQLRuntimeException;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -62,7 +61,7 @@ public abstract class ProgramInvocation {
     }
 
     private Throwable extractCause(Throwable failure) {
-        while ((failure instanceof YQLRuntimeException || failure instanceof ExecutionException) && failure.getCause() != null) {
+        while (failure instanceof ExecutionException && failure.getCause() != null) {
             failure = failure.getCause();
         }
         return failure;

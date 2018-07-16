@@ -12,7 +12,6 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.compiler.runtime.YQLRuntimeException;
 import com.yahoo.yqlplus.engine.sources.TimeoutSource;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
@@ -40,7 +39,7 @@ public class TimeoutTest extends ProgramTestBase  {
         try {
             List<Person> rez = program.run(ImmutableMap.of()).getResult("f1").get().getResult();
             Assert.fail("should fail with a timeout");
-        } catch (YQLRuntimeException | ExecutionException e) {
+        } catch (ExecutionException e) {
             Assert.assertTrue(e.getMessage().contains("Timeout"));
         }
     }
