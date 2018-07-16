@@ -12,7 +12,6 @@ import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
-import com.yahoo.yqlplus.language.parser.Location;
 
 public enum PhysicalOperator implements Operator {
     REQUIRED_ARGUMENT(String.class, YQLType.class),
@@ -30,10 +29,6 @@ public enum PhysicalOperator implements Operator {
 
     public static OperatorNode<PhysicalOperator> create(PhysicalOperator operator, Object... arguments) {
         return OperatorNode.create(operator, arguments);
-    }
-
-    public static OperatorNode<PhysicalOperator> createLocated(Location loc, PhysicalOperator operator, Object... arguments) {
-        return OperatorNode.create(loc, operator, arguments);
     }
 
     private final ArgumentsTypeChecker checker;

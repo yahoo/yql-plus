@@ -7,6 +7,7 @@ module com.yahoo.yqlplus.engine {
     requires org.objectweb.asm;
     requires org.objectweb.asm.util;
     requires com.google.common;
+    requires com.google.guice;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.core;
 
