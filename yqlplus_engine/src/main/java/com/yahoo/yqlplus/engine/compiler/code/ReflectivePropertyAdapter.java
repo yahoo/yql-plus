@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
+import com.yahoo.yqlplus.language.parser.Location;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -35,11 +36,18 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
         return new ReflectivePropertyAdapter(typeWidget, properties, propertyList);
     }
 
+    private static GambitCreator.Invocable findWriter(EngineValueTypeAdapter adapter, String name, TypeLiteral<?> owner, Method method) {
+        try {
+            Method writeMethod = method.getDeclaringClass().getMethod("set" + name, method.getReturnType());
+            return ExactInvocation.reflectInvoke(adapter, owner, writeMethod);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
 
     private static Map<String, PropertyReader> readProperties(TypeLiteral<?> typeLiteral, EngineValueTypeAdapter adapter) {
         Map<String, PropertyReader> builder = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
-        Map<String, MethodPropertyReader> readers = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
-        Map<String, Method> writers = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
         for (Method method : typeLiteral.getRawType().getMethods()) {
             if (Object.class.equals(method.getDeclaringClass())) {
                 continue;
@@ -52,14 +60,14 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
             }
             if (method.getName().startsWith("get") && method.getName().length() > 3) {
                 String fieldName = method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4);
-                TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adapt(returnType);
-                builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
+                String methodSuffix = method.getName().substring(3);
+                GambitCreator.Invocable invoker = ExactInvocation.reflectInvoke(adapter, typeLiteral, method);
+                builder.put(fieldName, new MethodPropertyReader(fieldName, invoker, findWriter(adapter, methodSuffix, typeLiteral, method), invoker.getReturnType()));
             } else if (method.getName().startsWith("is") && method.getName().length() > 2 && (Boolean.class.isAssignableFrom(method.getReturnType()) || boolean.class.isAssignableFrom(method.getReturnType()))) {
                 String fieldName = method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3);
-                TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adapt(returnType);
-                builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
+                String methodSuffix = method.getName().substring(2);
+                GambitCreator.Invocable invoker = ExactInvocation.reflectInvoke(adapter, typeLiteral, method);
+                builder.put(fieldName, new MethodPropertyReader(fieldName, invoker, findWriter(adapter, methodSuffix, typeLiteral, method), invoker.getReturnType()));
             }
         }
         for (Field field : typeLiteral.getRawType().getFields()) {
@@ -107,16 +115,61 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
     }
 
     private static class MethodPropertyReader extends PropertyReader {
-        private final Method reader;
+        private final GambitCreator.Invocable reader;
+        private final GambitCreator.Invocable writer;
 
-        public MethodPropertyReader(String name, Method method, TypeWidget ty) {
+        public MethodPropertyReader(String name, GambitCreator.Invocable method, GambitCreator.Invocable writer, TypeWidget ty) {
             super(new Property(name, ty));
             this.reader = method;
+            this.writer = writer;
         }
 
         @Override
-        public AssignableValue read(BytecodeExpression target) {
-            return new MethodAssignableValue(reader, property.type, target);
+        public AssignableValue read(final BytecodeExpression target) {
+            return new AssignableValue() {
+                @Override
+                public TypeWidget getType() {
+                    return reader.getReturnType();
+                }
+
+                @Override
+                public BytecodeExpression read() {
+                    return reader.invoke(Location.NONE, target);
+                }
+
+                @Override
+                public BytecodeSequence write(BytecodeExpression value) {
+                    if(writer == null) {
+                        throw new UnsupportedOperationException();
+                    }
+                    return new BytecodeSequence() {
+                        @Override
+                        public void generate(CodeEmitter code) {
+                            code.exec(writer.invoke(Location.NONE, target, value));
+                        }
+                    };
+                }
+
+                @Override
+                public BytecodeSequence write(TypeWidget top) {
+                    if(writer == null) {
+                        throw new UnsupportedOperationException();
+                    }
+                    return new BytecodeSequence() {
+                        @Override
+                        public void generate(CodeEmitter code) {
+                            AssignableValue stored = code.allocate(top);
+                            code.exec(stored.write(top));
+                            code.exec(writer.invoke(Location.NONE, target, stored));
+                        }
+                    };
+                }
+
+                @Override
+                public void generate(CodeEmitter code) {
+                    code.exec(read());
+                }
+            };
         }
     }
 }

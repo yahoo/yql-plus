@@ -114,6 +114,38 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         Assert.assertEquals(record.name, "hat");
     }
 
+    public static class MyBean {
+        private int id;
+        private String name;
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    @Test
+    public void requireRecordAsBean() throws Exception {
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_AS,
+                Type.getType(MyBean.class),
+                ImmutableList.of("id", "name"),
+                ImmutableList.of(constant(1), constant("hat"))));
+        MyBean record = (MyBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+        Assert.assertEquals(record.getName(), "hat");
+    }
+
     @Test
     public void requireMapPropefDynamic() throws Exception {
         putExpr("map.fancy.hat", OperatorNode.create(PhysicalExprOperator.PROPREF, constant(AnyTypeWidget.getInstance(), ImmutableMap.of("hat", 2)), "hat"));

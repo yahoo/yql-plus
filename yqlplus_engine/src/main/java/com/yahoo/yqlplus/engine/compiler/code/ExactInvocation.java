@@ -9,17 +9,37 @@ package com.yahoo.yqlplus.engine.compiler.code;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 
 public class ExactInvocation extends BytecodeInvocable {
+    public static GambitCreator.Invocable reflectInvoke(EngineValueTypeAdapter adapter, TypeLiteral<?> owner, Method method) {
+        TypeWidget ownerType = adapter.adapt(owner);
+        TypeWidget returnType = adapter.adapt(owner.getReturnType(method));
+        String methodName = method.getName();
+        List<TypeWidget> argTypes = Lists.newArrayListWithExpectedSize(method.getParameterCount());
+        for(TypeLiteral<?> argType : owner.getParameterTypes(method)) {
+            argTypes.add(adapter.adapt(argType));
+        }
+        int op = Opcodes.INVOKEVIRTUAL;
+        if(owner.getRawType().isInterface()) {
+            op = Opcodes.INVOKEINTERFACE;
+        }
+        if(Modifier.isStatic(method.getModifiers())) {
+            op = Opcodes.INVOKESTATIC;
+        }
+        return exactInvoke(op, methodName, ownerType, returnType, argTypes);
+    }
 
-    public static GambitCreator.Invocable exactInvoke(int op, final String methodName, final TypeWidget owner, TypeWidget returnType, TypeWidget... argsWidgets) {
-        return exactInvoke(op, methodName, owner, returnType, argsWidgets == null ? ImmutableList.of() : Arrays.asList(argsWidgets));
+    public static GambitCreator.Invocable reflectInvoke(EngineValueTypeAdapter adapter, Method method) {
+        return reflectInvoke(adapter, TypeLiteral.get(method.getDeclaringClass()), method);
     }
 
     private static boolean hasReceiver(int op) {
@@ -86,4 +106,5 @@ public class ExactInvocation extends BytecodeInvocable {
         }
         code.getMethodVisitor().visitMethodInsn(op, ownerInternalName, methodName, desc, op == Opcodes.INVOKEINTERFACE);
     }
+
 }
