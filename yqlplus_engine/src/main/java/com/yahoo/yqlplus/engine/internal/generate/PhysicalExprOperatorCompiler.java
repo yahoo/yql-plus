@@ -45,6 +45,7 @@ import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
 import com.yahoo.yqlplus.engine.compiler.runtime.BinaryComparison;
 import com.yahoo.yqlplus.engine.compiler.runtime.KeyGenerator;
+import com.yahoo.yqlplus.engine.compiler.runtime.ProgramInvocation;
 import com.yahoo.yqlplus.engine.compiler.runtime.RecordAccumulator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;

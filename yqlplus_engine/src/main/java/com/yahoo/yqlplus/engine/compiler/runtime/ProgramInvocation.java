@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.engine.internal.generate;
+package com.yahoo.yqlplus.engine.compiler.runtime;
 
 import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.types.YQLType;
