@@ -164,6 +164,11 @@ public class ASMClassSource {
         InvocableUnit(String name, ASMClassSource environment) {
             super(name, environment);
         }
+
+        @Override
+        public boolean shouldGenerate() {
+            return methods.size() > 0;
+        }
     }
 
 
@@ -273,6 +278,8 @@ public class ASMClassSource {
         DynamicBootstrapUnit bootstrapper = new DynamicBootstrapUnit(this);
         bootstrapper.init();
         built = true;
+
+        units.removeIf(next -> !next.shouldGenerate());
 
         List<UnitPrep> unitPreps = Lists.newArrayList();
         List<UnitGenerator> reversed = Lists.newArrayList(units);

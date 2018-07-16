@@ -15,7 +15,11 @@ import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLCoreType;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
 import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -25,7 +29,11 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.V1_7;
 
 public class UnitGenerator {
 
@@ -343,4 +351,7 @@ public class UnitGenerator {
         return typeWidget;
     }
 
+    public boolean shouldGenerate() {
+        return true;
+    }
 }

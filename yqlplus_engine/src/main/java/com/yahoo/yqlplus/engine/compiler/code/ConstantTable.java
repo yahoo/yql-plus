@@ -15,7 +15,9 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_1;
 
 public class ConstantTable {
     private static final Set<String> CONSTANT_TYPES = ImmutableSet.of(Type.getDescriptor(String.class),
@@ -52,6 +54,11 @@ public class ConstantTable {
                     throw new ProgramCompileException(e1);
                 }
             }
+        }
+
+        @Override
+        public boolean shouldGenerate() {
+            return constantTable.size() > 0;
         }
 
         @Override
