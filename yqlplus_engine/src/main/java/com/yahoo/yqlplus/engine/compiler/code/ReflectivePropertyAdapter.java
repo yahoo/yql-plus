@@ -140,7 +140,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
                 @Override
                 public BytecodeSequence write(BytecodeExpression value) {
                     if(writer == null) {
-                        throw new UnsupportedOperationException();
+                        throw new UnsupportedOperationException(String.format("Unable to write property '%s'", property.name));
                     }
                     return new BytecodeSequence() {
                         @Override

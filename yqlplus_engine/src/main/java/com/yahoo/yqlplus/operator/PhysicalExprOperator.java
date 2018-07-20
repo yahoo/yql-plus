@@ -78,6 +78,7 @@ public enum PhysicalExprOperator implements Operator {
     PROPREF_DEFAULT(PhysicalExprOperator.class, String.class, PhysicalExprOperator.class),
 
     RECORD_AS(Type.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
+    COPY_AS(Type.class, PhysicalExprOperator.class),
     // (returnType, owner, methodName, methodDescriptor)
     INVOKEVIRTUAL(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKESTATIC(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),

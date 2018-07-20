@@ -269,6 +269,12 @@ public class SourceAdapter implements SourceType {
                 }
                 return true;
             }
+
+            @Override
+            public boolean visitRecordSet(QM qm, Class<?> parameterClazz, TypeWidget recordType) {
+                qm.addSetRecordParameter(parameterClazz, recordType, row);
+                return true;
+            }
         });
         if(candidates.isEmpty()) {
             throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
@@ -563,6 +569,11 @@ public class SourceAdapter implements SourceType {
             return false;
         }
 
+        default boolean visitRecordSet(QM qm, Class<?> parameterClazz, TypeWidget recordType) {
+            reportMethodException(qm.method, "@%s methods may not have @Set('$') parameters", qm.methodType);
+            return false;
+        }
+
         default boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget setType) {
             reportMethodException(qm.method, "@%s methods may not have @Key parameters", qm.methodType);
             return false;
@@ -631,7 +642,14 @@ public class SourceAdapter implements SourceType {
                                 reportMethodParameterException(annotationClass.getSimpleName(), method, "@Set parameters are only permitted on @Insert and @Update methods");
                                 throw new IllegalArgumentException();
                             }
-                            if(!visitor.visitSet(m, set.value(), defaultValue, parameterType, setType)) {
+                            if("$".equals(set.value())) {
+                                if (defaultValue != null) {
+                                    reportMethodParameterException(annotationClass.getSimpleName(), method, "@DefaultValue is not permitted on @Set('$') parameters");
+                                }
+                                if(!visitor.visitRecordSet(m, parameterType, setType)) {
+                                    continue methods;
+                                }
+                            } else if(!visitor.visitSet(m, set.value(), defaultValue, parameterType, setType)) {
                                 continue methods;
                             }
                         } else if (annotate instanceof TimeoutMilliseconds) {
@@ -667,6 +685,8 @@ public class SourceAdapter implements SourceType {
         final IndexDescriptor.Builder indexBuilder;
         final java.util.Set<String> keyArguments;
         final java.util.Set<String> setArguments;
+        boolean recordSet;
+        boolean wildcardSet;
         boolean singleton;
         boolean batch;
         TypeWidget rowType;
@@ -810,12 +830,63 @@ public class SourceAdapter implements SourceType {
         public void addSetParameter(String keyName, OperatorNode<PhysicalExprOperator> exprOperatorOperatorNode) {
             if (setArguments.contains(keyName)) {
                 reportMethodParameterException(methodType, method, "@Set('%s') used multiple times", keyName);
+            } else if (recordSet) {
+                reportMethodParameterException(methodType, method, "@Set('$') cannot be used with @Set('%s')", keyName);
             }
+
             setArguments.add(keyName);
             invokeArguments.add(exprOperatorOperatorNode);
         }
 
+        public void addSetRecordParameter(Class<?> recordTypeClazz, TypeWidget recordType, Map<String, OperatorNode<PhysicalExprOperator>> record) {
+            if(!setArguments.isEmpty()) {
+                reportMethodParameterException(methodType, method, "@Set('$') cannot be used with @Set('%s')", setArguments.iterator().next());
+            }
+            if(!recordType.hasProperties()) {
+                reportMethodParameterException(methodType, method, "@Set('$') parameter type %s has no properties", recordType.getTypeName());
+            }
+            PropertyAdapter adapter = recordType.getPropertyAdapter();
+            if(adapter.isClosed()) {
+                for(PropertyAdapter.Property property : adapter.getProperties()) {
+                    setArguments.add(property.name);
+                    if(!property.type.isNullable() && !record.containsKey(property.name)) {
+                        reportMethodParameterException(methodType, method, "@Set('$') parameter has required field '%s' which is not available", property.name);
+                    }
+                }
+            } else {
+                wildcardSet = true;
+            }
+            List<String> properties = Lists.newArrayList();
+            List<OperatorNode<PhysicalExprOperator>> values = Lists.newArrayList();
+            for(Map.Entry<String,OperatorNode<PhysicalExprOperator>> e : record.entrySet()) {
+                properties.add(e.getKey());
+                values.add(e.getValue());
+            }
+            invokeArguments.add(OperatorNode.create(PhysicalExprOperator.RECORD_AS, Type.getType(recordTypeClazz), properties, values));
+        }
+
+        public void addSetRecordParameter(Class<?> recordTypeClazz, TypeWidget recordType, OperatorNode<PhysicalExprOperator> record) {
+            if(!setArguments.isEmpty()) {
+                reportMethodParameterException(methodType, method, "@Set('$') cannot be used with @Set('%s')", setArguments.iterator().next());
+            }
+            if(!recordType.hasProperties()) {
+                reportMethodParameterException(methodType, method, "@Set('$') parameter type %s has no properties", recordType.getTypeName());
+            }
+            PropertyAdapter adapter = recordType.getPropertyAdapter();
+            if(adapter.isClosed()) {
+                for(PropertyAdapter.Property property : adapter.getProperties()) {
+                    setArguments.add(property.name);
+                }
+            } else {
+                wildcardSet = true;
+            }
+            invokeArguments.add(OperatorNode.create(PhysicalExprOperator.COPY_AS, Type.getType(recordTypeClazz), record));
+        }
+
         public void verifySetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
+            if(wildcardSet) {
+                return;
+            }
             // verify no unknown fields are present in the input
             for(String key : record.keySet()) {
                 if(!setArguments.contains(key)) {
@@ -825,6 +896,9 @@ public class SourceAdapter implements SourceType {
         }
 
         public int checkSetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
+            if (wildcardSet) {
+                return 1000;
+            }
             int out = 0;
             for(String key : record.keySet()) {
                 if(setArguments.contains(key)) {
@@ -967,6 +1041,12 @@ public class SourceAdapter implements SourceType {
                             OperatorNode.create(PhysicalExprOperator.INVOKENEW, PropertyNotFoundException.class, ImmutableList.of(context.constant(String.format("Required property '%s' not found on INSERT", keyName))))))));
                 }
             }
+            return true;
+        }
+
+        @Override
+        public boolean visitRecordSet(QM qm, Class<?> parameterClazz, TypeWidget recordType) {
+            qm.addSetRecordParameter(parameterClazz, recordType, record);
             return true;
         }
     }

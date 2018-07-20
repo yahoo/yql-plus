@@ -6,7 +6,11 @@
 
 package com.yahoo.yqlplus.engine.compiler.code;
 
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.lang.reflect.Modifier;
 
@@ -34,7 +38,7 @@ public class MethodGenerator extends FunctionGenerator {
         try {
             out.getMethodVisitor().visitMaxs(0, 0);
         } catch (ArrayIndexOutOfBoundsException | NegativeArraySizeException e) {
-            System.err.println("Frame mismatch generating " + unit.getType().getJVMType().getInternalName() + ":" + name);
+            System.err.println("Frame mismatch generating " + unit.getType().getJVMType().getInternalName() + ":" + name + ": " + e.getMessage());
             throw e;
         } catch (NullPointerException e) {
             System.err.println("NPE generating " + unit.getType().getJVMType().getInternalName() + ":" + name);

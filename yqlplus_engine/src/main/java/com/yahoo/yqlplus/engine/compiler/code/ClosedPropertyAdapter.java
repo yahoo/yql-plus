@@ -146,6 +146,9 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
 
     @Override
     public final AssignableValue index(final BytecodeExpression target, final BytecodeExpression propertyName) {
+        if(propertyName instanceof StringConstantExpression) {
+            return property(target, ((StringConstantExpression) propertyName).getValue());
+        }
         return new AssignableValue() {
             @Override
             public TypeWidget getType() {
@@ -177,12 +180,20 @@ public abstract class ClosedPropertyAdapter extends BasePropertyAdapter {
 
             @Override
             public BytecodeSequence write(final BytecodeExpression value) {
-                return dispatchProperty(target, propertyName, new DispatchProperty() {
+                return new BytecodeSequence() {
                     @Override
-                    public BytecodeSequence visit(BytecodeExpression target, String propertyName) {
-                        return property(target, propertyName).write(value);
+                    public void generate(CodeEmitter parent) {
+                        CodeEmitter code = parent.createScope();
+                        code.exec(dispatchProperty(target, propertyName, new DispatchProperty() {
+                            @Override
+                            public BytecodeSequence visit(BytecodeExpression target, String propertyName) {
+                                return property(target, propertyName).write(value);
+                            }
+                        }, new NotFoundSequence(propertyName)));
+                        code.endScope();
+
                     }
-                }, new NotFoundSequence(propertyName));
+                };
             }
 
             @Override

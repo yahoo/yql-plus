@@ -65,7 +65,7 @@ public class TaskGenerator {
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(runBody);
         OperatorNode<PhysicalOperator> op = step.getCompute();
         OperatorValue output = step.getOutput();
-        BytecodeExpression rootContext = runBody.propertyValue(op.getLocation(), runBody.local("$context"), "rootContext");
+        BytecodeExpression rootContext =  runBody.local("$context"); //   runBody.propertyValue(op.getLocation(), runBody.local("$context"), "rootContext");
         switch (op.getOperator()) {
             case REQUIRED_ARGUMENT: {
                 String nm = op.getArgument(0);

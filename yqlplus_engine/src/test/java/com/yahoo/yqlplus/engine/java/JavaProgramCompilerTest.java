@@ -6,33 +6,100 @@
 
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.collect.*;
-import com.yahoo.cloud.metrics.api.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.yahoo.cloud.metrics.api.MetricDimension;
+import com.yahoo.cloud.metrics.api.MetricType;
+import com.yahoo.cloud.metrics.api.RequestEvent;
+import com.yahoo.cloud.metrics.api.RequestMetric;
+import com.yahoo.cloud.metrics.api.StandardRequestEmitter;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import com.yahoo.yqlplus.engine.*;
+import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.CompiledProgram.ArgumentInfo;
+import com.yahoo.yqlplus.engine.ProgramResult;
+import com.yahoo.yqlplus.engine.TaskContext;
+import com.yahoo.yqlplus.engine.YQLPlusCompiler;
+import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.sources.*;
+import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource;
 import com.yahoo.yqlplus.engine.sources.ArraySyntaxTestSource.ArraySyntaxTestRecord;
+import com.yahoo.yqlplus.engine.sources.AsyncInsertMovieSource;
+import com.yahoo.yqlplus.engine.sources.AsyncSource;
+import com.yahoo.yqlplus.engine.sources.AsyncUpdateMovieSource;
+import com.yahoo.yqlplus.engine.sources.BaseUrlMapSource;
+import com.yahoo.yqlplus.engine.sources.BatchKeySource;
+import com.yahoo.yqlplus.engine.sources.BoxedParameterSource;
+import com.yahoo.yqlplus.engine.sources.BulkResponse;
+import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
+import com.yahoo.yqlplus.engine.sources.ErrorSource;
+import com.yahoo.yqlplus.engine.sources.FRSource;
+import com.yahoo.yqlplus.engine.sources.InnerSource;
+import com.yahoo.yqlplus.engine.sources.InsertMovieSourceSingleField;
+import com.yahoo.yqlplus.engine.sources.InsertSourceMissingSetAnnotation;
+import com.yahoo.yqlplus.engine.sources.InsertSourceWithDuplicateSetParameters;
+import com.yahoo.yqlplus.engine.sources.InsertSourceWithMultipleInsertMethods;
+import com.yahoo.yqlplus.engine.sources.IntSource;
+import com.yahoo.yqlplus.engine.sources.JsonArraySource;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource1;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource2;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource3;
 import com.yahoo.yqlplus.engine.sources.KeyTypeSources.KeyTypeSource4;
+import com.yahoo.yqlplus.engine.sources.KeyedSource;
 import com.yahoo.yqlplus.engine.sources.KeyedSource.IntegerKeyed;
+import com.yahoo.yqlplus.engine.sources.ListOfMapSource;
+import com.yahoo.yqlplus.engine.sources.LongDoubleMovieSource;
+import com.yahoo.yqlplus.engine.sources.LongMovie;
+import com.yahoo.yqlplus.engine.sources.LongSource;
+import com.yahoo.yqlplus.engine.sources.MapArgumentSource;
+import com.yahoo.yqlplus.engine.sources.MapSource;
 import com.yahoo.yqlplus.engine.sources.MapSource.SampleId;
+import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource;
 import com.yahoo.yqlplus.engine.sources.MapSyntaxTestSource.MapSyntaxTestRecord;
+import com.yahoo.yqlplus.engine.sources.MetricEmitterSource;
+import com.yahoo.yqlplus.engine.sources.Movie;
+import com.yahoo.yqlplus.engine.sources.MovieSource;
+import com.yahoo.yqlplus.engine.sources.MovieSourceDefaultValueWithoutSet;
+import com.yahoo.yqlplus.engine.sources.MovieSourceWithLongUuid;
+import com.yahoo.yqlplus.engine.sources.MovieSourceWithMetricEmitter;
+import com.yahoo.yqlplus.engine.sources.MovieUDF;
+import com.yahoo.yqlplus.engine.sources.NestedMapSource;
+import com.yahoo.yqlplus.engine.sources.NestedSource;
+import com.yahoo.yqlplus.engine.sources.PersonListMakeSource;
+import com.yahoo.yqlplus.engine.sources.PersonMakerSource;
+import com.yahoo.yqlplus.engine.sources.ReviewSource;
+import com.yahoo.yqlplus.engine.sources.Sample;
+import com.yahoo.yqlplus.engine.sources.SampleListSource;
+import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
+import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
+import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
+import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue;
+import com.yahoo.yqlplus.engine.sources.SingleKeySource;
+import com.yahoo.yqlplus.engine.sources.SingleListOfStringKeySourceWithSkipEmptyOrZeroSetToTrue;
+import com.yahoo.yqlplus.engine.sources.SingleStringKeySourceWithSkipEmptyOrZeroSetToTrue;
+import com.yahoo.yqlplus.engine.sources.StatusSource;
+import com.yahoo.yqlplus.engine.sources.StringUtilUDF;
+import com.yahoo.yqlplus.engine.sources.UpdateMovieSource;
+import com.yahoo.yqlplus.engine.sources.UpdateMovieSourceWithUnsortedParameters;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
@@ -857,7 +924,7 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
         Assert.assertEquals(120, insertedMovie.getDuration().intValue());
         Assert.assertEquals(reviews, insertedMovie.getReviews());
         Assert.assertFalse(insertedMovie.isNewRelease());
-        Assert.assertEquals(insertedMovie.getRating(), (byte) 0x7a);
+        Assert.assertEquals((byte)insertedMovie.getRating(), (byte) 0x7a);
 
         Assert.assertTrue(program.containsStatement(CompiledProgram.ProgramStatement.INSERT));
         Assert.assertFalse(program.containsStatement(CompiledProgram.ProgramStatement.SELECT));
@@ -893,6 +960,123 @@ public class JavaProgramCompilerTest extends ProgramTestBase {
         Assert.assertEquals(reviews, insertedMovie.getReviews());
         Assert.assertFalse(insertedMovie.isNewRelease());
         Assert.assertEquals(insertedMovie.getRating(), (byte) 0x7a);
+    }
+
+    @Test
+    public void requireInsertRecord() throws Exception {
+        YQLPlusCompiler compiler = createCompiler(
+                "source", new ReviewSource()
+        );
+        CompiledProgram program = compiler.compile("PROGRAM (@title string, @review string);\n" +
+                "INSERT INTO source (title, review) " +
+                "values (@title, @review) " +
+                "OUTPUT AS out;");
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .put("review", "pants")
+                .put("title", "Vertigo")
+                .build());
+        List<ReviewSource.Review> result = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 1, "Wrong number of records inserted");
+        ReviewSource.Review inserted = result.get(0);
+        Assert.assertEquals(inserted.getId(), 1);
+        Assert.assertEquals( inserted.getTitle(), "Vertigo");
+        Assert.assertEquals(inserted.getReview(), "pants");
+    }
+
+    @Test
+    public void requireUpdateAllRecords() throws Exception {
+        YQLPlusCompiler compiler = createCompiler(
+                "s1", new ReviewSource(new ReviewSource.ReviewUpdate("t1", "r1"), new ReviewSource.ReviewUpdate("t2", "r2"))
+        );
+        CompiledProgram program = compiler.compile("PROGRAM (@title string, @review string);\n" +
+                "UPDATE s1 SET title = @title, review = @review " +
+                "OUTPUT AS out;");
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .put("review", "pants")
+                .put("title", "Vertigo")
+                .build());
+        List<ReviewSource.Review> result = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 2, "Wrong number of records inserted");
+        ReviewSource.Review inserted = result.get(0);
+        Assert.assertEquals(inserted.getId(), 1);
+        Assert.assertEquals( inserted.getTitle(), "Vertigo");
+        Assert.assertEquals(inserted.getReview(), "pants");
+        inserted = result.get(1);
+        Assert.assertEquals(inserted.getId(), 2);
+        Assert.assertEquals( inserted.getTitle(), "Vertigo");
+        Assert.assertEquals(inserted.getReview(), "pants");
+    }
+
+    @Test
+    public void requireUpdateOneRecord() throws Exception {
+        YQLPlusCompiler compiler = createCompiler(
+                "s1", new ReviewSource(new ReviewSource.ReviewUpdate("t1", "r1"), new ReviewSource.ReviewUpdate("t2", "r2"))
+        );
+        CompiledProgram program = compiler.compile("PROGRAM (@title string, @review string);\n" +
+                "UPDATE s1 SET title = @title, review = @review WHERE id = 1" +
+                "OUTPUT AS out;");
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .put("review", "pants")
+                .put("title", "Vertigo")
+                .build());
+        List<ReviewSource.Review> result = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 1, "Wrong number of records inserted");
+        ReviewSource.Review inserted = result.get(0);
+        Assert.assertEquals(inserted.getId(), 1);
+        Assert.assertEquals( inserted.getTitle(), "Vertigo");
+        Assert.assertEquals(inserted.getReview(), "pants");
+    }
+
+    @Test
+    public void requireInsertRecordStreamProjected() throws Exception {
+        YQLPlusCompiler compiler = createCompiler(
+                "s1", new ReviewSource(new ReviewSource.ReviewUpdate("t1", "r1"), new ReviewSource.ReviewUpdate("t2", "r2")),
+                "s2", new ReviewSource()
+        );
+        CompiledProgram program = compiler.compile("PROGRAM ();\n" +
+                "INSERT INTO s2 " +
+                "SELECT title, review FROM s1 " +
+                "OUTPUT AS out;");
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .put("review", "pants")
+                .put("title", "Vertigo")
+                .build());
+        List<ReviewSource.Review> result = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 2, "Wrong number of records inserted");
+        ReviewSource.Review inserted = result.get(0);
+        Assert.assertEquals(inserted.getId(), 1);
+        Assert.assertEquals(inserted.getTitle(), "t1");
+        Assert.assertEquals(inserted.getReview(), "r1");
+        inserted = result.get(1);
+        Assert.assertEquals(inserted.getId(), 2);
+        Assert.assertEquals(inserted.getTitle(), "t2");
+        Assert.assertEquals(inserted.getReview(), "r2");
+    }
+
+    @Test
+    public void requireInsertRecordStreamAsIs() throws Exception {
+        YQLPlusCompiler compiler = createCompiler(
+                "s1", new ReviewSource(new ReviewSource.ReviewUpdate("t1", "r1"), new ReviewSource.ReviewUpdate("t2", "r2")),
+                "s2", new ReviewSource()
+        );
+        CompiledProgram program = compiler.compile("PROGRAM ();\n" +
+                "INSERT INTO s2 " +
+                "SELECT * FROM s1 " +
+                "OUTPUT AS out;");
+        ProgramResult myResult = program.run(new ImmutableMap.Builder<String, Object>()
+                .put("review", "pants")
+                .put("title", "Vertigo")
+                .build());
+        List<ReviewSource.Review> result = myResult.getResult("out").get().getResult();
+        Assert.assertEquals(result.size(), 2, "Wrong number of records inserted");
+        ReviewSource.Review inserted = result.get(0);
+        Assert.assertEquals(inserted.getId(), 1);
+        Assert.assertEquals(inserted.getTitle(), "t1");
+        Assert.assertEquals(inserted.getReview(), "r1");
+        inserted = result.get(1);
+        Assert.assertEquals(inserted.getId(), 2);
+        Assert.assertEquals(inserted.getTitle(), "t2");
+        Assert.assertEquals(inserted.getReview(), "r2");
     }
 
     @Test

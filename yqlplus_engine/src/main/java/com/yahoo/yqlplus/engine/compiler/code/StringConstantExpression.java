@@ -14,6 +14,10 @@ public class StringConstantExpression extends BaseTypeExpression implements Eval
         this.value = value;
     }
 
+    public String getValue() {
+        return value;
+    }
+
     @Override
     public void generate(CodeEmitter code) {
         code.emitStringConstant(value);

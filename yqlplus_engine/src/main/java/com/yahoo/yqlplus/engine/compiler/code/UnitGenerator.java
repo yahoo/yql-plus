@@ -33,7 +33,7 @@ import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.V1_7;
+import static org.objectweb.asm.Opcodes.V1_8;
 
 public class UnitGenerator {
 
@@ -320,7 +320,7 @@ public class UnitGenerator {
                 interfaceList[i] = interfaces.get(i).getInternalName();
             }
         }
-        cw.visit(V1_7, ACC_PUBLIC | ACC_FINAL | ACC_SUPER, internalName, null, superInternalName, interfaceList);
+        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL | ACC_SUPER, internalName, null, superInternalName, interfaceList);
 
         annotations.generateAnnotations(cw);
         {

@@ -22,6 +22,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -135,6 +136,54 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         }
     }
 
+    public static class SimilarBean {
+        private int id;
+        private String name;
+
+        public SimilarBean() {
+        }
+
+        public SimilarBean(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    public static class IdBean {
+        private int id;
+
+        public IdBean() {
+        }
+
+        public IdBean(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+    }
+
     @Test
     public void requireRecordAsBean() throws Exception {
         Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_AS,
@@ -144,6 +193,87 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         MyBean record = (MyBean) invoker.call();
         Assert.assertEquals(record.getId(), 1);
         Assert.assertEquals(record.getName(), "hat");
+    }
+
+    @Test
+    public void requireCopyAsSame() throws Exception {
+        MyBean bean = new MyBean();
+        bean.setId(1);
+        bean.setName("hat");
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(MyBean.class),
+                constant(bean)));
+        MyBean record = (MyBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+        Assert.assertEquals(record.getName(), "hat");
+    }
+
+    @Test
+    public void requireCopyAsOtherBean() throws Exception {
+        SimilarBean bean = new SimilarBean();
+        bean.setId(1);
+        bean.setName("hat");
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(MyBean.class),
+                constant(bean)));
+        MyBean record = (MyBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+        Assert.assertEquals(record.getName(), "hat");
+    }
+
+    @Test
+    public void requireCopyAsOtherBeanProject() throws Exception {
+        IdBean bean = new IdBean(1);
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(MyBean.class),
+                constant(bean)));
+        MyBean record = (MyBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+        Assert.assertNull(record.getName());
+    }
+
+    @Test
+    public void requireCopyAsOtherBeanProject2() throws Exception {
+        SimilarBean bean = new SimilarBean();
+        bean.setId(1);
+        bean.setName("name");
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(IdBean.class),
+                constant(bean)));
+        IdBean record = (IdBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+    }
+
+    @Test
+    public void requireCopyAsOtherBeanFromMap() throws Exception {
+        Map<String,Object> bean = ImmutableMap.of("id", 1);
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(IdBean.class),
+                constant(bean)));
+        IdBean record = (IdBean) invoker.call();
+        Assert.assertEquals(record.getId(), 1);
+    }
+
+    @Test
+    public void requireCopyAsMap() throws Exception {
+        IdBean bean = new IdBean(1);
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(HashMap.class),
+                constant(bean)));
+        Map<String,Object> record = (Map<String,Object>) invoker.call();
+        Assert.assertEquals(record.get("id"), 1);
+    }
+
+    @Test
+    public void requireCopyAsMap2() throws Exception {
+        SimilarBean bean = new SimilarBean(1, "hi");
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+                Type.getType(HashMap.class),
+                constant(bean)));
+        Map<String,Object> record = (Map<String,Object>) invoker.call();
+        Assert.assertEquals(record.get("id"), 1);
+        Assert.assertEquals(record.get("name"), "hi");
+
     }
 
     @Test

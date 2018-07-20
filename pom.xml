@@ -27,6 +27,7 @@
         <module>yqlplus_guice</module>
         <module>yqlplus_source_api</module>
         <module>yqlplus_stdlib</module>
+        <module>yqlplus_integration</module>
         <module>yqlplus_javadocs</module>
     </modules>
     <dependencyManagement>
@@ -104,11 +105,11 @@
                         </execution>
                     </executions>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
-                </plugin>
+                <!--<plugin>-->
+                    <!--<groupId>org.apache.maven.plugins</groupId>-->
+                    <!--<artifactId>maven-surefire-plugin</artifactId>-->
+                    <!--<version>2.22.0</version>-->
+                <!--</plugin>-->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>

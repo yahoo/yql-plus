@@ -28,6 +28,8 @@ public interface PropertyAdapter {
 
     BytecodeSequence mergeIntoFieldWriter(BytecodeExpression target, BytecodeExpression fieldWriter);
 
+    BytecodeExpression createFrom(BytecodeExpression inputExpr);
+
     interface PropertyVisit {
         void item(CodeEmitter code, BytecodeExpression propertyName, BytecodeExpression propertyValue, Label abortLoop, Label nextItem);
     }

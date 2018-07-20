@@ -6,6 +6,8 @@
 
 package com.yahoo.yqlplus.engine.compiler.code;
 
+import com.google.common.collect.Maps;
+import com.yahoo.yqlplus.engine.api.PropertyNotFoundException;
 import com.yahoo.yqlplus.engine.compiler.runtime.FieldWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
@@ -65,6 +67,52 @@ public abstract class BasePropertyAdapter implements PropertyAdapter {
         });
     }
 
-
-
+    @Override
+    public BytecodeExpression createFrom(BytecodeExpression inputExpr) {
+        if(type.isAssignableFrom(inputExpr.getType())) {
+            return inputExpr;
+        }
+        if (isClosed()) {
+            return new BaseTypeExpression(type) {
+                @Override
+                public void generate(CodeEmitter code) {
+                    PropertyAdapter other = inputExpr.getType().getPropertyAdapter();
+                    BytecodeExpression src = code.evaluateOnce(inputExpr);
+                    Map<String, BytecodeExpression> fields = Maps.newLinkedHashMap();
+                    for (Property property : getProperties()) {
+                        try {
+                            BytecodeExpression val = other.property(src, property.name);
+                            if (!property.type.isAssignableFrom(val.getType())) {
+                                continue;
+                            }
+                            fields.put(property.name, val);
+                        } catch (PropertyNotFoundException ignored) {
+                        }
+                    }
+                    code.exec(construct(fields));
+                }
+            };
+        } else {
+            return new BaseTypeExpression(type) {
+                @Override
+                public void generate(CodeEmitter parent) {
+                    CodeEmitter code = parent.createScope();
+                    BytecodeExpression val = code.evaluateOnce(type.construct());
+                    PropertyAdapter p = inputExpr.getType().getPropertyAdapter();
+                    code.exec(p.visitProperties(inputExpr, new PropertyVisit() {
+                        @Override
+                        public void item(CodeEmitter code, BytecodeExpression propertyName, BytecodeExpression propertyValue, Label abortLoop, Label nextItem) {
+                            try {
+                                code.exec(index(val, propertyName).write(propertyValue));
+                            } catch (PropertyNotFoundException ignored) {
+                                // skip unknown properties
+                            }
+                        }
+                    }));
+                    code.exec(val);
+                    code.endScope();
+                }
+            };
+        }
+    }
 }
