@@ -200,7 +200,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         MyBean bean = new MyBean();
         bean.setId(1);
         bean.setName("hat");
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(MyBean.class),
                 constant(bean)));
         MyBean record = (MyBean) invoker.call();
@@ -213,7 +213,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         SimilarBean bean = new SimilarBean();
         bean.setId(1);
         bean.setName("hat");
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(MyBean.class),
                 constant(bean)));
         MyBean record = (MyBean) invoker.call();
@@ -224,7 +224,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     @Test
     public void requireCopyAsOtherBeanProject() throws Exception {
         IdBean bean = new IdBean(1);
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(MyBean.class),
                 constant(bean)));
         MyBean record = (MyBean) invoker.call();
@@ -237,7 +237,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
         SimilarBean bean = new SimilarBean();
         bean.setId(1);
         bean.setName("name");
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(IdBean.class),
                 constant(bean)));
         IdBean record = (IdBean) invoker.call();
@@ -247,7 +247,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     @Test
     public void requireCopyAsOtherBeanFromMap() throws Exception {
         Map<String,Object> bean = ImmutableMap.of("id", 1);
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(IdBean.class),
                 constant(bean)));
         IdBean record = (IdBean) invoker.call();
@@ -257,7 +257,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     @Test
     public void requireCopyAsMap() throws Exception {
         IdBean bean = new IdBean(1);
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(HashMap.class),
                 constant(bean)));
         Map<String,Object> record = (Map<String,Object>) invoker.call();
@@ -267,7 +267,7 @@ public class PhysicalExpressionCompilerTest extends CompilingTestBase {
     @Test
     public void requireCopyAsMap2() throws Exception {
         SimilarBean bean = new SimilarBean(1, "hi");
-        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.COPY_AS,
+        Callable<Object> invoker = compileExpression(OperatorNode.create(PhysicalExprOperator.RECORD_FROM,
                 Type.getType(HashMap.class),
                 constant(bean)));
         Map<String,Object> record = (Map<String,Object>) invoker.call();

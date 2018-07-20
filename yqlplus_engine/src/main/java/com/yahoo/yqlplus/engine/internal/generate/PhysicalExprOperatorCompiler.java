@@ -313,15 +313,15 @@ public class PhysicalExprOperatorCompiler {
                 }
                 return recordType.getPropertyAdapter().construct(sets);
             }
-            case COPY_AS: {
+            case RECORD_FROM: {
                 Type t = expr.getArgument(0);
                 TypeWidget recordType = scope.adapt(t, false);
                 OperatorNode<PhysicalExprOperator> input = expr.getArgument(1);
                 BytecodeExpression inputExpr = evaluateExpression(program, context, input);
                 if (!recordType.hasProperties()) {
-                    throw new ProgramCompileException(expr.getLocation(), "Type for output of COPY_AS has no properties", recordType.getTypeName());
+                    throw new ProgramCompileException(expr.getLocation(), "Type for output of RECORD_FROM has no properties", recordType.getTypeName());
                 } else if (!inputExpr.getType().hasProperties()) {
-                    throw new ProgramCompileException(expr.getLocation(), "Type for input for COPY_AS has no properties", inputExpr.getType().getTypeName());
+                    throw new ProgramCompileException(expr.getLocation(), "Type for input for RECORD_FROM has no properties", inputExpr.getType().getTypeName());
                 }
                 return recordType.getPropertyAdapter().createFrom(inputExpr);
             }

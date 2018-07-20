@@ -880,7 +880,7 @@ public class SourceAdapter implements SourceType {
             } else {
                 wildcardSet = true;
             }
-            invokeArguments.add(OperatorNode.create(PhysicalExprOperator.COPY_AS, Type.getType(recordTypeClazz), record));
+            invokeArguments.add(OperatorNode.create(PhysicalExprOperator.RECORD_FROM, Type.getType(recordTypeClazz), record));
         }
 
         public void verifySetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
