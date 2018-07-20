@@ -19,7 +19,7 @@ public abstract class BasePropertyAdapter implements PropertyAdapter {
     protected TypeWidget type;
 
     public BasePropertyAdapter(TypeWidget type) {
-        this.type = type;
+        this.type = NotNullableTypeWidget.create(type);
     }
 
     @Override
