@@ -4,7 +4,7 @@
  * See LICENSE file for terms.
  */
 
-package com.yahoo.yqlplus.api.guice;
+package com.yahoo.yqlplus.guice;
 
 
 import com.google.inject.Provider;
