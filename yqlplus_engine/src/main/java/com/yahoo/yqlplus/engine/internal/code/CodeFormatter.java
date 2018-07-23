@@ -11,20 +11,21 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.yahoo.yqlplus.engine.api.GeneratedSource;
-import com.yahoo.yqlplus.engine.internal.code.CodeOutput;
-import javax.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.*;
-import java.lang.reflect.Modifier;
-import java.util.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Formatter;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.UUID;
 
 public final class CodeFormatter {
 
@@ -50,7 +51,6 @@ public final class CodeFormatter {
                 return "new Object[0]";
             } else {
                 return String.format("new Object[%d] { %s }", arr.length, Joiner.on(", ").join(Iterables.transform(Arrays.asList(arr), new Function<Object, Object>() {
-                    @Nullable
                     @Override
                     public Object apply(Object input) {
                         return emitLiteral(input);

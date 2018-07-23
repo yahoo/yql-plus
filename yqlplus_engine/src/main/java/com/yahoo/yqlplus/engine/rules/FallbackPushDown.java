@@ -18,7 +18,6 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorVisitor;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 
-import javax.annotation.Nullable;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.Set;
@@ -99,9 +98,8 @@ public class FallbackPushDown extends LogicalOperatorTransform {
                 final String oldAlias = (String) current.getAnnotation("alias");
                 final String newAlias = Iterables.get(visible, 0);
                 result = result.transform(new Function<Object, Object>() {
-                    @Nullable
                     @Override
-                    public Object apply(@Nullable Object input) {
+                    public Object apply(Object input) {
                         if (input instanceof OperatorNode) {
                             if (ExpressionOperator.IS.apply((OperatorNode<? extends Operator>) input)) {
                                 OperatorNode<ExpressionOperator> expr = (OperatorNode<ExpressionOperator>) input;

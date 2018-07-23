@@ -17,7 +17,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -62,9 +61,8 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     @Query
     public Iterable<Person> lookupBatch(@Key("otherId") List<String> id) {
         return Iterables.transform(id, new Function<String, Person>() {
-            @Nullable
             @Override
-            public Person apply(@Nullable String input) {
+            public Person apply(String input) {
                 return idMap.get(input);
             }
         });
@@ -73,9 +71,8 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     @Query
     public Iterable<Person> lookup(@Key("iid") List<Integer> iids) {
         return Iterables.transform(iids, new Function<Integer, Person>() {
-            @Nullable
             @Override
-            public Person apply(@Nullable Integer input) {
+            public Person apply(Integer input) {
                 return iidMap.get(input);
             }
         });

@@ -1,6 +1,4 @@
 module com.yahoo.yqlplus.language {
-    requires jsr305;
-
     requires com.google.common;
     requires com.google.guice;
 

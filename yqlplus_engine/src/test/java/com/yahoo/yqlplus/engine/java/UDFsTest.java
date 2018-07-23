@@ -26,8 +26,11 @@ import com.yahoo.yqlplus.engine.sources.SingleKeySource;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
@@ -54,9 +57,8 @@ public class UDFsTest extends ProgramTestBase {
         @Export
         public List<Person> doubleScores(Iterable<Person> persons) {
             return ImmutableList.copyOf(Iterables.transform(persons, new Function<Person, Person>() {
-                @Nullable
                 @Override
-                public Person apply(@Nullable Person person) {
+                public Person apply(Person person) {
                     return new Person(person.getId(), person.getValue(), person.getScore() * 2);
                 }
             }));

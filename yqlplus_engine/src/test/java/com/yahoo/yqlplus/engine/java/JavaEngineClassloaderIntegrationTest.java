@@ -16,7 +16,6 @@ import com.yahoo.sample.EngineContainerInterface;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,9 +40,8 @@ public class JavaEngineClassloaderIntegrationTest {
 
     public Pattern toPattern(String... packageNames) {
         return Pattern.compile("^(" + Joiner.on(")|(").join(Iterables.transform(Arrays.asList(packageNames), new Function<String, Object>() {
-            @Nullable
             @Override
-            public Object apply(@Nullable String input) {
+            public Object apply(String input) {
                 return Pattern.quote(input);
             }
         })) + ").*");
