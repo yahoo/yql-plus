@@ -1,4 +1,4 @@
-package com.yahoo.yqlplus.integration;
+package com.yahoo.yqlplus.integration.sources;
 
 public class Movie {
     private String id;

@@ -1,4 +1,4 @@
-package com.yahoo.yqlplus.integration;
+package com.yahoo.yqlplus.integration.sources;
 
 
 import com.google.common.collect.ImmutableList;

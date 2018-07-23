@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.collect.ImmutableMap;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLPlusEngine;
 import com.yahoo.yqlplus.engine.YQLResultSet;
+import com.yahoo.yqlplus.integration.sources.Movie;
+import com.yahoo.yqlplus.integration.sources.MovieSource;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -17,9 +20,11 @@ import io.undertow.util.Headers;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 
 public class MovieServer {
     public static void main(final String[] args) throws IOException {
+        ForkJoinPool pool = ForkJoinPool.commonPool();
         YQLPlusCompiler compiler = YQLPlusEngine.builder()
         .bind(
                 "movies", new MovieSource(new Movie("1", "joe", "drama", "2017-01-01", 10))
@@ -31,23 +36,36 @@ public class MovieServer {
                 .setHandler(new HttpHandler() {
                     @Override
                     public void handleRequest(final HttpServerExchange exchange) throws Exception {
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                        if("/movies".equals(exchange.getRequestPath())) {
-                            ProgramResult myResult = program.run(ImmutableMap.of());
-                            YQLResultSet rez = myResult.getResult("foo").get();
-                            List<Movie> foo = rez.getResult();
-                            exchange.setStatusCode(200);
-                            OutputStream output = exchange.getOutputStream();
-                            JsonGenerator out = factory.createGenerator(output);
-                            out.writeObject(foo);
-                            output.close();
+                        if (exchange.isInIoThread()) {
+                            exchange.dispatch(this);
                             return;
                         }
-                        exchange.setStatusCode(404);
-                        OutputStream output = exchange.getOutputStream();
-                        JsonGenerator out = factory.createGenerator(output);
-                        out.writeString("Not found");
+                        try {
+                            if ("/movies".equals(exchange.getRequestPath())) {
+                                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                                TaskContext context = TaskContext.builder()
+                                        .withPool(pool)
+                                        .build();
+                                ProgramResult myResult = program.run(ImmutableMap.of(), context);
+                                YQLResultSet rez = myResult.getResult("movies").get();
+                                List<Movie> foo = rez.getResult();
+                                exchange.startBlocking();
+                                OutputStream output = exchange.getOutputStream();
+                                JsonGenerator out = factory.createGenerator(output);
+                                out.writeObject(foo);
+                                out.flush();
+                                out.close();
+
+                                return;
+                            }
+                            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+                            exchange.setStatusCode(404);
+                            exchange.getResponseSender().send("Not found");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }).build();
         server.start();
+
     }}

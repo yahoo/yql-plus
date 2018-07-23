@@ -4,8 +4,8 @@ import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLPlusEngine;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.integration.Movie;
-import com.yahoo.yqlplus.integration.MovieSource;
+import com.yahoo.yqlplus.integration.sources.Movie;
+import com.yahoo.yqlplus.integration.sources.MovieSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
