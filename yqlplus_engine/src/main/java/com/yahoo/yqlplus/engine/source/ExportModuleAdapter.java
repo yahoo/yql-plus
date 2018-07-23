@@ -138,6 +138,9 @@ public class ExportModuleAdapter implements ModuleType {
                     }
                 }
             }
+            if(inputNext.hasNext()) {
+                continue;
+            }
             return invoker.invoke(invokeArguments);
         }
         for (Field field : clazz.getFields()) {
