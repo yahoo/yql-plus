@@ -6,4 +6,7 @@ module com.yahoo.yqlplus.integration {
     requires com.yahoo.yqlplus.api;
     requires com.yahoo.yqlplus.engine;
     requires com.google.common;
+    requires undertow.core;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.core;
 }
