@@ -111,7 +111,7 @@ public class JavaEngineClassloaderIntegrationTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testCustomClassloaderGate() throws Exception {
         // OK, so our classloader hierarchy
         // system
