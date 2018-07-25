@@ -33,7 +33,6 @@ options {
   NEXT : 'next';
   PAGED : 'paged';
   FALLBACK : 'fallback';
-  IMPORT_FROM :;
 
   LIMIT : 'limit';
   OFFSET : 'offset';
