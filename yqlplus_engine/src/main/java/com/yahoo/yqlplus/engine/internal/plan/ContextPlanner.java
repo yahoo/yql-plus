@@ -213,9 +213,6 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
             case UPDATE:
             case UPDATE_ALL:
                 throw new ProgramCompileException(source.getLocation(), "%s may not be used as the right side of a JOIN", source.getOperator());
-            case NEXT:
-            case PAGE:
-                throw new UnsupportedOperationException("NEXT not implemented");
             case MULTISOURCE:
                 // this one should be rewritten out by the ExpandMultisource transform
             default:
@@ -249,9 +246,6 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
             case UPDATE_ALL:
                 program.addStatement(CompiledProgram.ProgramStatement.UPDATE);
                 return executeWrite(query, source);
-            case NEXT:
-            case PAGE:
-                throw new UnsupportedOperationException("NEXT not yet implemented");
             case MULTISOURCE:
                 // this one should be rewritten out by the ExpandMultisource transform
             default:
@@ -371,12 +365,10 @@ public class ContextPlanner implements DynamicExpressionEnvironment, CompileCont
             case MERGE:
             case PIPE:
             case SCAN:
-            case NEXT:
             case EMPTY:
             case EVALUATE:
             case FALLBACK:
             case MULTISOURCE:
-            case PAGE:
             case INSERT:
             case DELETE:
             case DELETE_ALL:

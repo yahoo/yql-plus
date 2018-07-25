@@ -61,12 +61,10 @@ import com.yahoo.yqlplus.language.grammar.yqlplusParser.ModuleIdContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.ModuleNameContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.MultiplicativeExpressionContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Namespaced_nameContext;
-import com.yahoo.yqlplus.language.grammar.yqlplusParser.Next_statementContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.OffsetContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.OrderbyContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Orderby_fieldContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Output_specContext;
-import com.yahoo.yqlplus.language.grammar.yqlplusParser.Paged_clauseContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.ParamsContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Pipeline_stepContext;
 import com.yahoo.yqlplus.language.grammar.yqlplusParser.Procedure_argumentContext;
@@ -980,18 +978,6 @@ public final class ProgramParser {
                             stmts.add(OperatorNode.create(location, StatementOperator.EXECUTE, query, variable));
                     break;
                 }
-                        case yqlplusParser.RULE_next_statement: {
-                            // NEXT^ literalString OUTPUT! AS! ident
-                            Next_statementContext nextStateContext = (Next_statementContext) ruleContext.getChild(0);
-                            String continuationValue = StringUnescaper.unquote(nextStateContext.literalString().getText());
-                            String variable = nextStateContext.ident().getText();
-                            Location location = toLocation(scope, node);
-                            OperatorNode<SequenceOperator> next = OperatorNode.create(location, SequenceOperator.NEXT, continuationValue);
-                            stmts.add(OperatorNode.create(location, StatementOperator.EXECUTE, next, variable));
-                            stmts.add(OperatorNode.create(location, StatementOperator.OUTPUT, variable));
-                            scope.defineVariable(location, variable);
-                    break;
-                }
                         case yqlplusParser.RULE_output_statement:
                             Source_statementContext source_statement = statementContext.output_statement().source_statement();
                             OperatorNode<SequenceOperator> query;
@@ -1002,16 +988,11 @@ public final class ProgramParser {
                             }
                     String variable = "result" + (++output);
                     boolean isCountVariable = false;
-                    OperatorNode<ExpressionOperator> pageSize = null;
                             ParseTree outputStatement = node.getChild(0);
                             Location location = toLocation(scope, outputStatement);
                             for (int i = 1; i < outputStatement.getChildCount(); ++i) {
                                 ParseTree child = outputStatement.getChild(i);
                                 switch (getParseTreeIndex(child)) {
-                                    case yqlplusParser.RULE_paged_clause:
-                                        Paged_clauseContext pagedContext = (Paged_clauseContext) child;
-                                        pageSize = convertExpr(pagedContext.fixed_or_parameter(), scope);
-                                        break;
                                     case yqlplusParser.RULE_output_spec:
                                         Output_specContext outputSpecContext = (Output_specContext) child;
                                         variable = outputSpecContext.ident().getText();
@@ -1024,9 +1005,6 @@ public final class ProgramParser {
                         }
                     }
                     scope.defineVariable(location, variable);
-                    if (pageSize != null) {
-                        query = OperatorNode.create(SequenceOperator.PAGE, query, pageSize);
-                    }
                     stmts.add(OperatorNode.create(location, StatementOperator.EXECUTE, query, variable));
                             stmts.add(OperatorNode.create(location, isCountVariable ? StatementOperator.COUNT : StatementOperator.OUTPUT, variable));
                 }

@@ -30,7 +30,6 @@ public enum SequenceOperator implements Operator {
     EMPTY(),    // emits a single, empty row
     // evaluate the given expression and use the result as a sequence
     EVALUATE(ExpressionOperator.class),
-    NEXT(String.class),
 
     PROJECT(SequenceOperator.class, new TypeLiteral<List<OperatorNode<ProjectOperator>>>() {
     }), // transform a sequence into a new schema
@@ -51,7 +50,6 @@ public enum SequenceOperator implements Operator {
     FALLBACK(SequenceOperator.class, SequenceOperator.class),
 
     TIMEOUT(SequenceOperator.class, ExpressionOperator.class),
-    PAGE(SequenceOperator.class, ExpressionOperator.class),
     ALL(),
     MULTISOURCE(TypeCheckers.LIST_OF_LIST_OF_STRING);
 

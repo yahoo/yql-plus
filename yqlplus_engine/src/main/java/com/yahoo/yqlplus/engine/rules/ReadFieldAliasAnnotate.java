@@ -9,7 +9,11 @@ package com.yahoo.yqlplus.engine.rules;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.language.logical.*;
+import com.yahoo.yqlplus.language.logical.ExpressionOperator;
+import com.yahoo.yqlplus.language.logical.LogicalOperatorTransform;
+import com.yahoo.yqlplus.language.logical.ProjectOperator;
+import com.yahoo.yqlplus.language.logical.SequenceOperator;
+import com.yahoo.yqlplus.language.logical.SortOperator;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorVisitor;
@@ -144,7 +148,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case DELETE_ALL:
             case EMPTY:
             case EVALUATE:
-            case NEXT:
             case PIPE:
             case DISTINCT:
             case LIMIT:
@@ -152,7 +155,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case SLICE:
             case MERGE:
             case TIMEOUT:
-            case PAGE:
             case ALL:
             case MULTISOURCE:
             case FALLBACK:
@@ -292,7 +294,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case DELETE_ALL:
             case EMPTY:
             case EVALUATE:
-            case NEXT:
             case ALL:
             case MULTISOURCE:
                 return new RowType();
@@ -325,7 +326,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case LIMIT:
             case OFFSET:
             case TIMEOUT:
-            case PAGE:
             case SLICE: {
                 OperatorNode<SequenceOperator> input = target.getArgument(0);
                 input = visitSequenceOperator(input);
