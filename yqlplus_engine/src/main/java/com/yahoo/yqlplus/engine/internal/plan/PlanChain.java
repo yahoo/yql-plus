@@ -101,6 +101,7 @@ abstract class PlanChain {
             case READ_MODULE:
                 return false;
             case CALL:
+                return isRowDependentAny(filter.getArgument(1));
             case READ_RECORD:
             case READ_FIELD:
                 return true;
