@@ -49,8 +49,6 @@ options {
   OUTPUT : 'output';
   COUNT : 'count';
   RETURNING : 'returning';
-  APPLY : 'apply';
-  CAST : 'cast';
 
   BEGIN : 'begin';
   END : 'end';
@@ -201,8 +199,8 @@ ident
 
 keyword_as_ident
    : SELECT | TABLE | DELETE | INTO | VALUES | LIMIT | OFFSET | WHERE | 'order' | 'by' | DESC | MERGE | LEFT | JOIN
-   | ON | OUTPUT | COUNT | BEGIN | END | APPLY | TYPE_BYTE | TYPE_INT16 | TYPE_INT32 | TYPE_INT64 | TYPE_BOOLEAN | TYPE_TIMESTAMP | TYPE_DOUBLE | TYPE_STRING | TYPE_ARRAY | TYPE_MAP
-   | VIEW | CREATE | EVALUATE | IMPORT | PROGRAM | SOURCES | SET | MATCHES | CAST
+   | ON | OUTPUT | COUNT | BEGIN | END | TYPE_BYTE | TYPE_INT16 | TYPE_INT32 | TYPE_INT64 | TYPE_BOOLEAN | TYPE_TIMESTAMP | TYPE_DOUBLE | TYPE_STRING | TYPE_ARRAY | TYPE_MAP
+   | VIEW | CREATE | EVALUATE | IMPORT | PROGRAM | SOURCES | SET | MATCHES
    ;
 
 program : params? (import_statement SEMI)* (ddl SEMI)* (statement SEMI)* EOF
