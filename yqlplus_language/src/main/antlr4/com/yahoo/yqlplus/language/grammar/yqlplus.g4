@@ -586,15 +586,11 @@ operatorCall
     ;
 
 
-// TODO: temporarily disable CAST, need to think through how types are named
-
 primaryExpression
 @init {
     boolean in_select = expression_stack.peek().in_select;
 }
 	: callExpresion[in_select]
-//	| CAST LPAREN expression[$expression::in_select] AS typename RPAREN -> ^(CAST expression typename)
-//	| APPLY operatorCall
 	| parameter
 	| fieldref
 	| scalar_literal
