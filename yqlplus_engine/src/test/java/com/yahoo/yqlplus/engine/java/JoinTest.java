@@ -111,6 +111,17 @@ public class JoinTest extends ProgramTestBase {
 		dumpDebugInfo(program, myResult);
 	}
 
+    @Test
+    public void testInnerOr() throws Exception {
+        YQLPlusCompiler compiler = createJoinCompiler();
+        CompiledProgram program = compiler.compile("SELECT * FROM innersource WHERE id IN (SELECT id FROM innersource) OR id = '3' ORDER BY id DESC OUTPUT as b4;");
+        // program.dump(System.err);
+        ProgramResult myResult = program.run(ImmutableMap.of());
+        Assert.assertEquals(myResult.getResult("b4").get().getResult(), Lists.newArrayList(new Person("3", "smith", 1), new Person("1", "joe", 1)));
+
+        dumpDebugInfo(program, myResult);
+    }
+
     /**
      * Unit test for Ticket 6943641 ("Skip executing the right side source on a JOIN with NULL key")
      *

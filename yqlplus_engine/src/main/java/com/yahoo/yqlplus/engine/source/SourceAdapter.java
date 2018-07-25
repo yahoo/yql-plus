@@ -15,6 +15,7 @@ import com.yahoo.yqlplus.api.annotations.Emitter;
 import com.yahoo.yqlplus.api.annotations.Insert;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
+import com.yahoo.yqlplus.api.annotations.Rank;
 import com.yahoo.yqlplus.api.annotations.Set;
 import com.yahoo.yqlplus.api.annotations.TimeoutMilliseconds;
 import com.yahoo.yqlplus.api.annotations.Update;
@@ -57,6 +58,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +153,7 @@ public class SourceAdapter implements SourceType {
 
 
     private StreamValue executeDelete(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, OperatorNode<ExpressionOperator> filter) {
-        List<QM> candidates = visitMethods(Delete.class, context, args, new Visitor() {
+        List<QM> candidates = visitMethods(query, Delete.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
@@ -162,103 +164,93 @@ public class SourceAdapter implements SourceType {
     }
 
     private StreamValue executeIndexWrite(Class<? extends Annotation> annotation, OperatorNode<SequenceOperator> query, CompileContext context, OperatorNode<ExpressionOperator> filter, List<QM> candidates) {
-        if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching method for %s (e.g. @%s methods with matching @Key parameters)", sourceName, query.toString(), annotation.getSimpleName());
-        } else {
-            List<IndexDescriptor> descriptors = Lists.newArrayList();
-            Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
-            for(QM m : candidates) {
-                if(!m.keyArguments.isEmpty()) {
-                    IndexDescriptor desc = m.indexBuilder.build();
-                    methodMap.put(IndexKey.of(desc.getColumnNames()), m);
-                    descriptors.add(desc);
-                }
+        List<IndexDescriptor> descriptors = Lists.newArrayList();
+        Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
+        for(QM m : candidates) {
+            if(!m.keyArguments.isEmpty()) {
+                IndexDescriptor desc = m.indexBuilder.build();
+                methodMap.put(IndexKey.of(desc.getColumnNames()), m);
+                descriptors.add(desc);
             }
-            IndexedQueryPlanner indexPlanner = new IndexedQueryPlanner(descriptors);
-            QueryStrategy qs = indexPlanner.planExact(filter);
-            if (qs.scan) {
-                throw new ProgramCompileException(query.getLocation(), "%s must exactly match indexes (e.g. @%s methods w/ @Key parameters)", query.getOperator(), annotation.getSimpleName());
-            }
-
-            List<StreamValue> outputs = Lists.newArrayList();
-            for (IndexKey index : qs.indexes.keySet()) {
-                Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
-                Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
-                for (IndexStrategy strategy : strategyCollection) {
-                    Preconditions.checkState(strategy.filter == null, "Internal error: index strategy planner for DELETE must use exact index matches");
-                    IndexQuery iq = new IndexQuery();
-                    prepareIndexKeyValues(context, null, null, strategy, iq);
-                    iq.index = index;
-                    iq.handledFilter = true;
-                    split.put(iq.index, iq);
-                }
-                for (IndexKey idx : split.keySet()) {
-                    Collection<IndexQuery> todo = split.get(idx);
-                    methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
-                }
-            }
-            if (outputs.isEmpty()) {
-                throw new ProgramCompileException("Unable to match execution strategy for query %s (? should not be reached given declared indexes)", query);
-            }
-            StreamValue result;
-            if (outputs.size() == 1) {
-                result = outputs.get(0);
-            } else {
-                result = StreamValue.merge(context, outputs);
-            }
-            return result;
         }
+        IndexedQueryPlanner indexPlanner = new IndexedQueryPlanner(descriptors);
+        QueryStrategy qs = indexPlanner.planExact(filter);
+        if (qs.scan) {
+            throw new ProgramCompileException(query.getLocation(), "%s must exactly match indexes (e.g. @%s methods w/ @Key parameters)", query.getOperator(), annotation.getSimpleName());
+        }
+
+        List<StreamValue> outputs = Lists.newArrayList();
+        for (IndexKey index : qs.indexes.keySet()) {
+            Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
+            Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
+            for (IndexStrategy strategy : strategyCollection) {
+                Preconditions.checkState(strategy.filter == null, "Internal error: index strategy planner for DELETE must use exact index matches");
+                IndexQuery iq = new IndexQuery();
+                prepareIndexKeyValues(context, null, null, strategy, iq);
+                iq.index = index;
+                iq.handledFilter = true;
+                split.put(iq.index, iq);
+            }
+            for (IndexKey idx : split.keySet()) {
+                Collection<IndexQuery> todo = split.get(idx);
+                methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
+            }
+        }
+        if (outputs.isEmpty()) {
+            throw new ProgramCompileException("Unable to match execution strategy for query %s (? should not be reached given declared indexes)", query);
+        }
+        StreamValue result;
+        if (outputs.size() == 1) {
+            result = outputs.get(0);
+        } else {
+            result = StreamValue.merge(context, outputs);
+        }
+        return result;
     }
 
     private StreamValue executeDeleteAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context) {
-        List<QM> candidates = visitMethods(Delete.class, context, args, new Visitor() {
+        List<QM> candidates = visitMethods(query, Delete.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget setType) {
                 // delete all does not consider any methods with filter arguments
                 return false;
-
             }
         });
-        if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Delete method for %s", sourceName, query.toString());
-        } else if (candidates.size() > 1) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Delete methods for %s (%d)", sourceName, query.toString(), candidates.size());
+        if (candidates.size() > 1) {
+            throw formatTooManyCandidates(query, Delete.class, candidates);
         } else {
             return candidates.get(0).stream(context);
         }
     }
 
+    private ProgramCompileException formatTooManyCandidates(OperatorNode<SequenceOperator> query, Class<? extends Annotation> annotation, List<QM> candidates) {
+        return new ProgramCompileException(query.getLocation(), "Source '%s' (%s) has too many matching @%s methods for %s (%d)", sourceName, clazz.getName(), annotation.getSimpleName(), query, candidates.size());
+    }
+
     private StreamValue executeUpdateAll(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, Map<String, OperatorNode<PhysicalExprOperator>> record) {
-        List<QM> candidates = visitMethods(Update.class, context, args, new UpdateVisitor(record, context));
-        if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Update method for %s", sourceName, query.toString());
-        } else if (candidates.size() > 1) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Update methods for %s (%d)", sourceName, query.toString(), candidates.size());
+        List<QM> candidates = visitMethods(query, Update.class, context, args, new UpdateVisitor(record, context));
+        if (candidates.size() > 1) {
+            throw formatTooManyCandidates(query, Update.class, candidates);
         } else {
-            candidates.get(0).verifySetArguments(record);
             return candidates.get(0).stream(context);
         }
     }
 
     private StreamValue executeUpdate(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, Map<String, OperatorNode<PhysicalExprOperator>> record, OperatorNode<ExpressionOperator> filter) {
-        List<QM> candidates = visitMethods(Update.class, context, args, new UpdateVisitor(record, context) {
+        List<QM> candidates = visitMethods(query, Update.class, context, args, new UpdateVisitor(record, context) {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
                 return true;
             }
         });
-        candidates.sort((l, r) -> (-Integer.compare(l.checkSetArguments(record), r.checkSetArguments(record))));
-        if(!candidates.isEmpty()) {
-            candidates.get(0).verifySetArguments(record);
-        }
         return executeIndexWrite(Update.class, query, context, filter, candidates);
     }
 
     private StreamValue executeInsertStream(OperatorNode<SequenceOperator> query, StreamValue records, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         ExprScope function = new ExprScope();
         OperatorNode<PhysicalExprOperator> row = function.addArgument("$row");
-        List<QM> candidates = visitMethods(Insert.class, context, args, new Visitor() {
+        List<QM> candidates = visitMethods(query, Insert.class, context, args, new Visitor() {
             @Override
             public boolean visitSet(QM qm, String keyName, Object defaultValue, Class<?> parameterType, TypeWidget setType) {
                 if(defaultValue != null) {
@@ -276,10 +268,8 @@ public class SourceAdapter implements SourceType {
                 return true;
             }
         });
-        if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
-        } else if (candidates.size() > 1) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has too many matching @Insert method for %s (%d)", sourceName, query.toString(), candidates.size());
+        if (candidates.size() > 1) {
+            throw formatTooManyCandidates(query, Insert.class, candidates);
         } else {
             QM m = candidates.get(0);
             OperatorNode<FunctionOperator> func = function.createFunction(m.invoke());
@@ -294,14 +284,8 @@ public class SourceAdapter implements SourceType {
     private StreamValue executeInsertSet(OperatorNode<SequenceOperator> query, List<Map<String, OperatorNode<PhysicalExprOperator>>> records, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         List<QM> invocations = Lists.newArrayList();
         for(Map<String, OperatorNode<PhysicalExprOperator>> record : records) {
-            List<QM> candidates = visitMethods(Insert.class, context, args, new RecordWriteVisitor(record, context));
-            if(candidates.isEmpty()) {
-                throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Insert method for %s", sourceName, query.toString());
-            } else {
-                candidates.sort((l, r) -> (-Integer.compare(l.checkSetArguments(record), r.checkSetArguments(record))));
-                candidates.get(0).verifySetArguments(record);
-                invocations.add(candidates.get(0));
-            }
+            List<QM> candidates = visitMethods(query, Insert.class, context, args, new RecordWriteVisitor(record, context));
+            invocations.add(candidates.get(0));
         }
         if(invocations.size() == 1) {
             return invocations.get(0).stream(context);
@@ -334,80 +318,76 @@ public class SourceAdapter implements SourceType {
     }
 
     private StreamValue executeSelect(OperatorNode<SequenceOperator> query, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
-        List<QM> candidates = visitMethods(Query.class, context, args, new Visitor() {
+        List<QM> candidates = visitMethods(query, Query.class, context, args, new Visitor() {
             @Override
             public boolean visitKey(QM qm, Key key, Class<?> parameterClazz, TypeWidget parameterType) {
                 qm.addKeyArgument(key, parameterClazz, parameterType);
                 return true;
             }
         });
-        if(candidates.isEmpty()) {
-            throw new ProgramCompileException(query.getLocation(), "Source '%s' has no matching @Query method for %s", sourceName, query.toString());
-        } else {
-            List<IndexDescriptor> descriptors = Lists.newArrayList();
-            Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
-            QM scan = null;
-            for(QM m : candidates) {
-                if(!m.keyArguments.isEmpty()) {
-                    IndexDescriptor desc = m.indexBuilder.build();
-                    methodMap.put(IndexKey.of(desc.getColumnNames()), m);
-                    descriptors.add(desc);
-                } else {
-                    scan = m;
-                }
-            }
-            IndexedQueryPlanner indexPlanner = new IndexedQueryPlanner(descriptors);
-            QueryStrategy qs = leftSide != null ?
-                    indexPlanner.planJoin(leftSide, joinExpression, state.getFilter())
-                    : indexPlanner.plan(state.getFilter());
-            if (qs.scan) {
-                if (scan == null) {
-                    throw new ProgramCompileException(query.getLocation(), "Source '%s' does not support SCAN and query has no matching index", sourceName);
-                } else {
-                    return scan.stream(context);
-                }
-            }
-
-            List<StreamValue> outputs = Lists.newArrayList();
-            boolean handledFilter = true;
-            for (IndexKey index : qs.indexes.keySet()) {
-                Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
-                Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
-                for (IndexStrategy strategy : strategyCollection) {
-                    IndexQuery iq = new IndexQuery();
-                    prepareIndexKeyValues(context, leftSide, joinExpression, strategy, iq);
-                    iq.index = index;
-                    iq.filter = strategy.filter;
-                    if (strategy.filter != null) {
-                        iq.filterPredicate = compileFilter(context, strategy.filter);
-                        iq.handledFilter = false;
-                    } else {
-                        iq.handledFilter = true;
-                    }
-                    split.put(iq.index, iq);
-                }
-                for (IndexKey idx : split.keySet()) {
-                    Collection<IndexQuery> todo = split.get(idx);
-                    methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
-                }
-                for (IndexQuery iq : split.values()) {
-                    handledFilter = handledFilter && iq.handledFilter;
-                }
-            }
-            if (outputs.isEmpty()) {
-                throw new ProgramCompileException("Unable to match execution strategy for query %s (? should not be reached given declared indexes)", query);
-            }
-            StreamValue result;
-            if (outputs.size() == 1) {
-                result = outputs.get(0);
+        List<IndexDescriptor> descriptors = Lists.newArrayList();
+        Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
+        QM scan = null;
+        for(QM m : candidates) {
+            if(!m.keyArguments.isEmpty()) {
+                IndexDescriptor desc = m.indexBuilder.build();
+                methodMap.put(IndexKey.of(desc.getColumnNames()), m);
+                descriptors.add(desc);
             } else {
-                result = StreamValue.merge(context, outputs);
+                scan = m;
             }
-            if (handledFilter) {
-                state.setFilterHandled(true);
-            }
-            return result;
         }
+        IndexedQueryPlanner indexPlanner = new IndexedQueryPlanner(descriptors);
+        QueryStrategy qs = leftSide != null ?
+                indexPlanner.planJoin(leftSide, joinExpression, state.getFilter())
+                : indexPlanner.plan(state.getFilter());
+        if (qs.scan) {
+            if (scan == null) {
+                throw new ProgramCompileException(query.getLocation(), "Source '%s' does not support SCAN and query has no matching index", sourceName);
+            } else {
+                return scan.stream(context);
+            }
+        }
+
+        List<StreamValue> outputs = Lists.newArrayList();
+        boolean handledFilter = true;
+        for (IndexKey index : qs.indexes.keySet()) {
+            Collection<IndexStrategy> strategyCollection = qs.indexes.get(index);
+            Multimap<IndexKey, IndexQuery> split = ArrayListMultimap.create();
+            for (IndexStrategy strategy : strategyCollection) {
+                IndexQuery iq = new IndexQuery();
+                prepareIndexKeyValues(context, leftSide, joinExpression, strategy, iq);
+                iq.index = index;
+                iq.filter = strategy.filter;
+                if (strategy.filter != null) {
+                    iq.filterPredicate = compileFilter(context, strategy.filter);
+                    iq.handledFilter = false;
+                } else {
+                    iq.handledFilter = true;
+                }
+                split.put(iq.index, iq);
+            }
+            for (IndexKey idx : split.keySet()) {
+                Collection<IndexQuery> todo = split.get(idx);
+                methodMap.get(idx).index(outputs, context, Lists.newArrayList(todo));
+            }
+            for (IndexQuery iq : split.values()) {
+                handledFilter = handledFilter && iq.handledFilter;
+            }
+        }
+        if (outputs.isEmpty()) {
+            throw new ProgramCompileException("Unable to match execution strategy for query %s (? should not be reached given declared indexes)", query);
+        }
+        StreamValue result;
+        if (outputs.size() == 1) {
+            result = outputs.get(0);
+        } else {
+            result = StreamValue.merge(context, outputs);
+        }
+        if (handledFilter) {
+            state.setFilterHandled(true);
+        }
+        return result;
     }
 
     protected OperatorNode<FunctionOperator> compileFilter(CompileContext context, OperatorNode<ExpressionOperator> filter) {
@@ -578,16 +558,102 @@ public class SourceAdapter implements SourceType {
             reportMethodException(qm.method, "@%s methods may not have @Key parameters", qm.methodType);
             return false;
         }
+
+        default boolean accept(CandidateMethod c, QM candidate) {
+            return true;
+        }
     }
 
-    private List<QM> visitMethods(Class<? extends Annotation> annotationClass, CompileContext types, List<OperatorNode<PhysicalExprOperator>> inputArgs, Visitor visitor) {
+    static class CandidateMethod {
+        Method method;
+        String methodName;
+        int boost;
+        int keys;
+        int sets;
+        int arguments;
+        private NoMatchingMethodException.Reason reason;
+        private String disqualified;
+
+        public CandidateMethod(Method method) {
+            this.method = method;
+            this.methodName = method.getName() + Type.getMethodDescriptor(method);
+            Class<?>[] argumentTypes = method.getParameterTypes();
+            Annotation[][] annotations = method.getParameterAnnotations();
+            for(int i = 0; i < argumentTypes.length; i++) {
+                if(isFreeArgument(argumentTypes[i], annotations[i])) {
+                    arguments++;
+                } else {
+                    for(Annotation annotation : annotations[i]) {
+                        if(annotation instanceof Key) {
+                            keys++;
+                        } else if (annotation instanceof Set) {
+                            sets++;
+                        } else if (annotation instanceof Rank) {
+                            boost += ((Rank) annotation).value();
+                        }
+                    }
+                }
+            }
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public int getBoost() {
+            return boost;
+        }
+
+        public int getKeys() {
+            return keys;
+        }
+
+        public int getSets() {
+            return sets;
+        }
+
+        public int getArguments() {
+            return arguments;
+        }
+
+        public boolean disqualify(NoMatchingMethodException.Reason reason, Object ...args) {
+            this.reason = reason;
+            String message = reason.getFormat();
+            if(args != null) {
+                message = String.format(reason.getFormat(), args);
+            }
+            disqualified = message;
+            return false;
+        }
+
+        public NoMatchingMethodException.Reason getReason() {
+            return reason;
+        }
+
+        public String getMessage() {
+            return disqualified;
+        }
+    }
+
+    private List<QM> visitMethods(OperatorNode<SequenceOperator> query, Class<? extends Annotation> annotationClass, CompileContext types, List<OperatorNode<PhysicalExprOperator>> inputArgs, Visitor visitor) {
         List<QM> candidates = Lists.newArrayList();
         OperatorNode<PhysicalExprOperator> sourceExpr = getSource(types);
-        methods:
+        Collection<CandidateMethod> candidateMethods = Sets.newTreeSet(
+                Comparator.comparing(CandidateMethod::getBoost)
+                        .thenComparing(CandidateMethod::getArguments)
+                        .thenComparing(CandidateMethod::getKeys)
+                        .thenComparing(CandidateMethod::getSets)
+                        .thenComparing(CandidateMethod::getMethodName)
+                        .reversed());
         for(Method method : clazz.getMethods()) {
             if(!Modifier.isPublic(method.getModifiers()) || method.getAnnotation(annotationClass) == null) {
                 continue;
             }
+            candidateMethods.add(new CandidateMethod(method));
+        }
+        methods:
+        for(CandidateMethod cm : candidateMethods) {
+            Method method = cm.method;
             Class<?>[] argumentTypes = method.getParameterTypes();
             java.lang.reflect.Type[] genericArgumentTypes = method.getGenericParameterTypes();
             Annotation[][] annotations = method.getParameterAnnotations();
@@ -615,6 +681,7 @@ public class SourceAdapter implements SourceType {
                 java.lang.reflect.Type genericType = genericArgumentTypes[i];
                 if (isFreeArgument(argumentTypes[i], annotations[i])) {
                     if (!inputNext.hasNext()) {
+                        cm.disqualify(NoMatchingMethodException.Reason.FREE_ARGUMENTS);
                         continue methods;
                     }
                     m.invokeArguments.add(inputNext.next());
@@ -622,12 +689,23 @@ public class SourceAdapter implements SourceType {
                     for (Annotation annotate : annotations[i]) {
                         if (annotate instanceof Key) {
                             Key key = (Key) annotate;
-                            if(Insert.class.isAssignableFrom(annotationClass)) {
+                            if (Insert.class.isAssignableFrom(annotationClass)) {
                                 reportMethodParameterException("Insert", method, "@Key parameters are not permitted on @Insert methods");
                                 throw new IllegalArgumentException();
                             }
-                            if(!visitor.visitKey(m, key, parameterType, types.adapt(genericType, true))) {
+                            if (!visitor.visitKey(m, key, parameterType, types.adapt(genericType, true))) {
+                                cm.disqualify(NoMatchingMethodException.Reason.KEY_PARAMETER, key.value());
                                 continue methods;
+                            }
+                        } else if (annotate instanceof DefaultValue) {
+                            boolean found = false;
+                            for (Annotation ann : annotations[i]) {
+                                if (ann instanceof Set) {
+                                    found = true;
+                                }
+                            }
+                            if(!found) {
+                                reportMethodParameterException(DefaultValue.class.getSimpleName(), method, "@DefaultValue must be accompanied by a @Set annotation");
                             }
                         } else if (annotate instanceof Set) {
                             Object defaultValue = null;
@@ -647,9 +725,11 @@ public class SourceAdapter implements SourceType {
                                     reportMethodParameterException(annotationClass.getSimpleName(), method, "@DefaultValue is not permitted on @Set('$') parameters");
                                 }
                                 if(!visitor.visitRecordSet(m, parameterType, setType)) {
+                                    cm.disqualify(NoMatchingMethodException.Reason.RECORD_SET_PARAMETER);
                                     continue methods;
                                 }
                             } else if(!visitor.visitSet(m, set.value(), defaultValue, parameterType, setType)) {
+                                cm.disqualify(NoMatchingMethodException.Reason.SET_PARAMETER, set.value());
                                 continue methods;
                             }
                         } else if (annotate instanceof TimeoutMilliseconds) {
@@ -672,7 +752,12 @@ public class SourceAdapter implements SourceType {
             if(inputNext.hasNext()) {
                 continue;
             }
-            candidates.add(m);
+            if(visitor.accept(cm, m)) {
+                candidates.add(m);
+            }
+        }
+        if(candidates.isEmpty()) {
+            throw new NoMatchingMethodException(annotationClass, sourceName, clazz, query, candidateMethods);
         }
         return candidates;
     }
@@ -883,29 +968,17 @@ public class SourceAdapter implements SourceType {
             invokeArguments.add(OperatorNode.create(PhysicalExprOperator.RECORD_FROM, Type.getType(recordTypeClazz), record));
         }
 
-        public void verifySetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
+        public boolean verifySetArguments(CandidateMethod c, Map<String, OperatorNode<PhysicalExprOperator>> record) {
             if(wildcardSet) {
-                return;
+                return true;
             }
             // verify no unknown fields are present in the input
             for(String key : record.keySet()) {
                 if(!setArguments.contains(key)) {
-                    throw new IllegalArgumentException(String.format("%s::%s Unexpected additional property '%s'", method.getDeclaringClass().getName(), method.getName(), key));
+                    return c.disqualify(NoMatchingMethodException.Reason.EXTRA_FIELD, key);
                 }
             }
-        }
-
-        public int checkSetArguments(Map<String, OperatorNode<PhysicalExprOperator>> record) {
-            if (wildcardSet) {
-                return 1000;
-            }
-            int out = 0;
-            for(String key : record.keySet()) {
-                if(setArguments.contains(key)) {
-                    out += 1;
-                }
-            }
-            return out;
+            return true;
         }
     }
 
@@ -1048,6 +1121,11 @@ public class SourceAdapter implements SourceType {
         public boolean visitRecordSet(QM qm, Class<?> parameterClazz, TypeWidget recordType) {
             qm.addSetRecordParameter(parameterClazz, recordType, record);
             return true;
+        }
+
+        @Override
+        public boolean accept(CandidateMethod c, QM candidate) {
+            return candidate.verifySetArguments(c, record);
         }
     }
 

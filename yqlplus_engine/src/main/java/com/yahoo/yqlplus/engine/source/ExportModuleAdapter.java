@@ -45,6 +45,7 @@ public class ExportModuleAdapter implements ModuleType {
     private static final List<Class<?>> SOURCE_ANNOTATIONS =
             ImmutableList.of(Key.class,
                     Set.class,
+                    DefaultValue.class,
                     TimeoutMilliseconds.class,
                     Emitter.class);
     private final String moduleName;
