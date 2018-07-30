@@ -36,12 +36,6 @@ SELECT * FROM source WHERE a AND b AND c AND d OR x;
 SELECT * FROM ns.source WHERE a AND b AND c AND d OR x;
 (PROGRAM L0:0 [(EXECUTE L0:1 (FILTER (SCAN L14:1 {alias=source} [ns, source], []), (OR [(AND [(READ_FIELD L30:1 source, a), (READ_FIELD L36:1 source, b), (READ_FIELD L42:1 source, c), (READ_FIELD L48:1 source, d)]), (READ_FIELD L53:1 source, x)])), result1), (OUTPUT L0:1 result1)])
 
-SELECT a, b, c FROM source paged 10;
-(PROGRAM L0:0 [(EXECUTE L0:1 (PAGE (PROJECT (SCAN L20:1 {alias=source} [source], []), [(FIELD (READ_FIELD L7:1 source, a), a), (FIELD (READ_FIELD L10:1 source, b), b), (FIELD (READ_FIELD L13:1 source, c), c)]), (LITERAL L33:1 10)), result1), (OUTPUT L0:1 result1)])
-
-next 'key' output as foo;
-(PROGRAM L0:0 [(EXECUTE L0:1 (NEXT L0:1 key), foo), (OUTPUT L0:1 foo)])
-
 SELECT * FROM source | step1 | step2() | step3(1, 2) OUTPUT AS booger;
 (PROGRAM L0:0 [(EXECUTE L0:1 (PIPE (PIPE (PIPE (SCAN L14:1 {alias=source} [source], []), [step1], []), [step2], []), [step3], [(LITERAL L47:1 1), (LITERAL L50:1 2)]), booger), (OUTPUT L0:1 booger)])
 
