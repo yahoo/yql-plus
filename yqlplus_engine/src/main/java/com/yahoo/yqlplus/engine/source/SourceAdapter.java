@@ -302,6 +302,8 @@ public class SourceAdapter implements SourceType {
                 }
                 return val;
             } else {
+                // this isn't actually possible in the language, because matching is based on available keys which has to be one set per INSERT
+                // but it IS possible in the Operator grammar
                 List<OperatorNode<PhysicalExprOperator>> exprs = invocations.stream().map(QM::invokeIterable).collect(Collectors.toList());
                 OperatorNode<PhysicalExprOperator> list = OperatorNode.create(PhysicalExprOperator.ARRAY, exprs);
                 StreamValue val = StreamValue.iterate(context, list);

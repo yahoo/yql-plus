@@ -56,7 +56,7 @@ public class YQLPlusCompiler {
         return compile("<string>", program);
     }
 
-    private CompiledProgram compile(OperatorNode<StatementOperator> program) throws IOException {
+    public CompiledProgram compile(OperatorNode<StatementOperator> program) throws IOException {
         return compiler.compile(program);
     }
 }
