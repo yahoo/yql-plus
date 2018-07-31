@@ -16,7 +16,11 @@ import com.yahoo.yqlplus.engine.compiler.runtime.RelativeTicker;
 import com.yahoo.yqlplus.engine.compiler.runtime.TimeoutTracker;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public final class TaskContext {
@@ -78,17 +82,15 @@ public final class TaskContext {
         this.metricEmitter = metricEmitter;
         this.tracer = tracer;
         this.timeout = timeout;
-        // TODO: give container control over this
         this.pool = pool;
     }
 
-    private TaskContext(TaskContext rootContext, TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout) {
+    private TaskContext(TaskContext rootContext, TaskMetricEmitter metricEmitter, Tracer tracer, Timeout timeout, ForkJoinPool pool) {
         this.rootContext = rootContext;
         this.metricEmitter = metricEmitter;
         this.tracer = tracer;
         this.timeout = timeout;
-        // TODO: give container control over this
-        this.pool = ForkJoinPool.commonPool();
+        this.pool =  pool;
     }
 
     public final <T> T runTimeout(Supplier<T> work) throws ExecutionException, InterruptedException {
@@ -98,15 +100,15 @@ public final class TaskContext {
     }
 
     public TaskContext start(MetricDimension ctx) {
-        return new TaskContext(rootContext, metricEmitter.start(ctx), tracer.start(ctx.getKey(), ctx.getValue()), timeout);
+        return new TaskContext(rootContext, metricEmitter.start(ctx), tracer.start(ctx.getKey(), ctx.getValue()), timeout, pool);
     }
 
     public TaskContext timeout(long timeout, TimeUnit units) throws TimeoutException {
-        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(timeout, units));
+        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(timeout, units), pool);
     }
 
     public TaskContext timeout(long min, TimeUnit minUnits, long max, TimeUnit maxUnits) throws TimeoutException {
-        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(min, minUnits, max, maxUnits));
+        return new TaskContext(rootContext, metricEmitter, tracer, this.timeout.createTimeout(min, minUnits, max, maxUnits), pool);
     }
 
     public <T> List<T> scatter(List<Supplier<T>> input) throws ExecutionException, InterruptedException {
