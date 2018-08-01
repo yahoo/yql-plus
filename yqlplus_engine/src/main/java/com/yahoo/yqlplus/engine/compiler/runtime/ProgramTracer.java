@@ -15,7 +15,11 @@ import com.google.common.base.Ticker;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.yahoo.yqlplus.api.trace.*;
+import com.yahoo.yqlplus.api.trace.RequestTracer;
+import com.yahoo.yqlplus.api.trace.TraceEntry;
+import com.yahoo.yqlplus.api.trace.TraceLogEntry;
+import com.yahoo.yqlplus.api.trace.TraceRequest;
+import com.yahoo.yqlplus.api.trace.Tracer;
 
 import java.io.IOException;
 import java.util.Collection;

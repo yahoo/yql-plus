@@ -30,9 +30,9 @@ public class IndexQuery {
         // if only joinKeyStream, use it
         // else
         // maybe CROSS the joinKeyStream with the GENERATE_KEYS?
-        if(joinKeys == null || joinKeys.isEmpty()) {
+        if (joinKeys == null || joinKeys.isEmpty()) {
             return prepareKeyStream(planner);
-        } else if(keyValues.isEmpty()) {
+        } else if (keyValues.isEmpty()) {
             return joinKeyStream;
         } else {
             StreamValue input = prepareKeyStream(planner);
@@ -53,7 +53,7 @@ public class IndexQuery {
         List<String> keys = index.columnOrder;
         List<OperatorNode<PhysicalExprOperator>> valueLists = Lists.newArrayList();
         for (String key : keys) {
-            if(keyValues.containsKey(key)) {
+            if (keyValues.containsKey(key)) {
                 valueLists.add(keyValues.get(key));
             }
         }

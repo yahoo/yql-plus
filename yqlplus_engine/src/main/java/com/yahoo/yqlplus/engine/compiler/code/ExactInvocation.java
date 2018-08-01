@@ -25,14 +25,14 @@ public class ExactInvocation extends BytecodeInvocable {
         TypeWidget returnType = adapter.adapt(owner.getReturnType(method));
         String methodName = method.getName();
         List<TypeWidget> argTypes = Lists.newArrayListWithExpectedSize(method.getParameterCount());
-        for(TypeLiteral<?> argType : owner.getParameterTypes(method)) {
+        for (TypeLiteral<?> argType : owner.getParameterTypes(method)) {
             argTypes.add(adapter.adapt(argType));
         }
         int op = Opcodes.INVOKEVIRTUAL;
-        if(owner.getRawType().isInterface()) {
+        if (owner.getRawType().isInterface()) {
             op = Opcodes.INVOKEINTERFACE;
         }
-        if(Modifier.isStatic(method.getModifiers())) {
+        if (Modifier.isStatic(method.getModifiers())) {
             op = Opcodes.INVOKESTATIC;
         }
         return exactInvoke(op, methodName, ownerType, returnType, argTypes);

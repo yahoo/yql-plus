@@ -14,7 +14,10 @@ import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.GETFIELD;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.PUTSTATIC;
 
 public class FieldDefinition extends Annotatable implements ObjectBuilder.FieldBuilder {
     final String ownerInternalName;

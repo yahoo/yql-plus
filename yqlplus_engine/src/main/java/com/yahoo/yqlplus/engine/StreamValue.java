@@ -91,7 +91,7 @@ public abstract class StreamValue {
 
     public abstract OperatorValue materialize();
 
-    public abstract OperatorValue  materializeIf(OperatorNode<PhysicalExprOperator> condition);
+    public abstract OperatorValue materializeIf(OperatorNode<PhysicalExprOperator> condition);
 
     public abstract Collection<OperatorValue> feed(OperatorValue stream);
 

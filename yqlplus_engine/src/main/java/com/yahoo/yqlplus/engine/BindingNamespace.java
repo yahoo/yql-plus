@@ -40,20 +40,20 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
 
     @SuppressWarnings("unchecked")
     public BindingNamespace bind(Object... kvPairs) {
-        if(kvPairs == null) {
+        if (kvPairs == null) {
             return this;
         }
         for (int i = 0; i < kvPairs.length; i += 2) {
             String key = (String) kvPairs[i];
             Object value = kvPairs[i + 1];
             if (value instanceof Source) {
-                bindSource(key, (Source)value);
+                bindSource(key, (Source) value);
             } else if (value instanceof Exports) {
                 bindModule(key, (Exports) value);
             } else if (value instanceof Supplier) {
-                Object val = ((Supplier)value).get();
-                if(val instanceof Exports) {
-                    bindModule(key, (Class<? extends Exports>) val.getClass(), (Supplier<Exports>)value);
+                Object val = ((Supplier) value).get();
+                if (val instanceof Exports) {
+                    bindModule(key, (Class<? extends Exports>) val.getClass(), (Supplier<Exports>) value);
                 } else if (val instanceof Source) {
                     bindSource(key, (Class<? extends Source>) val.getClass(), (Supplier<Source>) value);
                 } else {
@@ -140,7 +140,7 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
     @Override
     public ModuleType findModule(Location location, List<String> modulePath) {
         Supplier<ModuleType> moduleTypeSupplier = this.modules.get(Joiner.on('.').join(modulePath));
-        if(moduleTypeSupplier == null) {
+        if (moduleTypeSupplier == null) {
             return null;
         }
         return moduleTypeSupplier.get();
@@ -149,7 +149,7 @@ public class BindingNamespace implements ModuleNamespace, SourceNamespace, ViewR
     @Override
     public SourceType findSource(Location location, List<String> path) {
         Supplier<SourceType> sourceTypeSupplier = this.sources.get(Joiner.on('.').join(path));
-        if(sourceTypeSupplier == null) {
+        if (sourceTypeSupplier == null) {
             return null;
         }
         return sourceTypeSupplier.get();

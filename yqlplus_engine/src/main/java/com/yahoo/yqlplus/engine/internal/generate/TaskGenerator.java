@@ -65,7 +65,7 @@ public class TaskGenerator {
         PhysicalExprOperatorCompiler compiler = new PhysicalExprOperatorCompiler(runBody);
         OperatorNode<PhysicalOperator> op = step.getCompute();
         OperatorValue output = step.getOutput();
-        BytecodeExpression rootContext =  runBody.local("$context"); //   runBody.propertyValue(op.getLocation(), runBody.local("$context"), "rootContext");
+        BytecodeExpression rootContext = runBody.local("$context"); //   runBody.propertyValue(op.getLocation(), runBody.local("$context"), "rootContext");
         switch (op.getOperator()) {
             case REQUIRED_ARGUMENT: {
                 String nm = op.getArgument(0);
@@ -119,7 +119,7 @@ public class TaskGenerator {
                 BytecodeExpression outputExpression = stepCompiler.evaluateExpression(pgm, ctx, exprTree);
                 if (op.getOperator() == PhysicalOperator.EXECUTE) {
                     GambitCreator.Invocable inc = stepInvocable.complete(outputExpression);
-                    BytecodeExpression evaluatedExpr = inc.invoke(exprTree.getLocation() , program, ctxExpr);
+                    BytecodeExpression evaluatedExpr = inc.invoke(exprTree.getLocation(), program, ctxExpr);
                     runBody.exec(evaluatedExpr);
                 } else if (outputExpression.getType().getValueCoreType() != YQLCoreType.VOID) {
                     BytecodeExpression expr = stepInvocable.evaluateTryCatch(op.getLocation(), outputExpression);
@@ -148,7 +148,7 @@ public class TaskGenerator {
         for (OperatorValue arg : args) {
             exprs.add(body.local(arg.getName()));
         }
-        return builder.exit().invoke(Location.NONE , exprs);
+        return builder.exit().invoke(Location.NONE, exprs);
     }
 
     public ScopedBuilder getBody() {

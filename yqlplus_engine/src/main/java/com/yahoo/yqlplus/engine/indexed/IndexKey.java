@@ -25,7 +25,7 @@ public final class IndexKey {
         Collections.sort(copy);
         this.columns = copy;
         lowerCaseColumns = new ArrayList<>(this.columns.size());
-        for (String col:this.columns) {
+        for (String col : this.columns) {
             lowerCaseColumns.add(col.toLowerCase());
         }
         Collections.sort(lowerCaseColumns);

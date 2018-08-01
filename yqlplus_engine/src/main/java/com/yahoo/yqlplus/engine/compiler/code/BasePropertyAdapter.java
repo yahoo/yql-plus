@@ -29,10 +29,10 @@ public abstract class BasePropertyAdapter implements PropertyAdapter {
             public void generate(CodeEmitter top) {
                 CodeEmitter code = top.createScope();
                 BytecodeExpression input = code.evaluateOnce(type.construct());
-                for(Map.Entry<String, BytecodeExpression> e : fields.entrySet()) {
+                for (Map.Entry<String, BytecodeExpression> e : fields.entrySet()) {
                     AssignableValue out = property(input, e.getKey());
                     BytecodeExpression value = e.getValue();
-                    if(value.getType().isNullable()) {
+                    if (value.getType().isNullable()) {
                         Label nextItem = new Label();
                         value = code.evaluateOnce(value);
                         code.gotoIfNull(value, nextItem);
@@ -69,7 +69,7 @@ public abstract class BasePropertyAdapter implements PropertyAdapter {
 
     @Override
     public BytecodeExpression createFrom(BytecodeExpression inputExpr) {
-        if(type.isAssignableFrom(inputExpr.getType())) {
+        if (type.isAssignableFrom(inputExpr.getType())) {
             return inputExpr;
         }
         if (isClosed()) {

@@ -81,7 +81,7 @@ public class MethodGenerator extends FunctionGenerator {
 
     public Handle getHandle() {
         int h = Opcodes.H_INVOKEVIRTUAL;
-        if(Modifier.isStatic(modifiers)) {
+        if (Modifier.isStatic(modifiers)) {
             h = Opcodes.H_INVOKESTATIC;
         }
         return new Handle(h, unit.internalName, name, createMethodDescriptor(), false);

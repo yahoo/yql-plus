@@ -6,7 +6,6 @@
 
 package com.yahoo.yqlplus.engine.internal.code;
 
-import java.io.IOException;
 import java.io.Writer;
 
 class BufferWriter extends Writer {

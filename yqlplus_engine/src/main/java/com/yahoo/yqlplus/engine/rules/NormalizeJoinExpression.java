@@ -73,7 +73,7 @@ public class NormalizeJoinExpression extends LogicalOperatorTransform {
         Set<String> leftSources = findSources(leftSide);
         Set<String> rightSources = findSources(rightSide);
         OperatorNode<ExpressionOperator> newJoinExpr = normalizeJoinClause(leftSources, rightSources, joinExpr);
-        if(joinExpr != newJoinExpr) {
+        if (joinExpr != newJoinExpr) {
             return super.visitSequenceOperator(OperatorNode.create(target.getLocation(), target.getAnnotations(), target.getOperator(), leftSide, rightSide, newJoinExpr));
         }
 
@@ -81,19 +81,19 @@ public class NormalizeJoinExpression extends LogicalOperatorTransform {
     }
 
     private OperatorNode<ExpressionOperator> normalizeJoinClause(Set<String> leftSources, Set<String> rightSources, OperatorNode<ExpressionOperator> joinExpr) {
-        switch(joinExpr.getOperator()) {
+        switch (joinExpr.getOperator()) {
             case AND: {
                 List<OperatorNode<ExpressionOperator>> clauses = joinExpr.getArgument(0);
                 List<OperatorNode<ExpressionOperator>> newClauses = Lists.newArrayListWithExpectedSize(clauses.size());
                 boolean hasNew = false;
-                for(OperatorNode<ExpressionOperator> clause : clauses) {
+                for (OperatorNode<ExpressionOperator> clause : clauses) {
                     OperatorNode<ExpressionOperator> newClause = normalizeJoinClause(leftSources, rightSources, clause);
-                    if(newClause != clause) {
+                    if (newClause != clause) {
                         hasNew = true;
                     }
                     newClauses.add(newClause);
                 }
-                if(hasNew) {
+                if (hasNew) {
                     return OperatorNode.create(joinExpr.getLocation(), joinExpr.getAnnotations(), joinExpr.getOperator(), newClauses);
                 }
                 return joinExpr;

@@ -9,9 +9,22 @@ package com.yahoo.yqlplus.stdlib;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.annotations.Export;
 
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.*;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 
 
 /**
@@ -47,7 +60,8 @@ public class DateTime implements Exports {
      *
      * @return {@code Instant} representing the min time value.
      */
-    @Export Instant min() {
+    @Export
+    Instant min() {
         return Instant.MIN;
     }
 
@@ -141,8 +155,8 @@ public class DateTime implements Exports {
      * Parses the number of seconds since the epoch using the given hours and minutes as zone offset.
      *
      * @param epochSecond seconds since epoch
-     * @param hours zone hours offset, +/-
-     * @param minutes zone minutes offset, +/-
+     * @param hours       zone hours offset, +/-
+     * @param minutes     zone minutes offset, +/-
      * @return {@code OffsetDateTime} representation of epoch
      */
     @Export
@@ -154,8 +168,8 @@ public class DateTime implements Exports {
      * Parses the number of milliseconds since the epoch using the given hours and minutes as zone offset.
      *
      * @param epochMilli seconds since epoch
-     * @param hours zone hours offset, +/-
-     * @param minutes zone minutes offset, +/-
+     * @param hours      zone hours offset, +/-
+     * @param minutes    zone minutes offset, +/-
      * @return {@code OffsetDateTime} representation of epoch
      */
     @Export
@@ -167,10 +181,9 @@ public class DateTime implements Exports {
      * Parses date into a {@code TemporalAccessor}, without offset.
      * Note: dates with timezone offset are NOT supported.
      *
-     * @see <a href="http://stackoverflow.com/questions/7788267/what-are-the-use-cases-justifying-the-310-offsetdate-type">Why no OffsetDate</a>
-     *
      * @param date String representation of a date in ISO 8601 format
      * @return {@code LocalDate} representation of the date
+     * @see <a href="http://stackoverflow.com/questions/7788267/what-are-the-use-cases-justifying-the-310-offsetdate-type">Why no OffsetDate</a>
      */
     @Export
     public LocalDate from_date_string(String date) {
@@ -202,11 +215,10 @@ public class DateTime implements Exports {
     /**
      * Parses a date into a {@code TemporalAccessor} based on the provided pattern
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/format/DateTimeFormatter.html#patterns">Supported Patterns</a>
-     *
      * @param datetime Datetime to parse
-     * @param pattern Pattern matching the date
+     * @param pattern  Pattern matching the date
      * @return {@code TemporalAccessor} representation of the parsed time
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/format/DateTimeFormatter.html#patterns">Supported Patterns</a>
      */
     @Export
     public TemporalAccessor from_string(String datetime, String pattern) {
@@ -217,17 +229,16 @@ public class DateTime implements Exports {
 
     /**
      * Extract the value of a specific field from the given {@code TemporalAccessor} if the field is supported.
-     *
+     * <p>
      * <p>Note: Querying any date field from a time value will throw a {@code DateTimeException}.</p>
-     *
+     * <p>
      * <p>Note: Unlike postgres for example, stand-alone dates are not internally converted to datetime. This means
      * that querying any time field will throw a {@code DateTimeException}.</p>
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoField.html">Supported fields</a>
-     *
      * @param temporal Temporal value to extract the field from
-     * @param field field to extract the value from
+     * @param field    field to extract the value from
      * @return int value of requested field, if found
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoField.html">Supported fields</a>
      */
     @Export
     public int extract_field_value(TemporalAccessor temporal, String field) {
@@ -272,11 +283,10 @@ public class DateTime implements Exports {
     /**
      * Formats the given datetime object according to the provided pattern.
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/format/DateTimeFormatter.html#patterns">Supported Patterns</a>
-     *
      * @param datetime datetime object
-     * @param pattern Supported pattern
+     * @param pattern  Supported pattern
      * @return The formatted {@code TemporalAccessor}
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/format/DateTimeFormatter.html#patterns">Supported Patterns</a>
      */
     @Export
     public String format(TemporalAccessor datetime, String pattern) {
@@ -288,24 +298,22 @@ public class DateTime implements Exports {
      * <p>Add an interval to {@code TemporalAccessor}.</p>
      * <p>Note: Please refer to the links for the difference between Period and Duration.</p>
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Period.html">Period</a>
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Duration.html">Duration</a>
-     *
      * @param datetime - {@code TemporalAccessor} representation of the datetime
      * @param interval - String representation of {@code Period} or {@code Duration}
-     *                   eg: P1Y1M0D or P1DT1H1M1S or PT1H1M1S
+     *                 eg: P1Y1M0D or P1DT1H1M1S or PT1H1M1S
      * @return {@code TemporalAccessor} representation of the result
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Period.html">Period</a>
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Duration.html">Duration</a>
      */
     @Export
     public TemporalAccessor add(TemporalAccessor datetime, String interval) {
-        if (! (datetime instanceof Temporal)) {
+        if (!(datetime instanceof Temporal)) {
             throw new IllegalArgumentException(datetime.toString() + " is not supported.");
         }
         TemporalAmount p;
-        if(!interval.contains("T")) {
+        if (!interval.contains("T")) {
             p = Period.parse(interval);
-        }
-        else {
+        } else {
             p = Duration.parse(interval);
         }
 
@@ -318,24 +326,22 @@ public class DateTime implements Exports {
      * <p>Subtract an interval from {@code TemporalAccessor} based on ISO-8601.</p>
      * <p>Note: Please refer to the links for the difference between Period and Duration.</p>
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Period.html">Period</a>
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Duration.html">Duration</a>
-     *
      * @param datetime - {@code TemporalAccessor} representation of the datetime
      * @param interval - String representation of {@code Period} or {@code Duration}
-     *                   eg: P1Y1M0D or P5DT1H1M1S or PT1H1M1S
+     *                 eg: P1Y1M0D or P5DT1H1M1S or PT1H1M1S
      * @return {@code TemporalAccessor} representation of the result
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Period.html">Period</a>
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/Duration.html">Duration</a>
      */
     @Export
     public TemporalAccessor sub(TemporalAccessor datetime, String interval) {
-        if (! (datetime instanceof Temporal)) {
+        if (!(datetime instanceof Temporal)) {
             throw new IllegalArgumentException(datetime.toString() + " is not supported.");
         }
         TemporalAmount p;
-        if(!interval.contains("T")) {
+        if (!interval.contains("T")) {
             p = Period.parse(interval);
-        }
-        else {
+        } else {
             p = Duration.parse(interval);
         }
 
@@ -347,11 +353,10 @@ public class DateTime implements Exports {
     /**
      * Truncates according to the specified unit. Note: Currently only time truncation is supported.
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoUnit.html">Supported Units</a>
-     *
      * @param temporal Temporal value to truncate
-     * @param unit Time unit to truncate
+     * @param unit     Time unit to truncate
      * @return New and immutable truncated {@code TemporalAccessor}
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoUnit.html">Supported Units</a>
      */
     @Export
     public TemporalAccessor truncate_datetime(TemporalAccessor temporal, String unit) {
@@ -369,11 +374,10 @@ public class DateTime implements Exports {
     /**
      * Truncates according to the specified unit. Note: Currently only time truncation is supported.
      *
-     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoUnit.html">Supported Units</a>
-     *
      * @param temporal Temporal value to truncate
-     * @param unit Time unit to truncate
+     * @param unit     Time unit to truncate
      * @return New and immutable truncated {@code TemporalAccessor}
+     * @see <a href="http://download.java.net/jdk8/docs/api/java/time/temporal/ChronoUnit.html">Supported Units</a>
      */
     @Export
     public TemporalAccessor truncate_time(TemporalAccessor temporal, String unit) {
@@ -392,8 +396,8 @@ public class DateTime implements Exports {
      * Sets the specified field in the {@code Temporal} to the given value.
      *
      * @param temporalAccessor {@code TemporalAccessor} with the field to update
-     * @param field Field to update
-     * @param value Desired value
+     * @param field            Field to update
+     * @param value            Desired value
      * @return A new Object of same type as the one specified, with the field updated
      */
     @Export

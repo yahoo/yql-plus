@@ -56,20 +56,20 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
     @Override
     public ModuleType findModule(Location location, List<String> modulePath) {
         String key = keyFor(modulePath);
-        if(moduleMap.containsKey(key)) {
+        if (moduleMap.containsKey(key)) {
             return moduleMap.get(key);
         }
         SuffixMatch<ModuleNamespace> prefixSearch = prefixSearch(moduleNamespaceMap, modulePath);
-        if(prefixSearch != null) {
+        if (prefixSearch != null) {
             return prefixSearch.module.findModule(location, prefixSearch.suffix);
         }
-        for(ModuleNamespace moduleNamespace : moduleNamespaceSet) {
+        for (ModuleNamespace moduleNamespace : moduleNamespaceSet) {
             try {
                 ModuleType moduleType = moduleNamespace.findModule(location, modulePath);
                 if (moduleType != null) {
                     return moduleType;
                 }
-            } catch(DependencyNotFoundException ignored) {
+            } catch (DependencyNotFoundException ignored) {
 
             }
         }
@@ -77,10 +77,10 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
     }
 
     private <T> SuffixMatch<T> prefixSearch(Map<String, T> map, List<String> path) {
-        for(int i = path.size()-1; i > 0; i--) {
-            List<String> suffix = path.subList(i,  path.size());
+        for (int i = path.size() - 1; i > 0; i--) {
+            List<String> suffix = path.subList(i, path.size());
             String prefix = keyFor(path.subList(0, i));
-            if(map.containsKey(prefix)) {
+            if (map.containsKey(prefix)) {
                 return new SuffixMatch<>(suffix, map.get(prefix));
             }
         }
@@ -90,20 +90,20 @@ public class SearchNamespaceAdapter implements SourceNamespace, ModuleNamespace 
     @Override
     public SourceType findSource(Location location, List<String> path) {
         String key = keyFor(path);
-        if(sourceMap.containsKey(key)) {
+        if (sourceMap.containsKey(key)) {
             return sourceMap.get(key);
         }
         SuffixMatch<SourceNamespace> prefixSearch = prefixSearch(sourceNamespaceMap, path);
-        if(prefixSearch != null) {
+        if (prefixSearch != null) {
             return prefixSearch.module.findSource(location, prefixSearch.suffix);
         }
-        for(SourceNamespace moduleNamespace : sourceNamespaceSet) {
+        for (SourceNamespace moduleNamespace : sourceNamespaceSet) {
             try {
                 SourceType moduleType = moduleNamespace.findSource(location, path);
                 if (moduleType != null) {
                     return moduleType;
                 }
-            } catch(DependencyNotFoundException ignored) {
+            } catch (DependencyNotFoundException ignored) {
 
             }
         }

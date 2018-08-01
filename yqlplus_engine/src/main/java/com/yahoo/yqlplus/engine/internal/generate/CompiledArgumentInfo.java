@@ -41,47 +41,47 @@ public class CompiledArgumentInfo implements CompiledProgram.ArgumentInfo {
     public static Type convertYQLCoreType(YQLType yqlType) {
         Type resultType;
         switch (yqlType.getCoreType()) {
-        case INT8:
-            resultType = byte.class;
-            break;
-        case INT16:
-            resultType = short.class;
-            break;
-        case INT32:
-            resultType = int.class;
-            break;
-        case INT64:
-            resultType = long.class;
-            break;
-        case FLOAT32:
-            resultType = float.class;
-            break;
-        case FLOAT64:
-            resultType = double.class;
-            break;
-        case STRING:
-            resultType = String.class;
-            break;
-        case BYTES:
-            resultType = ByteBuffer.class;
-            break;
-        case TIMESTAMP:
-            resultType = long.class;
-            break;
-        case BOOLEAN:
-            resultType = boolean.class;
-            break;
-        case MAP:
-            resultType = Map.class;
-            break;
-        case ARRAY:
-            resultType = Object[].class;
-            break;
-        case STRUCT:
-            resultType = Record.class;
-            break;
-        default:
-            throw new ProgramCompileException("Unsupported argtype: " + yqlType);
+            case INT8:
+                resultType = byte.class;
+                break;
+            case INT16:
+                resultType = short.class;
+                break;
+            case INT32:
+                resultType = int.class;
+                break;
+            case INT64:
+                resultType = long.class;
+                break;
+            case FLOAT32:
+                resultType = float.class;
+                break;
+            case FLOAT64:
+                resultType = double.class;
+                break;
+            case STRING:
+                resultType = String.class;
+                break;
+            case BYTES:
+                resultType = ByteBuffer.class;
+                break;
+            case TIMESTAMP:
+                resultType = long.class;
+                break;
+            case BOOLEAN:
+                resultType = boolean.class;
+                break;
+            case MAP:
+                resultType = Map.class;
+                break;
+            case ARRAY:
+                resultType = Object[].class;
+                break;
+            case STRUCT:
+                resultType = Record.class;
+                break;
+            default:
+                throw new ProgramCompileException("Unsupported argtype: " + yqlType);
         }
         return resultType;
     }
@@ -100,12 +100,12 @@ public class CompiledArgumentInfo implements CompiledProgram.ArgumentInfo {
     public boolean isRequired() {
         return required;
     }
-    
+
     @Override
     public YQLType getYQLType() {
         return yqlType;
     }
-    
+
     @Override
     public Object getDefaultValue() {
         return defaultValue;

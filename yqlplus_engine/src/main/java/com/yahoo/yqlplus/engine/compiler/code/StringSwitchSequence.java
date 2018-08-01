@@ -35,21 +35,21 @@ public class StringSwitchSequence implements BytecodeSequence {
     @Override
     public void generate(CodeEmitter code) {
         Map<String, Label> labelMap = Maps.newHashMapWithExpectedSize(sequenceMap.size());
-        for(String key : sequenceMap.keySet()) {
+        for (String key : sequenceMap.keySet()) {
             labelMap.put(key, new Label());
         }
         Label done = new Label();
-        Label defaultCase =  defaultSequence == BytecodeSequence.NOOP ?  done : new Label();
+        Label defaultCase = defaultSequence == BytecodeSequence.NOOP ? done : new Label();
         code.exec(input);
         code.emitInstanceCheck(input.getType(), String.class, defaultCase);
         code.emitStringSwitch(labelMap, defaultCase, caseInsensitive);
         MethodVisitor mv = code.getMethodVisitor();
-        for(Map.Entry<String, BytecodeSequence>  e : sequenceMap.entrySet()) {
+        for (Map.Entry<String, BytecodeSequence> e : sequenceMap.entrySet()) {
             mv.visitLabel(labelMap.get(e.getKey()));
             code.exec(e.getValue());
             mv.visitJumpInsn(Opcodes.GOTO, done);
         }
-        if(defaultCase != done) {
+        if (defaultCase != done) {
             mv.visitLabel(defaultCase);
             code.exec(defaultSequence);
         }

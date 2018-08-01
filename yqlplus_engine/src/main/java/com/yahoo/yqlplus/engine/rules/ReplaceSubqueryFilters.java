@@ -7,7 +7,11 @@
 package com.yahoo.yqlplus.engine.rules;
 
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.language.logical.*;
+import com.yahoo.yqlplus.language.logical.ExpressionOperator;
+import com.yahoo.yqlplus.language.logical.ProjectOperator;
+import com.yahoo.yqlplus.language.logical.SequenceOperator;
+import com.yahoo.yqlplus.language.logical.StatementOperator;
+import com.yahoo.yqlplus.language.logical.StatementOperatorTransform;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 

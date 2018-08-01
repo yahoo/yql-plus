@@ -113,7 +113,7 @@ public final class UnitCodeEmitter implements CodeEmitter {
                 methodVisitor.visitLdcInsn(constant);
         }
     }
-    
+
     @Override
     public void emitBooleanConstant(boolean constant) {
         if (constant) {
@@ -414,7 +414,7 @@ public final class UnitCodeEmitter implements CodeEmitter {
 
     @Override
     public BytecodeExpression nullChecked(BytecodeExpression expr, Label isNull) {
-        if(expr.getType().isNullable()) {
+        if (expr.getType().isNullable()) {
             BytecodeExpression input = evaluateOnce(expr);
             gotoIfNull(input, isNull);
             return new NullCheckedEvaluatedExpression(input);
@@ -424,7 +424,7 @@ public final class UnitCodeEmitter implements CodeEmitter {
 
     @Override
     public boolean gotoIfNull(BytecodeExpression expr, Label isNull) {
-        if(expr.getType().isNullable()) {
+        if (expr.getType().isNullable()) {
             exec(expr);
             methodVisitor.visitJumpInsn(Opcodes.IFNULL, isNull);
             return true;
@@ -445,6 +445,7 @@ public final class UnitCodeEmitter implements CodeEmitter {
         }
         return false;
     }
+
     @Override
     public boolean nullTestLeaveNull(TypeWidget typeWidget, Label isNull) {
         if (typeWidget.isNullable()) {
@@ -705,9 +706,9 @@ public final class UnitCodeEmitter implements CodeEmitter {
         methodVisitor.visitTypeInsn(Opcodes.NEW, typeInternalName);
         methodVisitor.visitInsn(Opcodes.DUP);
         String desc = Type.getMethodDescriptor(Type.VOID_TYPE);
-        if(constructorArguments != null && constructorArguments.length > 0) {
+        if (constructorArguments != null && constructorArguments.length > 0) {
             Type[] argumentTypes = new Type[constructorArguments.length];
-            for(int i = 0; i < constructorArguments.length; ++i) {
+            for (int i = 0; i < constructorArguments.length; ++i) {
                 argumentTypes[i] = constructorArguments[i].getType().getJVMType();
             }
             desc = Type.getMethodDescriptor(Type.VOID_TYPE, argumentTypes);

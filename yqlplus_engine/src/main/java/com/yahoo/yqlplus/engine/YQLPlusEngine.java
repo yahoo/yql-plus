@@ -34,7 +34,7 @@ public final class YQLPlusEngine {
         }
 
         public Builder addAdapters(TypeAdaptingWidget... adapters) {
-            for(TypeAdaptingWidget adapter : adapters) {
+            for (TypeAdaptingWidget adapter : adapters) {
                 addAdapter(adapter);
             }
             return this;

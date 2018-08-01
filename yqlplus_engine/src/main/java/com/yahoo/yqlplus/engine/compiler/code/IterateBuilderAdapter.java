@@ -24,15 +24,15 @@ public class IterateBuilderAdapter extends ExpressionHandler implements GambitCr
         final AssignableValue av = block.allocate(type.getIterableAdapter().getValue());
         this.itemExpr = av.read();
         block.add(type.getIterableAdapter()
-                        .iterate(iterable, av, new IterateAdapter.IterateLoop() {
-                                    @Override
-                                    public void item(CodeEmitter code, BytecodeExpression item, Label abortLoop, Label nextItem) {
-                                        IterateBuilderAdapter.this.next = nextItem;
-                                        IterateBuilderAdapter.this.abort = abortLoop;
-                                        body.generate(code);
-                                    }
-                                }
-                        )
+                .iterate(iterable, av, new IterateAdapter.IterateLoop() {
+                            @Override
+                            public void item(CodeEmitter code, BytecodeExpression item, Label abortLoop, Label nextItem) {
+                                IterateBuilderAdapter.this.next = nextItem;
+                                IterateBuilderAdapter.this.abort = abortLoop;
+                                body.generate(code);
+                            }
+                        }
+                )
         );
     }
 

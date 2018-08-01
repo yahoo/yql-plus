@@ -33,7 +33,7 @@ public class RuntimeWidgetGenerator extends UnitGenerator {
         MethodGenerator method = createMethod("getFieldNames");
         method.setReturnType(new IterableTypeWidget(BaseTypeAdapter.STRING));
         BytecodeExpression sourceExpr = new BytecodeCastExpression(targetType, method.addArgument("source", AnyTypeWidget.getInstance()).read());
-        if(!targetType.hasProperties()) {
+        if (!targetType.hasProperties()) {
             method.add(environment.constant(method.getReturnType(), ImmutableList.<String>of()));
         } else {
             method.add(targetType.getPropertyAdapter().getPropertyNameIterable(sourceExpr));

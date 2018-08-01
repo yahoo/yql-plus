@@ -18,23 +18,23 @@ public class RecordPropertyAdapter extends OpenPropertyAdapter {
     }
 
     public static void mergeFields(Record input, FieldWriter output) {
-        if(input == null) {
+        if (input == null) {
             return;
         }
-        for(String fieldName : input.getFieldNames()) {
+        for (String fieldName : input.getFieldNames()) {
             Object out = input.get(fieldName);
-            if(out != null) {
+            if (out != null) {
                 output.put(fieldName, out);
             }
         }
     }
 
     public static Object get(Record input, Object key) {
-        if(input == null) {
+        if (input == null) {
             return null;
         }
-        if(key instanceof String) {
-            return input.get((String)key);
+        if (key instanceof String) {
+            return input.get((String) key);
         }
         return null;
     }

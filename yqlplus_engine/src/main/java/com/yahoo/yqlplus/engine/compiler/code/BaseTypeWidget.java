@@ -118,7 +118,7 @@ public abstract class BaseTypeWidget implements TypeWidget {
                 }
             case MAP:
                 if (type instanceof StructBaseTypeWidget) {
-                     return true;
+                    return true;
                 }
             case ENUM:
             case UNION:
@@ -130,17 +130,17 @@ public abstract class BaseTypeWidget implements TypeWidget {
         }
 
     }
-    
+
     private boolean isAssignableFrom(Type type1, Type type2) {
-      try {
-          Class clazz1 = Class.forName(type1.getClassName());
-          Class clazz2 = Class.forName(type2.getClassName());
-          if (clazz1.isAssignableFrom(clazz2)) {
-              return true;
-          }
-      } catch (ClassNotFoundException e) {
-      }
-      return type2.getDescriptor().equals(type1.getDescriptor());
+        try {
+            Class clazz1 = Class.forName(type1.getClassName());
+            Class clazz2 = Class.forName(type2.getClassName());
+            if (clazz1.isAssignableFrom(clazz2)) {
+                return true;
+            }
+        } catch (ClassNotFoundException e) {
+        }
+        return type2.getDescriptor().equals(type1.getDescriptor());
     }
 
     @Override
@@ -181,7 +181,7 @@ public abstract class BaseTypeWidget implements TypeWidget {
     protected BytecodeExpression invokeNew(final Type type, BytecodeExpression... arguments) {
         return ConstructInvocation.boundInvoke(type, this, arguments).invoke(Location.NONE);
     }
-    
+
     protected BytecodeExpression invokeNew(final Type type, final List<ConstructorGenerator> constructorGenerators, BytecodeExpression... arguments) {
         return ConstructInvocation.boundInvoke(type, this, constructorGenerators, arguments).invoke(Location.NONE);
     }

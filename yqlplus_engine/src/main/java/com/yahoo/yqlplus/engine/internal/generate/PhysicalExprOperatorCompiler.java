@@ -197,7 +197,7 @@ public class PhysicalExprOperatorCompiler {
             }
             case TIMEOUT_REMAINING: {
                 TimeUnit units = expr.getArgument(0);
-                BytecodeExpression timeoutExpr =  scope.propertyValue(Location.NONE, context, "timeout");
+                BytecodeExpression timeoutExpr = scope.propertyValue(Location.NONE, context, "timeout");
                 return scope.invokeExact(Location.NONE, "getRemaining", Timeout.class, BaseTypeAdapter.INT64, timeoutExpr, scope.constant(units));
             }
             case ENFORCE_TIMEOUT: {
@@ -328,13 +328,13 @@ public class PhysicalExprOperatorCompiler {
             case PROJECT: {
                 List<OperatorNode<PhysicalProjectOperator>> operations = expr.getArgument(0);
                 GambitCreator.RecordBuilder recordBuilder;
-                if("map".equals(expr.getAnnotation("project:type"))) {
+                if ("map".equals(expr.getAnnotation("project:type"))) {
                     recordBuilder = scope.dynamicRecord();
                 } else {
                     recordBuilder = scope.record();
                 }
-                for(OperatorNode<PhysicalProjectOperator> op : operations) {
-                    switch(op.getOperator()) {
+                for (OperatorNode<PhysicalProjectOperator> op : operations) {
+                    switch (op.getOperator()) {
                         case FIELD: {
                             OperatorNode<PhysicalExprOperator> fieldValue = op.getArgument(0);
                             String fieldName = op.getArgument(1);
@@ -456,7 +456,7 @@ public class PhysicalExprOperatorCompiler {
             }
             case BOOL: {
                 OperatorNode<PhysicalExprOperator> target = expr.getArgument(0);
-                BytecodeExpression input =  evaluateExpression(program, context, target);
+                BytecodeExpression input = evaluateExpression(program, context, target);
                 return new BooleanCoerceExpression(input);
             }
             case ARRAY: {
@@ -518,11 +518,11 @@ public class PhysicalExprOperatorCompiler {
         String methodName = expr.getArgument(2);
         Type methodDescriptor = Type.getMethodType(expr.getArgument(3));
         List<OperatorNode<PhysicalExprOperator>> args = expr.getArgument(4);
-        List<TypeWidget> argumentTypes = Lists.newArrayListWithExpectedSize(methodDescriptor.getArgumentTypes().length+1);
+        List<TypeWidget> argumentTypes = Lists.newArrayListWithExpectedSize(methodDescriptor.getArgumentTypes().length + 1);
         if (op != Opcodes.INVOKESTATIC) {
             argumentTypes.add(ownerType);
         }
-        for(Type argType : methodDescriptor.getArgumentTypes()) {
+        for (Type argType : methodDescriptor.getArgumentTypes()) {
             argumentTypes.add(scope.adapt(argType, true));
         }
         List<BytecodeExpression> arguments = evaluateExpressions(program, context, args);
@@ -530,7 +530,7 @@ public class PhysicalExprOperatorCompiler {
         return new BaseTypeExpression(returnType) {
             @Override
             public void generate(CodeEmitter code) {
-                for(int i = 0; i < arguments.size(); i++) {
+                for (int i = 0; i < arguments.size(); i++) {
                     code.exec(new BytecodeCastExpression(argumentTypes.get(i), arguments.get(i)));
                 }
                 code.getMethodVisitor().visitMethodInsn(op, owner.getInternalName(), methodName, methodDescriptor.getDescriptor(), op == Opcodes.INVOKEINTERFACE);
@@ -547,7 +547,7 @@ public class PhysicalExprOperatorCompiler {
 
     private BytecodeExpression handleIfTail(BytecodeExpression program, BytecodeExpression context, GambitCreator.CaseBuilder caseBuilder, OperatorNode<PhysicalExprOperator> test, OperatorNode<PhysicalExprOperator> ifTrue, OperatorNode<PhysicalExprOperator> ifFalse) {
         caseBuilder.when(evaluateExpression(program, context, test), evaluateExpression(program, context, ifTrue));
-        if(ifFalse.getOperator() == PhysicalExprOperator.IF) {
+        if (ifFalse.getOperator() == PhysicalExprOperator.IF) {
             OperatorNode<PhysicalExprOperator> nextTest = ifFalse.getArgument(0);
             OperatorNode<PhysicalExprOperator> nextTruth = ifFalse.getArgument(1);
             OperatorNode<PhysicalExprOperator> nextFalse = ifFalse.getArgument(2);
@@ -1007,7 +1007,7 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.Invocable compiledRightKey = compileFunction(program.getType(), context.getType(), ImmutableList.of(rightRowType), rightKey);
             TypeWidget rightMapType = new MapTypeWidget(Type.getType(HashMap.class), compiledRightKey.getReturnType(), listOfRightType);
             this.rightMap = scope.evaluateInto(rightMapType.construct());
-            if(outer) {
+            if (outer) {
                 this.emptyMatchList = scope.constant(listOfRightType, Arrays.asList(new Object[1]));
             } else {
                 this.emptyMatchList = scope.constant(listOfRightType, ImmutableList.of());
@@ -1038,7 +1038,7 @@ public class PhysicalExprOperatorCompiler {
 
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
-            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), compiledLeftKey.invoke(this.leftKey.getLocation() , program, ctxExpr, item)));
+            BytecodeExpression key = loop.evaluateInto(loop.cast(AnyTypeWidget.getInstance(), compiledLeftKey.invoke(this.leftKey.getLocation(), program, ctxExpr, item)));
             //
             // arrange for the output list to container either:
             //     1) list of right rows or
@@ -1107,7 +1107,7 @@ public class PhysicalExprOperatorCompiler {
             GambitCreator.ScopeBuilder funcBody = functor.scope();
             PhysicalExprOperatorCompiler functionCompiler = new PhysicalExprOperatorCompiler(funcBody);
             BytecodeExpression timeout = scope.propertyValue(function.getLocation(), ctxArgument, "timeout");
-            BytecodeExpression outputValue =  scope.resolve(function.getLocation(),  timeout, functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
+            BytecodeExpression outputValue = scope.resolve(function.getLocation(), timeout, functionCompiler.evaluateExpression(programArgument, ctxArgument, functionBody));
             BytecodeExpression scatterValue = funcBody.complete(outputValue);
             LambdaInvocable invocable = functor.complete(scatterValue);
             GambitCreator.Invocable scatterFunction = invocable.prefix(program, ctxExpr);
@@ -1193,7 +1193,7 @@ public class PhysicalExprOperatorCompiler {
 
         @Override
         public void item(GambitCreator.IterateBuilder loop, BytecodeExpression item) {
-            if(item.getType().isPromise()) {
+            if (item.getType().isPromise()) {
                 super.item(loop, loop.evaluateInto(loop.resolve(Location.NONE, loop.propertyValue(Location.NONE, ctxExpr, "timeout"), item)));
             } else {
                 super.item(loop, loop.evaluateInto(item));
@@ -1385,7 +1385,7 @@ public class PhysicalExprOperatorCompiler {
                 loop.next(new BooleanCompareExpression(offset.getLocation(), off, loop.constant(0), BinaryComparison.GTEQ));
             }
             if (limit != null) {
-                loop.abort(new BooleanCompareExpression(limit.getLocation(),lmt, loop.constant(1),  BinaryComparison.LT));
+                loop.abort(new BooleanCompareExpression(limit.getLocation(), lmt, loop.constant(1), BinaryComparison.LT));
                 loop.inc(lmt, -1);
             }
             super.item(loop, item);

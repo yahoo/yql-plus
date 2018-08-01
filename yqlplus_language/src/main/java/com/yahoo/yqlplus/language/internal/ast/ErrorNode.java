@@ -6,7 +6,11 @@
 
 package com.yahoo.yqlplus.language.internal.ast;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.IntStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStream;
 
 /**
  * Started from copy of CommonErrorNode from ANTLR3

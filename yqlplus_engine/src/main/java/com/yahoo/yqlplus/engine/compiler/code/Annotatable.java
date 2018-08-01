@@ -9,7 +9,11 @@ package com.yahoo.yqlplus.engine.compiler.code;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLTypeException;
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

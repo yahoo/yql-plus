@@ -8,5 +8,6 @@ package com.yahoo.yqlplus.engine.compiler.code;
 
 public interface LambdaInvocable extends GambitCreator.Invocable {
     TypeWidget getResultType();
+
     FunctionalInterfaceContract getContract();
 }

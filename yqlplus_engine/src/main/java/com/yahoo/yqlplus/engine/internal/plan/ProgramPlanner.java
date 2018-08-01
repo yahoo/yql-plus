@@ -276,7 +276,7 @@ public class ProgramPlanner implements ViewRegistry {
     }
 
     public OperatorNode<PhysicalExprOperator> constant(Object value) {
-        if(value == null) {
+        if (value == null) {
             return OperatorNode.create(PhysicalExprOperator.NULL, AnyTypeWidget.getInstance());
         }
         if (valueConstants.containsKey(value)) {

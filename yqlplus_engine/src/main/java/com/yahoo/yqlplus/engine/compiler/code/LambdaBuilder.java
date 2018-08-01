@@ -34,7 +34,7 @@ public class LambdaBuilder extends ExpressionHandler implements LambdaFactoryBui
 
     @Override
     public LambdaInvocable exit() {
-        return source.createLambdaFactory(generator,  contract);
+        return source.createLambdaFactory(generator, contract);
     }
 
     @Override

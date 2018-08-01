@@ -10,7 +10,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.engine.compiler.runtime.*;
+import com.yahoo.yqlplus.engine.compiler.runtime.ArithmeticOperation;
+import com.yahoo.yqlplus.engine.compiler.runtime.Booleans;
+import com.yahoo.yqlplus.engine.compiler.runtime.Like;
+import com.yahoo.yqlplus.engine.compiler.runtime.Maths;
+import com.yahoo.yqlplus.engine.compiler.runtime.RecordMapWrapper;
 import com.yahoo.yqlplus.flow.internal.dynalink.FlowBootstrapper;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
@@ -93,7 +97,7 @@ public class ConstantExpressionEvaluator implements Function<OperatorNode<Expres
                 List<Object> values = apply((List<OperatorNode<ExpressionOperator>>) input.getArgument(1));
                 ImmutableMap.Builder<String, Object> map = ImmutableMap.builder();
                 for (int i = 0; i < keys.size(); ++i) {
-                    if(values.get(i) == null) {
+                    if (values.get(i) == null) {
                         throw new NotConstantExpressionException(input.getLocation(), "Operator " + input.getOperator() + " with NULL value is not supported by constant expressions");
                     }
                     map.put(keys.get(i), values.get(i));

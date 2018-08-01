@@ -72,7 +72,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
     @Override
     public BytecodeExpression evaluateInto(BytecodeExpression expr) {
-        if(expr instanceof LocalValue) {
+        if (expr instanceof LocalValue) {
             return expr;
         }
         AssignableValue av = allocate(expr.getType());
@@ -522,8 +522,8 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
                     AssignableValue map = code.allocate(mapType.construct());
                     PropertyAdapter adapter = map.getType().getPropertyAdapter();
                     AssignableValue writer = code.allocate(mapFieldWriter.construct(new BytecodeCastExpression(new MapTypeWidget(Type.getType(Map.class), BaseTypeAdapter.STRING, BaseTypeAdapter.ANY), map)));
-                    for(DynamicOperation op : operationNodes) {
-                        if("".equals(op.fieldName)) {
+                    for (DynamicOperation op : operationNodes) {
+                        if ("".equals(op.fieldName)) {
                             BytecodeExpression value = op.value;
                             code.exec(value.getType().getPropertyAdapter().mergeIntoFieldWriter(value, writer));
                         } else {
@@ -537,7 +537,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             };
         }
     }
-    
+
     private static boolean isJavaFieldName(String fieldName) {
         if (fieldName.isEmpty()) {
             return false;
@@ -555,7 +555,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
                 }
                 return true;
             }
-        }     
+        }
     }
 
     private class ExpressionRecordBuilder implements RecordBuilder {
@@ -570,14 +570,14 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
             dynamic = true;
             dynamicBuilder = new DynamicExpressionRecordBuilder();
             // merge all of our existing properties to the dynamic builder
-            for (Map.Entry<String, BytecodeExpression> entry:fieldSettings.entrySet()) {
+            for (Map.Entry<String, BytecodeExpression> entry : fieldSettings.entrySet()) {
                 dynamicBuilder.add(Location.NONE, entry.getKey(), entry.getValue());
-            }              
+            }
         }
-        
+
         @Override
         public RecordBuilder add(Location loc, String fieldName, BytecodeExpression input) {
-            if(dynamic) {
+            if (dynamic) {
                 dynamicBuilder.add(loc, fieldName, input);
                 return this;
             }
@@ -593,21 +593,21 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
         @Override
         public RecordBuilder merge(Location loc, BytecodeExpression recordType) {
-            if(dynamic) {
+            if (dynamic) {
                 dynamicBuilder.merge(loc, recordType);
                 return this;
             }
             TypeWidget inputType = recordType.getType();
-            if(!inputType.hasProperties()) {
+            if (!inputType.hasProperties()) {
                 throw new UnsupportedOperationException("RecordBuilder.merge must take an argument with properties (e.g. a struct/record)");
             }
             PropertyAdapter inputProperties = inputType.getPropertyAdapter();
-            if(!inputProperties.isClosed()) {
+            if (!inputProperties.isClosed()) {
                 initDynamicBuilder();
                 dynamicBuilder.merge(loc, recordType);
                 return this;
             }
-            for(PropertyAdapter.Property property : inputProperties.getProperties()) {
+            for (PropertyAdapter.Property property : inputProperties.getProperties()) {
 
                 add(loc, property.name, guarded(recordType, inputProperties.property(recordType, property.name)));
             }
@@ -616,7 +616,7 @@ public abstract class ExpressionHandler extends TypesHandler implements ScopedBu
 
         @Override
         public BytecodeExpression build() {
-            if(dynamic) {
+            if (dynamic) {
                 return dynamicBuilder.build();
             }
             return staticStructBuilder.build()

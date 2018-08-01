@@ -47,8 +47,8 @@ abstract class PlanChain {
     }
 
     private boolean isRowDependentAny(List<OperatorNode<ExpressionOperator>> args) {
-        for(OperatorNode<ExpressionOperator> arg : args) {
-            if(isRowDependent(arg)) {
+        for (OperatorNode<ExpressionOperator> arg : args) {
+            if (isRowDependent(arg)) {
                 return true;
             }
         }
@@ -56,7 +56,7 @@ abstract class PlanChain {
     }
 
     private boolean isRowDependent(OperatorNode<ExpressionOperator> filter) {
-        switch(filter.getOperator()) {
+        switch (filter.getOperator()) {
             case LITERAL:
             case NULL:
                 return false;
@@ -114,16 +114,16 @@ abstract class PlanChain {
     }
 
     private void visitFilter(OperatorNode<ExpressionOperator> filter, List<OperatorNode<ExpressionOperator>> dependent, List<OperatorNode<ExpressionOperator>> independent) {
-        switch(filter.getOperator()) {
+        switch (filter.getOperator()) {
             case AND: {
                 List<OperatorNode<ExpressionOperator>> targets = filter.getArgument(0);
-                for(OperatorNode<ExpressionOperator> target : targets) {
+                for (OperatorNode<ExpressionOperator> target : targets) {
                     visitFilter(target, dependent, independent);
                 }
                 break;
             }
             default: {
-                if(isRowDependent(filter)) {
+                if (isRowDependent(filter)) {
                     dependent.add(filter);
                 } else {
                     independent.add(filter);
@@ -133,7 +133,7 @@ abstract class PlanChain {
     }
 
     private OperatorNode<ExpressionOperator> and(List<OperatorNode<ExpressionOperator>> inputs) {
-        if(inputs.size() < 2) {
+        if (inputs.size() < 2) {
             return inputs.get(0);
         } else {
             return OperatorNode.create(ExpressionOperator.AND, inputs);
@@ -141,7 +141,7 @@ abstract class PlanChain {
     }
 
     private OperatorNode<SequenceOperator> makeFilter(OperatorNode<SequenceOperator> old, List<OperatorNode<ExpressionOperator>> inputs, OperatorNode<SequenceOperator> source) {
-        if(inputs.isEmpty()) {
+        if (inputs.isEmpty()) {
             return source;
         }
         return OperatorNode.create(old.getLocation(), old.getAnnotations(), SequenceOperator.FILTER, source, and(inputs));
@@ -154,7 +154,7 @@ abstract class PlanChain {
         OperatorNode<SequenceOperator> source = filterNode.getArgument(0);
         OperatorNode<ExpressionOperator> expr = filterNode.getArgument(1);
         visitFilter(expr, dependent, independent);
-        if(independent.isEmpty()) {
+        if (independent.isEmpty()) {
             return new FilterDependency(filterNode, null);
         }
         return new FilterDependency(
@@ -162,7 +162,7 @@ abstract class PlanChain {
                 and(independent)
         );
     }
-    
+
     public StreamValue execute(ChainState state, OperatorNode<SequenceOperator> query) {
         query = enter(query);
         switch (query.getOperator()) {
@@ -182,7 +182,7 @@ abstract class PlanChain {
             }
             case FILTER: {
                 FilterDependency dep = transformRowIndependentFilter(query);
-                if(dep.rowIndependentFilter != null) {
+                if (dep.rowIndependentFilter != null) {
                     StreamValue result = execute(state, dep.filterNode);
                     OperatorNode<PhysicalExprOperator> independent = context.evaluate(dep.rowIndependentFilter);
                     OperatorNode<PhysicalExprOperator> expr = OperatorNode.create(query.getLocation(), PhysicalExprOperator.IF, independent,

@@ -229,7 +229,7 @@ public final class OperatorNode<T extends Operator> {
                 List<Object> newList = Lists.newArrayListWithExpectedSize(((List) input).size());
                 for (Object val : (List) input) {
                     Object r = COPY_OR_OMIT.apply(val);
-                    if(r != null) {
+                    if (r != null) {
                         newList.add(r);
                     }
                 }
@@ -257,11 +257,11 @@ public final class OperatorNode<T extends Operator> {
     }
 
     private Map<String, Object> annotationCopy(Map<String, Object> annotations) {
-        ImmutableMap.Builder<String,Object> newAnnotations = ImmutableMap.builder();
-        for(Map.Entry<String, Object> annotation : annotations.entrySet()) {
+        ImmutableMap.Builder<String, Object> newAnnotations = ImmutableMap.builder();
+        for (Map.Entry<String, Object> annotation : annotations.entrySet()) {
             String key = annotation.getKey();
             Object value = COPY_OR_OMIT.apply(annotation.getValue());
-            if(value != null) {
+            if (value != null) {
                 newAnnotations.put(key, value);
             }
         }

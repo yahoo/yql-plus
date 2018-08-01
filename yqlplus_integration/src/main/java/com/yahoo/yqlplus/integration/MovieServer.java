@@ -26,9 +26,9 @@ public class MovieServer {
     public static void main(final String[] args) throws IOException {
         ForkJoinPool pool = ForkJoinPool.commonPool();
         YQLPlusCompiler compiler = YQLPlusEngine.builder()
-        .bind(
-                "movies", new MovieSource(new Movie("1", "joe", "drama", "2017-01-01", 10))
-        ).build();
+                .bind(
+                        "movies", new MovieSource(new Movie("1", "joe", "drama", "2017-01-01", 10))
+                ).build();
         JsonFactory factory = new MappingJsonFactory();
         CompiledProgram program = compiler.compile("SELECT * FROM movies OUTPUT AS movies;");
         Undertow server = Undertow.builder()
@@ -68,4 +68,5 @@ public class MovieServer {
                 }).build();
         server.start();
 
-    }}
+    }
+}

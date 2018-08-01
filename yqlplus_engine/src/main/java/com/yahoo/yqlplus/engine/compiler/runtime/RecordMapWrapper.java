@@ -16,7 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class RecordMapWrapper implements Map<String,Object>, Record {
+public class RecordMapWrapper implements Map<String, Object>, Record {
     private final Map<String, Object> fields;
 
     public RecordMapWrapper(Map<String, Object> fields) {

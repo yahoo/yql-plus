@@ -14,15 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 public class MovieSource implements Source {
-    private final Map<String,Movie> movies = Maps.newLinkedHashMap();
+    private final Map<String, Movie> movies = Maps.newLinkedHashMap();
 
     public MovieSource() {
     }
 
 
-    public MovieSource(Movie movie, Movie ...movies) {
+    public MovieSource(Movie movie, Movie... movies) {
         this.movies.put(movie.getId(), movie);
-        if(movies != null) {
+        if (movies != null) {
             for (Movie m : movies) {
                 this.movies.put(m.getId(), m);
             }

@@ -57,22 +57,22 @@ public class SequenceBuiltinsModule implements ModuleType {
 
     @Override
     public StreamValue pipe(Location location, CompileContext context, String name, StreamValue input, List<OperatorNode<ExpressionOperator>> arguments) {
-        if("groupby".equals(name)) {
-            if(arguments.size() == 2) {
+        if ("groupby".equals(name)) {
+            if (arguments.size() == 2) {
                 return dynamicGroupby(location, context, input, arguments);
-            } else if(arguments.size() != 3) {
+            } else if (arguments.size() != 3) {
                 throw new ProgramCompileException(location, "groupby(group-field, output-group-field, output-group-rows): argument count mismatch");
             }
             ConstantExpressionEvaluator eval = new ConstantExpressionEvaluator();
             List<String> args = Lists.newArrayList();
-            for(OperatorNode<ExpressionOperator> arg : arguments) {
+            for (OperatorNode<ExpressionOperator> arg : arguments) {
                 try {
                     Object val = eval.apply(arg);
-                    if(!(val instanceof String)) {
+                    if (!(val instanceof String)) {
                         throw new ProgramCompileException(location, "arguments to groupby must be string: (not string: %s)", arg);
                     }
-                    args.add((String)val);
-                } catch(NotConstantExpressionException e) {
+                    args.add((String) val);
+                } catch (NotConstantExpressionException e) {
                     throw new ProgramCompileException(location, "arguments to groupby must be constant: (not constant: %s)", arg);
                 }
             }
@@ -99,7 +99,7 @@ public class SequenceBuiltinsModule implements ModuleType {
             input.add(location, StreamOperator.FLATTEN);
             return input;
         } else if ("transform".equals(name)) {
-            if(arguments.size() != 1) {
+            if (arguments.size() != 1) {
                 throw new ProgramCompileException(location, "transform(<expr>): argument count mismatch");
             }
             OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));
@@ -107,7 +107,7 @@ public class SequenceBuiltinsModule implements ModuleType {
                     OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), arg));
             return input;
         } else if ("scatter".equals(name)) {
-            if(arguments.size() != 1) {
+            if (arguments.size() != 1) {
                 throw new ProgramCompileException(location, "scatter(<expr>): argument count mismatch");
             }
             OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));
@@ -115,7 +115,7 @@ public class SequenceBuiltinsModule implements ModuleType {
                     OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$$row"), arg));
             return input;
         } else if ("filter".equals(name)) {
-            if(arguments.size() != 1) {
+            if (arguments.size() != 1) {
                 throw new ProgramCompileException(location, "filter(<expr>): argument count mismatch");
             }
             OperatorNode<PhysicalExprOperator> arg = context.evaluate(arguments.get(0));

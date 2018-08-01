@@ -24,8 +24,8 @@ public class RuntimeLinker {
     private final MethodHandle propertyString;
     private final MethodHandle propertyStringDefault;
     private final MethodHandle index;
-   // private final MethodHandle serializeJson;
-   // private final MethodHandle serializeTBin;
+    // private final MethodHandle serializeJson;
+    // private final MethodHandle serializeTBin;
     private final MethodHandle mergeIntoFieldWriter;
     private final MethodHandle getFieldNames;
 
@@ -48,12 +48,12 @@ public class RuntimeLinker {
             index = lookup.findVirtual(widget, "index", MethodType.methodType(Object.class, Object.class, Object.class))
                     .bindTo(widgetInstance);
 
-          //  Comment out for now since the code is targeting for gateway implementation
-          //  Gateway is not fully implemented and the code will fail some tests of current none-gateway use cases
-          //  serializeJson = lookup.findVirtual(widget, "serializeJson", MethodType.methodType(void.class, Object.class, JsonGenerator.class))
-          //          .bindTo(widgetInstance);
-          //  serializeTBin = lookup.findVirtual(widget, "serializeTBin", MethodType.methodType(void.class, Object.class, TBinEncoder.class))
-          //          .bindTo(widgetInstance);
+            //  Comment out for now since the code is targeting for gateway implementation
+            //  Gateway is not fully implemented and the code will fail some tests of current none-gateway use cases
+            //  serializeJson = lookup.findVirtual(widget, "serializeJson", MethodType.methodType(void.class, Object.class, JsonGenerator.class))
+            //          .bindTo(widgetInstance);
+            //  serializeTBin = lookup.findVirtual(widget, "serializeTBin", MethodType.methodType(void.class, Object.class, TBinEncoder.class))
+            //          .bindTo(widgetInstance);
             mergeIntoFieldWriter = lookup.findVirtual(widget, "mergeIntoFieldWriter", MethodType.methodType(void.class, Object.class, FieldWriter.class))
                     .bindTo(widgetInstance);
             getFieldNames = lookup.findVirtual(widget, "getFieldNames", MethodType.methodType(Iterable.class, Object.class))
@@ -71,9 +71,9 @@ public class RuntimeLinker {
             if ("mergeFields".equals(desc.getNameToken(1))) {
                 return new GuardedInvocation(mergeIntoFieldWriter,
                         Guards.isOfClass(clazz, mergeIntoFieldWriter.type()));
-            } else if("getFieldNames".equals(desc.getNameToken(1))) {
-              return new GuardedInvocation(getFieldNames,
-                      Guards.isOfClass(clazz, getFieldNames.type()));
+            } else if ("getFieldNames".equals(desc.getNameToken(1))) {
+                return new GuardedInvocation(getFieldNames,
+                        Guards.isOfClass(clazz, getFieldNames.type()));
             }
 // Comment out for now since the code is targeting for gateway implementation
 // Gateway is not fully implemented and the code will fail some tests of current none-gateway use cases
@@ -117,13 +117,13 @@ public class RuntimeLinker {
             MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
             return new GuardedInvocation(handle,
                     Guards.isOfClass(clazz, handle.type()));
-        } else if("getPropDefault".equals(operation) && desc.getNameTokenCount() > 2) {
+        } else if ("getPropDefault".equals(operation) && desc.getNameTokenCount() > 2) {
             base = this.propertyStringDefault;
             String property = desc.getNameToken(2);
             MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
             return new GuardedInvocation(handle,
                     Guards.isOfClass(clazz, handle.type()));
-        } else if("getPropDefault".equals(operation)) {
+        } else if ("getPropDefault".equals(operation)) {
             String property = desc.getNameToken(2);
             MethodHandle handle = MethodHandles.insertArguments(base, 1, property);
             return new GuardedInvocation(propertyStringDefault,

@@ -20,7 +20,7 @@ public class RecordAdaptingWidget implements TypeAdaptingWidget {
     @Override
     public TypeWidget adapt(EngineValueTypeAdapter typeAdapter, Type type) {
         Class<?> clazz = JVMTypes.getRawType(type);
-        if(Map.class.isAssignableFrom(clazz)) {
+        if (Map.class.isAssignableFrom(clazz)) {
             return new DynamicRecordWidget(org.objectweb.asm.Type.getType(clazz));
         }
         return new RecordTypeWidget();

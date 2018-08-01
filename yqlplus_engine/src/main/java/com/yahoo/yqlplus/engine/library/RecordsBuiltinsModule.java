@@ -27,24 +27,25 @@ public class RecordsBuiltinsModule implements ModuleType {
 
     @Override
     public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
-        if("merge".equals(name)) {
+        if ("merge".equals(name)) {
             List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
             List<OperatorNode<PhysicalProjectOperator>> ops = Lists.newArrayListWithExpectedSize(args.size());
-            for(OperatorNode<PhysicalExprOperator> arg : args) {
+            for (OperatorNode<PhysicalExprOperator> arg : args) {
                 ops.add(OperatorNode.create(arg.getLocation(), PhysicalProjectOperator.MERGE, arg));
             }
             return OperatorNode.create(PhysicalExprOperator.PROJECT, ops);
         } else if ("map".equals(name)) {
             List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
             List<OperatorNode<PhysicalProjectOperator>> ops = Lists.newArrayListWithExpectedSize(args.size());
-            for(OperatorNode<PhysicalExprOperator> arg : args) {
+            for (OperatorNode<PhysicalExprOperator> arg : args) {
                 ops.add(OperatorNode.create(arg.getLocation(), PhysicalProjectOperator.MERGE, arg));
             }
             OperatorNode<PhysicalExprOperator> projectNode = OperatorNode.create(PhysicalExprOperator.PROJECT, ops);
             projectNode.putAnnotation("project:type", "map");
             return projectNode;
         }
-        throw new ProgramCompileException(location, "Unknown records function '%s'", name);    }
+        throw new ProgramCompileException(location, "Unknown records function '%s'", name);
+    }
 
     @Override
     public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {

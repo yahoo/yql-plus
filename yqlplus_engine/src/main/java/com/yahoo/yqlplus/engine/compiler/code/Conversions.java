@@ -156,18 +156,18 @@ public class Conversions {
         registerInsn(m, Character.TYPE, Float.TYPE, Opcodes.I2F);
         registerInsn(m, Character.TYPE, Double.TYPE, Opcodes.I2D);
         m.put(key(String.class, Character.TYPE), new BytecodeSequence() {
-                    @Override
-                    public void generate(CodeEmitter code) {
-                        code.emitIntConstant(0);
-                        code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                                Type.getInternalName(String.class),
-                                "charAt",
-                                Type.getMethodDescriptor(Type.CHAR_TYPE, Type.INT_TYPE),
-                                false);
-                    }
-                });
+            @Override
+            public void generate(CodeEmitter code) {
+                code.emitIntConstant(0);
+                code.getMethodVisitor().visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        Type.getInternalName(String.class),
+                        "charAt",
+                        Type.getMethodDescriptor(Type.CHAR_TYPE, Type.INT_TYPE),
+                        false);
+            }
+        });
 
-                registerNoop(m, Byte.TYPE, Boolean.TYPE);
+        registerNoop(m, Byte.TYPE, Boolean.TYPE);
         registerNoop(m, Byte.TYPE, Short.TYPE);
         registerNoop(m, Byte.TYPE, Integer.TYPE);
         registerNoop(m, Byte.TYPE, Character.TYPE);

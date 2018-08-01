@@ -18,7 +18,7 @@ public class CodeOutput extends CodeChunk implements CodeBlock {
     private boolean begin = true;
 
     public String toDumpString() {
-    	return CodeFormatter.toDumpString(toString());
+        return CodeFormatter.toDumpString(toString());
     }
 
     static class Env {

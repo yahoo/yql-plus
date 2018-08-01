@@ -66,7 +66,7 @@ public final class TaskContext {
         }
 
         public TaskContext build() {
-            if(timeout == null) {
+            if (timeout == null) {
                 withTimeout(30L, TimeUnit.SECONDS);
             }
             return new TaskContext(metricEmitter, tracer, timeout, pool);
@@ -90,7 +90,7 @@ public final class TaskContext {
         this.metricEmitter = metricEmitter;
         this.tracer = tracer;
         this.timeout = timeout;
-        this.pool =  pool;
+        this.pool = pool;
     }
 
     public final <T> T runTimeout(Supplier<T> work) throws ExecutionException, InterruptedException {
@@ -113,14 +113,14 @@ public final class TaskContext {
 
     public <T> List<T> scatter(List<Supplier<T>> input) throws ExecutionException, InterruptedException {
         CompletableFuture[] futures = new CompletableFuture[input.size()];
-        for(int i = 0; i < futures.length; i++) {
+        for (int i = 0; i < futures.length; i++) {
             futures[i] = CompletableFuture.supplyAsync(input.get(i), pool);
         }
         CompletableFuture<Void> done = CompletableFuture.allOf(futures);
         done.orTimeout(timeout.remainingTicks(), timeout.getTickUnits());
         done.get();
         List<T> result = Lists.newArrayListWithExpectedSize(input.size());
-        for(int i = 0; i < futures.length; i++) {
+        for (int i = 0; i < futures.length; i++) {
             result.add((T) futures[i].get());
         }
         return result;

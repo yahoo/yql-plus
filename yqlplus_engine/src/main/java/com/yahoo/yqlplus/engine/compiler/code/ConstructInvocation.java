@@ -60,7 +60,7 @@ public class ConstructInvocation extends BytecodeInvocable {
     public static GambitCreator.Invocable boundInvoke(Type targetType, final TypeWidget owner, final List<ConstructorGenerator> constructorGenerators, final BytecodeExpression... args) {
         if (null != constructorGenerators && !constructorGenerators.isEmpty()) {
             List<ConstructorGenerator> foundGenerators = Lists.newArrayList();
-            for (ConstructorGenerator generator:constructorGenerators) {
+            for (ConstructorGenerator generator : constructorGenerators) {
                 List<TypeWidget> argumentTypes = generator.getArgumentTypes();
                 if (argumentTypes.size() != args.length) {
                     continue;
@@ -92,12 +92,12 @@ public class ConstructInvocation extends BytecodeInvocable {
                     throw new ProgramCompileException("No matching ConstructorGenerator");
                 default:
                     throw new ProgramCompileException("Found ambiguous constructors for " + args);
-            }          
+            }
         } else {
             throw new ProgramCompileException("No available ConstructorGenerator");
         }
     }
-    
+
     private static String createDescriptor(TypeWidget returnType, List<TypeWidget> argsWidgets) {
         Type rt = returnType.getJVMType();
         List<Type> argTypes = Lists.newArrayListWithExpectedSize(argsWidgets.size());

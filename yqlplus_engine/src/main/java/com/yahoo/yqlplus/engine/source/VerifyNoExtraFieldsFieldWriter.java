@@ -23,7 +23,7 @@ public class VerifyNoExtraFieldsFieldWriter implements FieldWriter {
 
     @Override
     public void put(String fieldName, Object value) {
-        if(!fieldNames.contains(fieldName)) {
+        if (!fieldNames.contains(fieldName)) {
             throw new IllegalArgumentException(String.format("%s::%s Unexpected additional property '%s' (%s)", className, methodName, fieldName, value.getClass().getTypeName()));
         }
     }

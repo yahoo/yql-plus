@@ -21,7 +21,7 @@ public abstract class OpenPropertyAdapter extends BasePropertyAdapter {
 
     @Override
     public final Iterable<Property> getProperties() {
-       throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -47,7 +47,6 @@ public abstract class OpenPropertyAdapter extends BasePropertyAdapter {
         BytecodeExpression sourceExpression = index(target, propertyName);
         return new CoalesceExpression(AnyTypeWidget.getInstance(), sourceExpression, defaultValue);
     }
-
 
 
     @Override

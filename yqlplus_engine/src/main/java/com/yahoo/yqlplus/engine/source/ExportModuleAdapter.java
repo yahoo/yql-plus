@@ -83,7 +83,7 @@ public class ExportModuleAdapter implements ModuleType {
 
     private OperatorNode<PhysicalExprOperator> adaptInvoke(Location location, CompileContext context, String name, OperatorNode<PhysicalExprOperator> streamInput, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
         List<OperatorNode<PhysicalExprOperator>> inputArgs = context.evaluateAllInRowContext(arguments, row);
-        if(streamInput != null) {
+        if (streamInput != null) {
             inputArgs.add(0, streamInput);
         }
         methods:
@@ -92,8 +92,8 @@ public class ExportModuleAdapter implements ModuleType {
                 continue;
             }
             Export export = method.getAnnotation(Export.class);
-            if(!"".equals(export.value())) {
-                if(!name.equalsIgnoreCase(export.value())) {
+            if (!"".equals(export.value())) {
+                if (!name.equalsIgnoreCase(export.value())) {
                     continue;
                 }
             } else {
@@ -139,7 +139,7 @@ public class ExportModuleAdapter implements ModuleType {
                     }
                 }
             }
-            if(inputNext.hasNext()) {
+            if (inputNext.hasNext()) {
                 continue;
             }
             return invoker.invoke(invokeArguments);
@@ -168,7 +168,7 @@ public class ExportModuleAdapter implements ModuleType {
                                 clazz, Type.getType(Supplier.class), "get", Type.getMethodDescriptor(Type.getType(Object.class)),
                                 ImmutableList.of(OperatorNode.create(PhysicalExprOperator.CONSTANT_VALUE, Supplier.class, supplier))));
                 module = OperatorNode.create(location, PhysicalExprOperator.VALUE, value);
-            }  else {
+            } else {
                 OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), location, PhysicalOperator.EVALUATE,
                         OperatorNode.create(location, PhysicalExprOperator.CURRENT_CONTEXT),
                         OperatorNode.create(location, PhysicalExprOperator.INVOKENEW,

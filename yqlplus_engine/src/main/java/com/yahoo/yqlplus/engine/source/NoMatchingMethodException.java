@@ -30,7 +30,9 @@ public class NoMatchingMethodException extends ProgramCompileException {
 
         Reason(String format) {
             this.format = format;
-        };
+        }
+
+        ;
 
         private final String format;
 

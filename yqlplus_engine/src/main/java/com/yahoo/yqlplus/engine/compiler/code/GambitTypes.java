@@ -23,7 +23,8 @@ public interface GambitTypes {
     InvocableBuilder createInvocable();
 
     LambdaFactoryBuilder createInvocableCallable();
-    LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes);
+
+    LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?>... argumentTypes);
 
     TypeWidget adapt(YQLType type);
 

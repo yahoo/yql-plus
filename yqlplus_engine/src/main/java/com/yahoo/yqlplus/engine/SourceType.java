@@ -13,5 +13,6 @@ import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 
 public interface SourceType {
     StreamValue plan(CompileContext planner, OperatorNode<SequenceOperator> query, OperatorNode<SequenceOperator> source);
+
     StreamValue join(CompileContext planner, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<SequenceOperator> right, OperatorNode<SequenceOperator> source);
 }

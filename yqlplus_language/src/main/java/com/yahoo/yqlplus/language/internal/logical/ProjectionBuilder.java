@@ -70,7 +70,7 @@ public class ProjectionBuilder {
         ImmutableList.Builder<OperatorNode<ProjectOperator>> lst = ImmutableList.builder();
         for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : fields.entrySet()) {
             if (e.getKey().startsWith("*")) {
-                lst.add(OperatorNode.create(ProjectOperator.MERGE_RECORD, (Object)e.getValue().getArgument(0)));
+                lst.add(OperatorNode.create(ProjectOperator.MERGE_RECORD, (Object) e.getValue().getArgument(0)));
             } else {
                 lst.add(OperatorNode.create(ProjectOperator.FIELD, e.getValue(), e.getKey()));
             }

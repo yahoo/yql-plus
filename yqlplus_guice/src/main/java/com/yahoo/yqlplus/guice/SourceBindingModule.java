@@ -55,7 +55,7 @@ public class SourceBindingModule extends AbstractModule {
 
     @Override
     protected void configure() {
-      
+
         MapBinder<String, Source> sourceBindings = MapBinder.newMapBinder(binder(), String.class, Source.class);
         for (Map.Entry<String, Class<? extends Source>> e : sources.entrySet()) {
             sourceBindings.addBinding(e.getKey()).to(e.getValue());

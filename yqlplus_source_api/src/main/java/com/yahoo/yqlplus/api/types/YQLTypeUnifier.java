@@ -6,7 +6,11 @@
 
 package com.yahoo.yqlplus.api.types;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Take two YQL types and identify (or create) a unified type.

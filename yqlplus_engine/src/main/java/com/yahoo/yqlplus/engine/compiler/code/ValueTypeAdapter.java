@@ -10,7 +10,7 @@ import com.google.inject.TypeLiteral;
 
 import java.lang.reflect.Type;
 
-public interface ValueTypeAdapter{
+public interface ValueTypeAdapter {
 
     TypeWidget adapt(TypeLiteral<?> typeLiteral);
 

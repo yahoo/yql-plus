@@ -163,7 +163,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     @Override
     public TypeWidget unifyTypes(TypeWidget leftType, TypeWidget rightType) {
-        if(leftType == rightType) {
+        if (leftType == rightType) {
             return leftType;
         }
         boolean nullable = leftType.isNullable() || rightType.isNullable();
@@ -291,7 +291,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     @Override
     public TypeWidget adapt(TypeLiteral<?> typeLiteral, boolean nullable) {
-        if(nullable) {
+        if (nullable) {
             return adapt(typeLiteral);
         } else {
             return NotNullableTypeWidget.create(adapt(typeLiteral));
@@ -326,7 +326,7 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
 
     @Override
     public TypeWidget adapt(java.lang.reflect.Type type, boolean nullable) {
-        return adaptInternal(TypeLiteral.get((type instanceof WildcardType)? type.getClass():type), nullable);
+        return adaptInternal(TypeLiteral.get((type instanceof WildcardType) ? type.getClass() : type), nullable);
     }
 
     @Override
@@ -449,10 +449,10 @@ public class ASMTypeAdapter implements EngineValueTypeAdapter {
         @Override
         public BytecodeExpression createSuccess(BytecodeExpression input) {
             return ExactInvocation.exactInvoke(Opcodes.INVOKESTATIC,
-                            "completedFuture",
-                            ownerType,
-                            ownerType,
-                            ImmutableList.of(AnyTypeWidget.getInstance())).invoke(Location.NONE, input);
+                    "completedFuture",
+                    ownerType,
+                    ownerType,
+                    ImmutableList.of(AnyTypeWidget.getInstance())).invoke(Location.NONE, input);
         }
 
         @Override

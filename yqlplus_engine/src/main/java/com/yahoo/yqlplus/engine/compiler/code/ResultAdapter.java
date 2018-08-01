@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.engine.compiler.code;
 
 public interface ResultAdapter {
     TypeWidget getResultType();
+
     TypeWidget getType();
 
     BytecodeExpression createSuccess(BytecodeExpression input);

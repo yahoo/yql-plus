@@ -81,7 +81,7 @@ public class ASMClassSourceLinker implements GuardingDynamicLinker {
             return new RuntimeLinker(clazz, adapterWidget);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
-        } catch(NegativeArraySizeException e) {
+        } catch (NegativeArraySizeException e) {
             childEnvironment.dump(System.err);
             throw e;
         }

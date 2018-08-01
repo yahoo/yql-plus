@@ -25,24 +25,25 @@ public class ConditionalsBuiltinsModule implements ModuleType {
 
     @Override
     public OperatorNode<PhysicalExprOperator> callInRowContext(Location location, CompileContext context, String name, List<OperatorNode<ExpressionOperator>> arguments, OperatorNode<PhysicalExprOperator> row) {
-        if("coalesce".equals(name)) {
+        if ("coalesce".equals(name)) {
             List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
             return OperatorNode.create(location, PhysicalExprOperator.COALESCE, args);
-        } else if("case".equals(name)) {
+        } else if ("case".equals(name)) {
             List<OperatorNode<PhysicalExprOperator>> args = context.evaluateAllInRowContext(arguments, row);
-            if(arguments.size() % 2 != 1) {
+            if (arguments.size() % 2 != 1) {
                 throw new ProgramCompileException(location, "case(condition-1, value-1, condition-2, value-2, ..., condition-n, value-n, default-value): arguments to CASE must be odd in number");
             }
             OperatorNode<PhysicalExprOperator> ifFalse = args.get(args.size() - 1);
             // 0 1 2 3 4
             //     ^
             // ^
-            for(int i = args.size() - 2; i > 0; i -= 2) {
-                ifFalse = OperatorNode.create(location, PhysicalExprOperator.IF, args.get(i-1), args.get(i), ifFalse);
+            for (int i = args.size() - 2; i > 0; i -= 2) {
+                ifFalse = OperatorNode.create(location, PhysicalExprOperator.IF, args.get(i - 1), args.get(i), ifFalse);
             }
             return ifFalse;
         }
-        throw new ProgramCompileException(location, "Unknown conditionals function '%s'", name);    }
+        throw new ProgramCompileException(location, "Unknown conditionals function '%s'", name);
+    }
 
     @Override
     public OperatorNode<PhysicalExprOperator> property(Location location, CompileContext context, String name) {

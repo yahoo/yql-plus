@@ -32,9 +32,9 @@ import java.util.Set;
 public class IndexedQueryPlanner {
     private static Iterable<IndexDescriptor> convertSet(Set<IndexKey> indexes) {
         List<IndexDescriptor> desc = Lists.newArrayListWithCapacity(indexes.size());
-        for(IndexKey key : indexes) {
+        for (IndexKey key : indexes) {
             IndexDescriptor.Builder b = IndexDescriptor.builder();
-            for(String name : key.columnOrder) {
+            for (String name : key.columnOrder) {
                 b.addColumn(name, YQLCoreType.STRING, false, true);
             }
             desc.add(b.build());
@@ -79,8 +79,8 @@ public class IndexedQueryPlanner {
     public QueryStrategy planJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<ExpressionOperator> filter) {
         List<JoinExpression> clauses = JoinExpression.parse(joinExpression);
         Set<String> joinColumns = Sets.newHashSet();
-        for(JoinExpression join : clauses) {
-            if(join.right.getOperator() == ExpressionOperator.READ_FIELD) {
+        for (JoinExpression join : clauses) {
+            if (join.right.getOperator() == ExpressionOperator.READ_FIELD) {
                 joinColumns.add(join.right.getArgument(1));
             }
         }
@@ -91,7 +91,7 @@ public class IndexedQueryPlanner {
         QueryStrategy iq = new QueryStrategy();
         if (filter == null && availableJoinColumns.isEmpty()) {
             iq.scan = true;
-        } else if(filter == null) {
+        } else if (filter == null) {
             IndexKey index = matchIndex(availableJoinColumns, exact);
             if (index == null) {
                 iq.scan = true;
@@ -211,7 +211,7 @@ public class IndexedQueryPlanner {
             indexStrategy.filter = OperatorNode.create(ExpressionOperator.AND, others);
         }
         indexStrategy.indexFilter = columns;
-        if(!indexColumns.isEmpty()) {
+        if (!indexColumns.isEmpty()) {
             indexStrategy.joinColumns = indexColumns;
         }
         iq.add(indexStrategy);

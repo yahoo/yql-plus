@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface MethodInvoker {
     boolean isStatic();
+
     default OperatorNode<PhysicalExprOperator> invoke() {
         return invoke(ImmutableList.of());
     }

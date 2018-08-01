@@ -67,7 +67,8 @@ public enum PhysicalExprOperator implements Operator {
     NOT(PhysicalExprOperator.class),
 
     RECORD(TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
-    PROJECT(new TypeLiteral<List<OperatorNode<PhysicalProjectOperator>>>() {}),
+    PROJECT(new TypeLiteral<List<OperatorNode<PhysicalProjectOperator>>>() {
+    }),
 
     ARRAY(PlanOperatorTypes.EXPRS),
     RESOLVE(PhysicalExprOperator.class),
@@ -80,8 +81,8 @@ public enum PhysicalExprOperator implements Operator {
     RECORD_AS(Type.class, TypeCheckers.LIST_OF_STRING, PlanOperatorTypes.EXPRS),
     RECORD_FROM(Type.class, PhysicalExprOperator.class),
     // (returnType, owner, methodName, methodDescriptor)
-    INVOKEVIRTUAL(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
-    INVOKESTATIC(java.lang.reflect.Type.class, Type.class,  String.class, String.class, PlanOperatorTypes.EXPRS),
+    INVOKEVIRTUAL(java.lang.reflect.Type.class, Type.class, String.class, String.class, PlanOperatorTypes.EXPRS),
+    INVOKESTATIC(java.lang.reflect.Type.class, Type.class, String.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKEINTERFACE(java.lang.reflect.Type.class, Type.class, String.class, String.class, PlanOperatorTypes.EXPRS),
     INVOKENEW(java.lang.reflect.Type.class, PlanOperatorTypes.EXPRS),
 
@@ -138,7 +139,7 @@ public enum PhysicalExprOperator implements Operator {
         PhysicalExprOperator callOperator = PhysicalExprOperator.INVOKEVIRTUAL;
         if (Modifier.isStatic(method.getModifiers())) {
             callOperator = PhysicalExprOperator.INVOKESTATIC;
-        } else if(method.getDeclaringClass().isInterface()) {
+        } else if (method.getDeclaringClass().isInterface()) {
             callOperator = PhysicalExprOperator.INVOKEINTERFACE;
         }
         return callOperator;

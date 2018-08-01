@@ -27,7 +27,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
     }
 
     public static PropertyAdapter create(TypeWidget typeWidget, EngineValueTypeAdapter adapter, TypeLiteral<?> typeLiteral) {
-        Map<String,PropertyReader> properties = readProperties(typeLiteral, adapter);
+        Map<String, PropertyReader> properties = readProperties(typeLiteral, adapter);
         ImmutableList.Builder<Property> propertyBuilder = ImmutableList.builder();
         for (PropertyReader reader : properties.values()) {
             propertyBuilder.add(reader.property);
@@ -139,7 +139,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
 
                 @Override
                 public BytecodeSequence write(BytecodeExpression value) {
-                    if(writer == null) {
+                    if (writer == null) {
                         throw new UnsupportedOperationException(String.format("Unable to write property '%s'", property.name));
                     }
                     return new BytecodeSequence() {
@@ -152,7 +152,7 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
 
                 @Override
                 public BytecodeSequence write(TypeWidget top) {
-                    if(writer == null) {
+                    if (writer == null) {
                         throw new UnsupportedOperationException();
                     }
                     return new BytecodeSequence() {

@@ -35,7 +35,7 @@ public interface CompiledProgram {
         boolean isRequired();
 
         YQLType getYQLType();
-        
+
         Object getDefaultValue();
     }
 
@@ -52,7 +52,7 @@ public interface CompiledProgram {
      * Invoke the compiled program.
      */
     ProgramResult run(Map<String, Object> arguments) throws Exception;
-    
+
     /**
      * Invoke the compiled program with explicit context
      */

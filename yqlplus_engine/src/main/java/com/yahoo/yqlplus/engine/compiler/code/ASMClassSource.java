@@ -68,7 +68,7 @@ public class ASMClassSource {
 
     private static Type[] toJVMTypes(List<TypeWidget> argTypes) {
         Type[] argumentTypes = new Type[argTypes.size()];
-        for(int i = 0; i < argumentTypes.length; i++) {
+        for (int i = 0; i < argumentTypes.length; i++) {
             argumentTypes[i] = argTypes.get(i).getJVMType();
         }
         return argumentTypes;
@@ -137,7 +137,7 @@ public class ASMClassSource {
             MethodHandle handle = getInvocableHandle(method);
             MethodType implType = MethodType.fromMethodDescriptorString(implementMethodType.getDescriptor(), generatedClassLoader);
             MethodType factoryType = MethodType.fromMethodDescriptorString(factoryMethodType.getDescriptor(), generatedClassLoader);
-            CallSite site = LambdaMetafactory.metafactory (MethodHandles.privateLookupIn(getGeneratedClass(invocableUnit), MethodHandles.lookup()),
+            CallSite site = LambdaMetafactory.metafactory(MethodHandles.privateLookupIn(getGeneratedClass(invocableUnit), MethodHandles.lookup()),
                     contract.methodName,
                     factoryType,
                     implType,
@@ -156,6 +156,7 @@ public class ASMClassSource {
             return contract;
         }
     }
+
     public LambdaFactoryCallable createLambdaFactory(MethodGenerator generator, FunctionalInterfaceContract contract) {
         return new LambdaFactoryCallable(generator, contract);
     }
@@ -290,7 +291,7 @@ public class ASMClassSource {
             ByteClassGenerator classes = new ByteClassGenerator();
             try {
                 unit.generate(classes);
-            } catch (NullPointerException |  ArrayIndexOutOfBoundsException | NegativeArraySizeException e) {
+            } catch (NullPointerException | ArrayIndexOutOfBoundsException | NegativeArraySizeException e) {
                 // this is almost inevitably an error from visitMaxes
                 // so let's dump some data
                 unit.trace(System.err);

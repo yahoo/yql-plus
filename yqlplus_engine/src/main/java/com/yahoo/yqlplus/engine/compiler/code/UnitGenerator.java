@@ -102,7 +102,7 @@ public class UnitGenerator {
             public YQLCoreType getValueCoreType() {
                 return YQLCoreType.OBJECT;
             }
-            
+
             @Override
             public BytecodeExpression invoke(BytecodeExpression target, TypeWidget outputType, String methodName, List<BytecodeExpression> arguments) {
                 final Type[] argTypes = new Type[arguments.size()];
@@ -114,7 +114,7 @@ public class UnitGenerator {
                 fullArgs.add(target);
                 fullArgs.addAll(arguments);
                 return new InvokeDynamicExpression(Dynamic.H_BOOTSTRAP, "dyn:callMethod:" + methodName, outputType, fullArgs);
-           } 
+            }
 
             @Override
             public PropertyAdapter getPropertyAdapter() {
@@ -235,7 +235,7 @@ public class UnitGenerator {
 
     //TODO: Currently this method is only called in the case only one MethodGenerator for the specific method name
     // Will add method to return whole set of MethodGenerators if necessary
-    
+
     public MethodGenerator getMethod(String name) {
         Preconditions.checkArgument(methods.containsKey(name), "Requested method '%s' does not exist", name);
         return methods.get(name).iterator().next();

@@ -30,10 +30,10 @@ public class TypesHandler implements GambitTypes {
         return new ByteInvocableBuilder(source);
     }
 
-    private FunctionalInterfaceContract functional(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes) {
+    private FunctionalInterfaceContract functional(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?>... argumentTypes) {
         List<TypeWidget> arguments = Lists.newArrayListWithExpectedSize(argumentTypes == null ? 0 : argumentTypes.length);
-        if(argumentTypes != null) {
-            for(Class<?> argType : argumentTypes) {
+        if (argumentTypes != null) {
+            for (Class<?> argType : argumentTypes) {
                 arguments.add(adapt(argType, true));
             }
         }
@@ -46,7 +46,7 @@ public class TypesHandler implements GambitTypes {
     }
 
     @Override
-    public LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?> ...argumentTypes) {
+    public LambdaFactoryBuilder createLambdaBuilder(Class<?> clazz, String methodName, Class<?> returnType, boolean nullable, Class<?>... argumentTypes) {
         FunctionalInterfaceContract contract = functional(clazz, methodName, returnType, nullable, argumentTypes);
         return new LambdaBuilder(source, contract);
     }

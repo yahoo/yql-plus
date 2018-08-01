@@ -16,7 +16,6 @@ import java.util.List;
 
 /**
  * Turn a MULTISOURCE into a MERGE of SCANs
- *
  */
 public class ExpandMultisource extends LogicalOperatorTransform {
     @Override
@@ -26,7 +25,7 @@ public class ExpandMultisource extends LogicalOperatorTransform {
         }
         List<List<String>> sourceNames = node.getArgument(0);
         List<OperatorNode<SequenceOperator>> scans = Lists.newArrayList();
-        for(List<String> sourceName : sourceNames) {
+        for (List<String> sourceName : sourceNames) {
             scans.add(OperatorNode.create(SequenceOperator.SCAN, sourceName, ImmutableList.of()));
         }
         OperatorNode<SequenceOperator> merge = OperatorNode.create(node.getLocation(), node.getAnnotations(), SequenceOperator.MERGE, scans);
