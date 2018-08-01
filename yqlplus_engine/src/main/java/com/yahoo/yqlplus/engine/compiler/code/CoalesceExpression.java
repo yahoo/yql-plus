@@ -19,7 +19,7 @@ class CoalesceExpression extends BaseTypeExpression {
         AssignableValue val = code.allocate(primaryValue);
         Label isNull = new Label();
         Label isDone = new Label();
-        if(code.gotoIfNull(val, isNull)) {
+        if (code.gotoIfNull(val, isNull)) {
             code.exec(val);
             code.cast(getType(), val.getType());
             MethodVisitor mv = code.getMethodVisitor();

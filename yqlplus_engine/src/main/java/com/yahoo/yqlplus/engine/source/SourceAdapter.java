@@ -105,7 +105,7 @@ public class SourceAdapter implements SourceType {
     }
 
     private StreamValue executeSourceJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state, OperatorNode<SequenceOperator> query) {
-        switch(query.getOperator()) {
+        switch (query.getOperator()) {
             case SCAN:
                 return executeSelect(query, leftSide, joinExpression, args, context, state);
             case INSERT:
@@ -117,14 +117,15 @@ public class SourceAdapter implements SourceType {
                 throw new ProgramCompileException(query.getLocation(), "Operator %s is not supported on right side of join", query.getOperator());
         }
     }
+
     private StreamValue executeSource(List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state, OperatorNode<SequenceOperator> query) {
-        switch(query.getOperator()) {
+        switch (query.getOperator()) {
             case SCAN:
                 return executeSelect(query, args, context, state);
             case INSERT: {
                 OperatorNode<SequenceOperator> records = query.getArgument(1);
                 List<Map<String, OperatorNode<PhysicalExprOperator>>> writeRecords = decodeInsertSequenceMaps(context, records);
-                if(writeRecords != null) {
+                if (writeRecords != null) {
                     return executeInsertSet(query, writeRecords, args, context, state);
                 }
                 return executeInsertStream(query, context.execute(records), args, context, state);
@@ -166,8 +167,8 @@ public class SourceAdapter implements SourceType {
     private StreamValue executeIndexWrite(Class<? extends Annotation> annotation, OperatorNode<SequenceOperator> query, CompileContext context, OperatorNode<ExpressionOperator> filter, List<QM> candidates) {
         List<IndexDescriptor> descriptors = Lists.newArrayList();
         Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
-        for(QM m : candidates) {
-            if(!m.keyArguments.isEmpty()) {
+        for (QM m : candidates) {
+            if (!m.keyArguments.isEmpty()) {
                 IndexDescriptor desc = m.indexBuilder.build();
                 methodMap.put(IndexKey.of(desc.getColumnNames()), m);
                 descriptors.add(desc);
@@ -253,7 +254,7 @@ public class SourceAdapter implements SourceType {
         List<QM> candidates = visitMethods(query, Insert.class, context, args, new Visitor() {
             @Override
             public boolean visitSet(QM qm, String keyName, Object defaultValue, Class<?> parameterType, TypeWidget setType) {
-                if(defaultValue != null) {
+                if (defaultValue != null) {
                     qm.addSetParameter(keyName, OperatorNode.create(PhysicalExprOperator.PROPREF_DEFAULT, row, keyName, OperatorNode.create(PhysicalExprOperator.CONSTANT, setType, defaultValue)));
                 } else {
                     qm.addSetParameter(keyName, OperatorNode.create(PhysicalExprOperator.PROPREF_DEFAULT, row, keyName, OperatorNode.create(PhysicalExprOperator.THROW,
@@ -274,7 +275,7 @@ public class SourceAdapter implements SourceType {
             QM m = candidates.get(0);
             OperatorNode<FunctionOperator> func = function.createFunction(m.invoke());
             records.add(func.getLocation(), StreamOperator.TRANSFORM, func);
-            if(!m.singleton) {
+            if (!m.singleton) {
                 records.add(func.getLocation(), StreamOperator.FLATTEN);
             }
             return records;
@@ -283,21 +284,21 @@ public class SourceAdapter implements SourceType {
 
     private StreamValue executeInsertSet(OperatorNode<SequenceOperator> query, List<Map<String, OperatorNode<PhysicalExprOperator>>> records, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
         List<QM> invocations = Lists.newArrayList();
-        for(Map<String, OperatorNode<PhysicalExprOperator>> record : records) {
+        for (Map<String, OperatorNode<PhysicalExprOperator>> record : records) {
             List<QM> candidates = visitMethods(query, Insert.class, context, args, new RecordWriteVisitor(record, context));
             invocations.add(candidates.get(0));
         }
-        if(invocations.size() == 1) {
+        if (invocations.size() == 1) {
             return invocations.get(0).stream(context);
         } else {
             boolean allSingleton = invocations.stream().allMatch((c) -> c.singleton);
             boolean allFlatten = invocations.stream().noneMatch((c) -> c.singleton);
-            if(allSingleton || allFlatten) {
+            if (allSingleton || allFlatten) {
                 List<OperatorNode<PhysicalExprOperator>> exprs = invocations.stream().map(QM::invoke).collect(Collectors.toList());
                 OperatorNode<PhysicalExprOperator> list = OperatorNode.create(PhysicalExprOperator.ARRAY, exprs);
                 StreamValue val = StreamValue.iterate(context, list);
                 val.add(Location.NONE, StreamOperator.RESOLVE);
-                if(allFlatten) {
+                if (allFlatten) {
                     val.add(Location.NONE, StreamOperator.FLATTEN);
                 }
                 return val;
@@ -316,7 +317,7 @@ public class SourceAdapter implements SourceType {
     }
 
     private StreamValue executeSelect(OperatorNode<SequenceOperator> query, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
-        return executeSelect(query,null, null, args, context, state);
+        return executeSelect(query, null, null, args, context, state);
     }
 
     private StreamValue executeSelect(OperatorNode<SequenceOperator> query, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, List<OperatorNode<PhysicalExprOperator>> args, CompileContext context, ChainState state) {
@@ -330,8 +331,8 @@ public class SourceAdapter implements SourceType {
         List<IndexDescriptor> descriptors = Lists.newArrayList();
         Map<IndexKey, QM> methodMap = Maps.newLinkedHashMap();
         QM scan = null;
-        for(QM m : candidates) {
-            if(!m.keyArguments.isEmpty()) {
+        for (QM m : candidates) {
+            if (!m.keyArguments.isEmpty()) {
                 IndexDescriptor desc = m.indexBuilder.build();
                 methodMap.put(IndexKey.of(desc.getColumnNames()), m);
                 descriptors.add(desc);
@@ -401,8 +402,8 @@ public class SourceAdapter implements SourceType {
     }
 
 
-    private void prepareIndexKeyValues(CompileContext context,OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexQuery iq) {
-        if(strategy.indexFilter != null) {
+    private void prepareIndexKeyValues(CompileContext context, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, IndexStrategy strategy, IndexQuery iq) {
+        if (strategy.indexFilter != null) {
             for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : strategy.indexFilter.entrySet()) {
                 String key = e.getKey();
                 OperatorNode<ExpressionOperator> zip = e.getValue();
@@ -421,8 +422,8 @@ public class SourceAdapter implements SourceType {
                 iq.keyValues.put(key, keyExpr);
             }
         }
-        if(strategy.joinColumns != null && !strategy.joinColumns.isEmpty()) {
-            if(leftSide == null || joinExpression == null) {
+        if (strategy.joinColumns != null && !strategy.joinColumns.isEmpty()) {
+            if (leftSide == null || joinExpression == null) {
                 throw new NullPointerException("joinColumns is non-empty yet there is no available leftSide");
             }
             // generate an expression to extract the relevant keys from the left side
@@ -433,18 +434,18 @@ public class SourceAdapter implements SourceType {
             scope.addArgument("$row");
             final OperatorNode<PhysicalExprOperator> rowReference = OperatorNode.create(PhysicalExprOperator.LOCAL, "$row");
             List<OperatorNode<PhysicalExprOperator>> nullTests = Lists.newArrayListWithExpectedSize(join.size());
-            for(JoinExpression expr : join) {
+            for (JoinExpression expr : join) {
                 String rightField = expr.getRightField();
-                if(strategy.joinColumns.contains(rightField)) {
+                if (strategy.joinColumns.contains(rightField)) {
                     fields.add(rightField);
                     expressions.add(context.evaluateInRowContext(expr.left, rowReference));
                     final OperatorNode<PhysicalExprOperator> fieldValue = OperatorNode.create(PhysicalExprOperator.PROPREF, rowReference, rightField);
                     com.yahoo.yqlplus.api.index.IndexColumn column = strategy.descriptor.getColumn(rightField);
-                    if(column.isSkipNull() || column.isSkipEmpty()) {
+                    if (column.isSkipNull() || column.isSkipEmpty()) {
                         nullTests.add(OperatorNode.create(PhysicalExprOperator.IS_NULL,
                                 fieldValue));
                     }
-                    if(column.isSkipEmpty()) {
+                    if (column.isSkipEmpty()) {
                         addEmptyTest(nullTests, column, fieldValue);
                     }
                 }
@@ -453,7 +454,7 @@ public class SourceAdapter implements SourceType {
                     scope.createFunction(OperatorNode.create(PhysicalExprOperator.RECORD, fields, expressions));
             StreamValue leftKeys = StreamValue.iterate(context, leftSide);
             leftKeys.add(Location.NONE, StreamOperator.TRANSFORM, keyFunction);
-            if(!nullTests.isEmpty()) {
+            if (!nullTests.isEmpty()) {
                 OperatorNode<PhysicalExprOperator> anyNull = nullTests.size() == 1 ? nullTests.get(0) : OperatorNode.create(PhysicalExprOperator.OR, nullTests);
                 OperatorNode<FunctionOperator> filterFunction =
                         scope.createFunction(OperatorNode.create(PhysicalExprOperator.NOT, anyNull));
@@ -467,19 +468,20 @@ public class SourceAdapter implements SourceType {
 
     private OperatorNode<PhysicalExprOperator> filterKeyArray(IndexColumn column, OperatorNode<PhysicalExprOperator> keyExpr) {
         ExprScope scope = new ExprScope();
-        final OperatorNode<PhysicalExprOperator> keyReference = scope.addArgument("$key");;
+        final OperatorNode<PhysicalExprOperator> keyReference = scope.addArgument("$key");
+        ;
         List<OperatorNode<PhysicalExprOperator>> tests = Lists.newArrayList();
-        if(column.isSkipNull() || column.isSkipEmpty()) {
+        if (column.isSkipNull() || column.isSkipEmpty()) {
             tests.add(OperatorNode.create(PhysicalExprOperator.IS_NULL, keyReference));
         }
-        if(column.isSkipEmpty()) {
+        if (column.isSkipEmpty()) {
             addEmptyTest(tests, column, keyReference);
         }
-        if(tests.isEmpty()) {
+        if (tests.isEmpty()) {
             return keyExpr;
         }
         OperatorNode<PhysicalExprOperator> test;
-        if(tests.size() == 1) {
+        if (tests.size() == 1) {
             test = tests.get(0);
         } else {
             test = OperatorNode.create(PhysicalExprOperator.OR, tests);
@@ -493,7 +495,7 @@ public class SourceAdapter implements SourceType {
     }
 
     private void addEmptyTest(List<OperatorNode<PhysicalExprOperator>> emptyTests, IndexColumn column, OperatorNode<PhysicalExprOperator> fieldValue) {
-        switch(column.getType().getCoreType()) {
+        switch (column.getType().getCoreType()) {
             case INT32:
                 emptyTests.add(OperatorNode.create(PhysicalExprOperator.EQ, fieldValue, OperatorNode.create(PhysicalExprOperator.CONSTANT, BaseTypeAdapter.INT32, 0)));
                 break;
@@ -520,20 +522,20 @@ public class SourceAdapter implements SourceType {
         List<OperatorNode<PhysicalExprOperator>> valueExprs = context.evaluateList(values);
         TreeMap<String, OperatorNode<PhysicalExprOperator>> b = new TreeMap<>(
                 String.CASE_INSENSITIVE_ORDER);
-        for(int i = 0; i < names.size(); i++) {
+        for (int i = 0; i < names.size(); i++) {
             b.put(names.get(i), valueExprs.get(i));
         }
         return b;
     }
 
     private List<Map<String, OperatorNode<PhysicalExprOperator>>> decodeInsertSequenceMaps(CompileContext context, OperatorNode<SequenceOperator> records) {
-        if(records.getOperator() == SequenceOperator.EVALUATE) {
+        if (records.getOperator() == SequenceOperator.EVALUATE) {
             OperatorNode<ExpressionOperator> expr = records.getArgument(0);
-            if(expr.getOperator() == ExpressionOperator.ARRAY) {
+            if (expr.getOperator() == ExpressionOperator.ARRAY) {
                 List<OperatorNode<ExpressionOperator>> maps = expr.getArgument(0);
                 List<Map<String, OperatorNode<PhysicalExprOperator>>> output = Lists.newArrayListWithExpectedSize(maps.size());
-                for(OperatorNode<ExpressionOperator> op : maps) {
-                    if(op.getOperator() == ExpressionOperator.MAP) {
+                for (OperatorNode<ExpressionOperator> op : maps) {
+                    if (op.getOperator() == ExpressionOperator.MAP) {
                         output.add(decodeExpressionMap(context, op));
                     } else {
                         return null;
@@ -581,12 +583,12 @@ public class SourceAdapter implements SourceType {
             this.methodName = method.getName() + Type.getMethodDescriptor(method);
             Class<?>[] argumentTypes = method.getParameterTypes();
             Annotation[][] annotations = method.getParameterAnnotations();
-            for(int i = 0; i < argumentTypes.length; i++) {
-                if(isFreeArgument(argumentTypes[i], annotations[i])) {
+            for (int i = 0; i < argumentTypes.length; i++) {
+                if (isFreeArgument(argumentTypes[i], annotations[i])) {
                     arguments++;
                 } else {
-                    for(Annotation annotation : annotations[i]) {
-                        if(annotation instanceof Key) {
+                    for (Annotation annotation : annotations[i]) {
+                        if (annotation instanceof Key) {
                             keys++;
                         } else if (annotation instanceof Set) {
                             sets++;
@@ -618,10 +620,10 @@ public class SourceAdapter implements SourceType {
             return arguments;
         }
 
-        public boolean disqualify(NoMatchingMethodException.Reason reason, Object ...args) {
+        public boolean disqualify(NoMatchingMethodException.Reason reason, Object... args) {
             this.reason = reason;
             String message = reason.getFormat();
-            if(args != null) {
+            if (args != null) {
                 message = String.format(reason.getFormat(), args);
             }
             disqualified = message;
@@ -647,14 +649,14 @@ public class SourceAdapter implements SourceType {
                         .thenComparing(CandidateMethod::getSets)
                         .thenComparing(CandidateMethod::getMethodName)
                         .reversed());
-        for(Method method : clazz.getMethods()) {
-            if(!Modifier.isPublic(method.getModifiers()) || method.getAnnotation(annotationClass) == null) {
+        for (Method method : clazz.getMethods()) {
+            if (!Modifier.isPublic(method.getModifiers()) || method.getAnnotation(annotationClass) == null) {
                 continue;
             }
             candidateMethods.add(new CandidateMethod(method));
         }
         methods:
-        for(CandidateMethod cm : candidateMethods) {
+        for (CandidateMethod cm : candidateMethods) {
             Method method = cm.method;
             Class<?>[] argumentTypes = method.getParameterTypes();
             java.lang.reflect.Type[] genericArgumentTypes = method.getGenericParameterTypes();
@@ -706,7 +708,7 @@ public class SourceAdapter implements SourceType {
                                     found = true;
                                 }
                             }
-                            if(!found) {
+                            if (!found) {
                                 reportMethodParameterException(DefaultValue.class.getSimpleName(), method, "@DefaultValue must be accompanied by a @Set annotation");
                             }
                         } else if (annotate instanceof Set) {
@@ -718,19 +720,19 @@ public class SourceAdapter implements SourceType {
                                     defaultValue = parseDefaultValue(method, set.value(), setType, ((DefaultValue) ann).value());
                                 }
                             }
-                            if(!Insert.class.isAssignableFrom(annotationClass) && !Update.class.isAssignableFrom(annotationClass)) {
+                            if (!Insert.class.isAssignableFrom(annotationClass) && !Update.class.isAssignableFrom(annotationClass)) {
                                 reportMethodParameterException(annotationClass.getSimpleName(), method, "@Set parameters are only permitted on @Insert and @Update methods");
                                 throw new IllegalArgumentException();
                             }
-                            if("$".equals(set.value())) {
+                            if ("$".equals(set.value())) {
                                 if (defaultValue != null) {
                                     reportMethodParameterException(annotationClass.getSimpleName(), method, "@DefaultValue is not permitted on @Set('$') parameters");
                                 }
-                                if(!visitor.visitRecordSet(m, parameterType, setType)) {
+                                if (!visitor.visitRecordSet(m, parameterType, setType)) {
                                     cm.disqualify(NoMatchingMethodException.Reason.RECORD_SET_PARAMETER);
                                     continue methods;
                                 }
-                            } else if(!visitor.visitSet(m, set.value(), defaultValue, parameterType, setType)) {
+                            } else if (!visitor.visitSet(m, set.value(), defaultValue, parameterType, setType)) {
                                 cm.disqualify(NoMatchingMethodException.Reason.SET_PARAMETER, set.value());
                                 continue methods;
                             }
@@ -751,14 +753,14 @@ public class SourceAdapter implements SourceType {
                     }
                 }
             }
-            if(inputNext.hasNext()) {
+            if (inputNext.hasNext()) {
                 continue;
             }
-            if(visitor.accept(cm, m)) {
+            if (visitor.accept(cm, m)) {
                 candidates.add(m);
             }
         }
-        if(candidates.isEmpty()) {
+        if (candidates.isEmpty()) {
             throw new NoMatchingMethodException(annotationClass, sourceName, clazz, query, candidateMethods);
         }
         return candidates;
@@ -780,6 +782,7 @@ public class SourceAdapter implements SourceType {
         PropertyAdapter rowProperties;
         String methodType;
         OperatorNode<PhysicalExprOperator> dimensions;
+
         QM(Class<? extends Annotation> annotationClass, Method method, OperatorNode<PhysicalExprOperator> source, boolean singleton, TypeWidget rowType, OperatorNode<PhysicalExprOperator> dimensions) {
             this.annotationClass = annotationClass;
             this.methodType = annotationClass.getSimpleName();
@@ -811,7 +814,7 @@ public class SourceAdapter implements SourceType {
 
         OperatorNode<PhysicalExprOperator> invokeIterable() {
             OperatorNode<PhysicalExprOperator> out = invoke();
-            if(singleton) {
+            if (singleton) {
                 return OperatorNode.create(PhysicalExprOperator.SINGLETON, OperatorNode.create(PhysicalExprOperator.RESOLVE, out));
             } else {
                 return out;
@@ -870,7 +873,7 @@ public class SourceAdapter implements SourceType {
                 // we only support a single @Key argument and we need a list of keys
                 ExprScope scope = new ExprScope();
                 scope.addArgument("$keys");
-                OperatorNode<PhysicalExprOperator> keys =  cursor.materializeValue();
+                OperatorNode<PhysicalExprOperator> keys = cursor.materializeValue();
                 StreamValue result = StreamValue.singleton(planner, keys);
                 result.add(Location.NONE, StreamOperator.TRANSFORM, scope.createFunction(invoke()));
                 result.add(Location.NONE, StreamOperator.RESOLVE);
@@ -926,17 +929,17 @@ public class SourceAdapter implements SourceType {
         }
 
         public void addSetRecordParameter(Class<?> recordTypeClazz, TypeWidget recordType, Map<String, OperatorNode<PhysicalExprOperator>> record) {
-            if(!setArguments.isEmpty()) {
+            if (!setArguments.isEmpty()) {
                 reportMethodParameterException(methodType, method, "@Set('$') cannot be used with @Set('%s')", setArguments.iterator().next());
             }
-            if(!recordType.hasProperties()) {
+            if (!recordType.hasProperties()) {
                 reportMethodParameterException(methodType, method, "@Set('$') parameter type %s has no properties", recordType.getTypeName());
             }
             PropertyAdapter adapter = recordType.getPropertyAdapter();
-            if(adapter.isClosed()) {
-                for(PropertyAdapter.Property property : adapter.getProperties()) {
+            if (adapter.isClosed()) {
+                for (PropertyAdapter.Property property : adapter.getProperties()) {
                     setArguments.add(property.name);
-                    if(!property.type.isNullable() && !record.containsKey(property.name)) {
+                    if (!property.type.isNullable() && !record.containsKey(property.name)) {
                         reportMethodParameterException(methodType, method, "@Set('$') parameter has required field '%s' which is not available", property.name);
                     }
                 }
@@ -945,7 +948,7 @@ public class SourceAdapter implements SourceType {
             }
             List<String> properties = Lists.newArrayList();
             List<OperatorNode<PhysicalExprOperator>> values = Lists.newArrayList();
-            for(Map.Entry<String,OperatorNode<PhysicalExprOperator>> e : record.entrySet()) {
+            for (Map.Entry<String, OperatorNode<PhysicalExprOperator>> e : record.entrySet()) {
                 properties.add(e.getKey());
                 values.add(e.getValue());
             }
@@ -953,15 +956,15 @@ public class SourceAdapter implements SourceType {
         }
 
         public void addSetRecordParameter(Class<?> recordTypeClazz, TypeWidget recordType, OperatorNode<PhysicalExprOperator> record) {
-            if(!setArguments.isEmpty()) {
+            if (!setArguments.isEmpty()) {
                 reportMethodParameterException(methodType, method, "@Set('$') cannot be used with @Set('%s')", setArguments.iterator().next());
             }
-            if(!recordType.hasProperties()) {
+            if (!recordType.hasProperties()) {
                 reportMethodParameterException(methodType, method, "@Set('$') parameter type %s has no properties", recordType.getTypeName());
             }
             PropertyAdapter adapter = recordType.getPropertyAdapter();
-            if(adapter.isClosed()) {
-                for(PropertyAdapter.Property property : adapter.getProperties()) {
+            if (adapter.isClosed()) {
+                for (PropertyAdapter.Property property : adapter.getProperties()) {
                     setArguments.add(property.name);
                 }
             } else {
@@ -971,12 +974,12 @@ public class SourceAdapter implements SourceType {
         }
 
         public boolean verifySetArguments(CandidateMethod c, Map<String, OperatorNode<PhysicalExprOperator>> record) {
-            if(wildcardSet) {
+            if (wildcardSet) {
                 return true;
             }
             // verify no unknown fields are present in the input
-            for(String key : record.keySet()) {
-                if(!setArguments.contains(key)) {
+            for (String key : record.keySet()) {
+                if (!setArguments.contains(key)) {
                     return c.disqualify(NoMatchingMethodException.Reason.EXTRA_FIELD, key);
                 }
             }
@@ -1005,7 +1008,7 @@ public class SourceAdapter implements SourceType {
                                 clazz, Type.getType(Supplier.class), "get", Type.getMethodDescriptor(Type.getType(Object.class)),
                                 ImmutableList.of(OperatorNode.create(PhysicalExprOperator.CONSTANT_VALUE, Supplier.class, supplier))));
                 source = OperatorNode.create(PhysicalExprOperator.VALUE, value);
-            }  else {
+            } else {
                 OperatorValue value = OperatorStep.create(planner.getValueTypeAdapter(), Location.NONE, PhysicalOperator.EVALUATE,
                         OperatorNode.create(PhysicalExprOperator.CURRENT_CONTEXT),
                         OperatorNode.create(PhysicalExprOperator.INVOKENEW,
@@ -1102,16 +1105,16 @@ public class SourceAdapter implements SourceType {
 
         @Override
         public boolean visitSet(QM qm, String keyName, Object defaultValue, Class<?> parameterType, TypeWidget setType) {
-            if(!record.containsKey(keyName)) {
-                if(defaultValue != null) {
+            if (!record.containsKey(keyName)) {
+                if (defaultValue != null) {
                     qm.addSetParameter(keyName, OperatorNode.create(PhysicalExprOperator.CONSTANT, setType, defaultValue));
                 } else {
                     return false;
                 }
             } else {
-                if(defaultValue != null) {
+                if (defaultValue != null) {
                     qm.addSetParameter(keyName, OperatorNode.create(PhysicalExprOperator.COALESCE, ImmutableList.of(record.get(keyName), OperatorNode.create(PhysicalExprOperator.CONSTANT, setType, defaultValue))));
-                }  else {
+                } else {
                     qm.addSetParameter(keyName, OperatorNode.create(PhysicalExprOperator.COALESCE, ImmutableList.of(record.get(keyName), OperatorNode.create(PhysicalExprOperator.THROW,
                             OperatorNode.create(PhysicalExprOperator.INVOKENEW, PropertyNotFoundException.class, ImmutableList.of(context.constant(String.format("Required property '%s' not found on INSERT", keyName))))))));
                 }
