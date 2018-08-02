@@ -6,9 +6,8 @@
 
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
-import com.google.inject.Guice;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSourceModule;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
 import org.testng.annotations.BeforeMethod;
 
 public class GambitSourceTestBase {
@@ -17,7 +16,7 @@ public class GambitSourceTestBase {
 
     @BeforeMethod(alwaysRun = true)
     public void createASMClassSource() {
-        asm = Guice.createInjector(new ASMClassSourceModule()).getInstance(ASMClassSource.class);
+        asm = new ASMClassSource();
         source = new GambitSource(asm);
     }
 }

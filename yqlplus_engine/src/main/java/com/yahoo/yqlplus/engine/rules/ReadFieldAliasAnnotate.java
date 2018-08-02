@@ -9,8 +9,11 @@ package com.yahoo.yqlplus.engine.rules;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yahoo.yqlplus.engine.internal.plan.JoinExpression;
-import com.yahoo.yqlplus.language.logical.*;
+import com.yahoo.yqlplus.language.logical.ExpressionOperator;
+import com.yahoo.yqlplus.language.logical.LogicalOperatorTransform;
+import com.yahoo.yqlplus.language.logical.ProjectOperator;
+import com.yahoo.yqlplus.language.logical.SequenceOperator;
+import com.yahoo.yqlplus.language.logical.SortOperator;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorVisitor;
@@ -32,19 +35,19 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
         }
 
         public static RowType getSequenceType(OperatorNode<SequenceOperator> target) {
-            return (RowType)(target.getAnnotation(NAME));
+            return (RowType) (target.getAnnotation(NAME));
         }
 
         public static RowType getLeftType(OperatorNode<SequenceOperator> target) {
-            return (RowType)(target.getAnnotation(LEFT_NAME));
+            return (RowType) (target.getAnnotation(LEFT_NAME));
         }
 
         public static RowType getRightType(OperatorNode<SequenceOperator> target) {
-            return (RowType)(target.getAnnotation(RIGHT_NAME));
+            return (RowType) (target.getAnnotation(RIGHT_NAME));
         }
 
         public static RowType getReadRecordType(OperatorNode<? extends Operator> target) {
-            return (RowType)(target.getAnnotation(NAME));
+            return (RowType) (target.getAnnotation(NAME));
         }
 
         public static void setSequenceType(OperatorNode<SequenceOperator> target, RowType rowType) {
@@ -82,7 +85,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
         }
 
         public void merge(RowType side) {
-            for(String alias : side.aliases) {
+            for (String alias : side.aliases) {
                 addAlias(alias);
             }
         }
@@ -123,11 +126,11 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
 
 
         // first, visit the children to figure out what type of input this is operating on
-        if(RowType.hasAnnotation(target)) {
-           return target;
+        if (RowType.hasAnnotation(target)) {
+            return target;
         }
         RowType rowType = visitForRowType(target);
-        if(target.getAnnotation("alias") != null) {
+        if (target.getAnnotation("alias") != null) {
             rowType.addAlias((String) target.getAnnotation("alias"));
         }
         RowType.setSequenceType(target, rowType);
@@ -136,7 +139,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
     }
 
     private void visitForReadRecord(OperatorNode<SequenceOperator> target) {
-        switch(target.getOperator()) {
+        switch (target.getOperator()) {
             case SCAN:
             case INSERT:
             case UPDATE:
@@ -145,7 +148,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case DELETE_ALL:
             case EMPTY:
             case EVALUATE:
-            case NEXT:
             case PIPE:
             case DISTINCT:
             case LIMIT:
@@ -153,7 +155,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case SLICE:
             case MERGE:
             case TIMEOUT:
-            case PAGE:
             case ALL:
             case MULTISOURCE:
             case FALLBACK:
@@ -163,8 +164,8 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
                 OperatorNode<SequenceOperator> input = target.getArgument(0);
                 RowTypeVisitor rowTypeVisitor = new RowTypeVisitor(RowType.getSequenceType(input));
                 List<OperatorNode<ProjectOperator>> projection = target.getArgument(1);
-                for(OperatorNode<ProjectOperator> op : projection) {
-                    switch(op.getOperator()) {
+                for (OperatorNode<ProjectOperator> op : projection) {
+                    switch (op.getOperator()) {
                         case FIELD: {
                             OperatorNode<ExpressionOperator> expr = op.getArgument(0);
                             expr.visit(rowTypeVisitor);
@@ -192,7 +193,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
                 OperatorNode<SequenceOperator> input = target.getArgument(0);
                 RowTypeVisitor rowTypeVisitor = new RowTypeVisitor(RowType.getSequenceType(input));
                 List<OperatorNode<SortOperator>> comparator = target.getArgument(1);
-                for(OperatorNode<SortOperator> op : comparator) {
+                for (OperatorNode<SortOperator> op : comparator) {
                     OperatorNode<ExpressionOperator> order = op.getArgument(0);
                     order.visit(rowTypeVisitor);
                 }
@@ -206,7 +207,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
                 RowType rightSide = RowType.getRightType(target);
                 RowTypeVisitor leftVisitor = new RowTypeVisitor(leftSide);
                 RowTypeVisitor rightVisitor = new RowTypeVisitor(rightSide);
-                for(JoinExpression expr : JoinExpression.parse(joinCondition)) {
+                for (JoinExpression expr : JoinExpression.parse(joinCondition)) {
                     expr.left.visit(leftVisitor);
                     expr.right.visit(rightVisitor);
                 }
@@ -219,6 +220,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
 
     private static class RowTypeVisitor implements OperatorVisitor {
         private final RowType rowType;
+
         public RowTypeVisitor(RowType rowType) {
             Preconditions.checkNotNull(rowType);
             this.rowType = rowType;
@@ -232,9 +234,9 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
         @Override
         @SuppressWarnings("unchecked")
         public <T extends Operator> void exit(OperatorNode<T> node) {
-            if(ExpressionOperator.IS.apply(node)) {
+            if (ExpressionOperator.IS.apply(node)) {
                 OperatorNode<ExpressionOperator> expr = (OperatorNode<ExpressionOperator>) node;
-                switch(expr.getOperator()) {
+                switch (expr.getOperator()) {
                     case AND:
                     case OR:
                     case EQ:
@@ -285,7 +287,7 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
     }
 
     private RowType visitForRowType(OperatorNode<SequenceOperator> target) {
-        switch(target.getOperator()) {
+        switch (target.getOperator()) {
             case SCAN:
             case UPDATE:
             case UPDATE_ALL:
@@ -293,13 +295,12 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case DELETE_ALL:
             case EMPTY:
             case EVALUATE:
-            case NEXT:
             case ALL:
             case MULTISOURCE:
                 return new RowType();
             case MERGE: {
                 List<OperatorNode<SequenceOperator>> inputs = target.getArgument(0);
-                for(OperatorNode<SequenceOperator> input : inputs) {
+                for (OperatorNode<SequenceOperator> input : inputs) {
                     visitSequenceOperator(input);
                 }
                 return new RowType();
@@ -326,7 +327,6 @@ public class ReadFieldAliasAnnotate extends LogicalOperatorTransform {
             case LIMIT:
             case OFFSET:
             case TIMEOUT:
-            case PAGE:
             case SLICE: {
                 OperatorNode<SequenceOperator> input = target.getArgument(0);
                 input = visitSequenceOperator(input);

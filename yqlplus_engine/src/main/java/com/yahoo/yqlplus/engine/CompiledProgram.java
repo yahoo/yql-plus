@@ -8,9 +8,6 @@ package com.yahoo.yqlplus.engine;
 
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.api.InvocationResultHandler;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
-import com.yahoo.yqlplus.engine.api.NativeInvocationResultHandler;
-import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
@@ -19,7 +16,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A CompiledProgram represents a ready-to-execute program. It has methods to inspect its input (arguments) and output
@@ -27,11 +23,11 @@ import java.util.concurrent.TimeUnit;
  */
 public interface CompiledProgram {
 
-    public enum ProgramStatement {
-        SELECT, INSERT, UPDATE, DELETE;
+    enum ProgramStatement {
+        SELECT, INSERT, UPDATE, DELETE
     }
 
-    public interface ArgumentInfo {
+    interface ArgumentInfo {
         String getName();
 
         Type getType();
@@ -39,11 +35,11 @@ public interface CompiledProgram {
         boolean isRequired();
 
         YQLType getYQLType();
-        
+
         Object getDefaultValue();
     }
 
-    public interface ResultSetInfo {
+    interface ResultSetInfo {
         String getName();
 
         /**
@@ -55,24 +51,14 @@ public interface CompiledProgram {
     /**
      * Invoke the compiled program.
      */
-    ProgramResult run(Map<String, Object> arguments, boolean debug) throws Exception;
-    
-    /**
-     * Invoke the compiled program with explicit timeout
-     */
-    ProgramResult run(Map<String, Object> arguments, boolean debug, long timeout, TimeUnit timeoutUnit) throws Exception;
-    /**
-     * Invoke the compiled program within the given ExecutionScope.
-     *
-     * @see ExecutionScope
-     */
-    ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope scope) throws Exception;
-    
-    ProgramResult run(Map<String, Object> arguments, boolean debug, ExecutionScope scope, long timeout, TimeUnit timeoutUnit) throws Exception;
+    ProgramResult run(Map<String, Object> arguments) throws Exception;
 
-    void invoke(InvocationResultHandler resultHandler, Map<String, Object> arguments, ExecutionScope scope, TaskContext context);
+    /**
+     * Invoke the compiled program with explicit context
+     */
+    ProgramResult run(Map<String, Object> arguments, TaskContext context) throws Exception;
 
-    void invoke(NativeEncoding encoding, NativeInvocationResultHandler resultHandler, Map<String, Object> arguments, ExecutionScope scope, TaskContext context);
+    void invoke(InvocationResultHandler resultHandler, Map<String, Object> arguments, TaskContext context);
 
     /**
      * Enumerated the arguments for this program. Required arguments must be passed to run to invoke the program.

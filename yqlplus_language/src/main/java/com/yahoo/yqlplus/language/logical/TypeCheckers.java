@@ -71,7 +71,7 @@ public final class TypeCheckers {
                 if (OperatorNode.class.isAssignableFrom(arg.getRawType())) {
                     Preconditions.checkArgument(arg.getType() instanceof ParameterizedType, "Type spec must be List<OperatorNode<?>>");
                     Class<? extends Operator> optype = (Class<? extends Operator>) TypeLiteral.get(((ParameterizedType) arg.getType()).getActualTypeArguments()[0]).getRawType();
-                    return new OperatorNodeListTypeChecker(parent, idx, optype, ImmutableSet.<Operator>of());
+                    return new OperatorNodeListTypeChecker(parent, idx, optype, ImmutableSet.of());
                 } else {
                     return new JavaListTypeChecker(parent, idx, arg.getRawType());
                 }
@@ -81,7 +81,7 @@ public final class TypeCheckers {
         if (value instanceof Class) {
             Class<?> clazz = (Class<?>) value;
             if (Operator.class.isAssignableFrom(clazz)) {
-                return new NodeTypeChecker(parent, idx, (Class<? extends Operator>) clazz, ImmutableSet.<Operator>of());
+                return new NodeTypeChecker(parent, idx, (Class<? extends Operator>) clazz, ImmutableSet.of());
             } else {
                 return new JavaTypeChecker(parent, idx, clazz);
             }

@@ -34,7 +34,7 @@ public enum StatementOperator implements Operator {
         }
     };
 
-    private StatementOperator(Object... types) {
+    StatementOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

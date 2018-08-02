@@ -6,11 +6,11 @@
 
 package com.yahoo.yqlplus.engine.internal.plan;
 
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
 
 import java.util.List;
 

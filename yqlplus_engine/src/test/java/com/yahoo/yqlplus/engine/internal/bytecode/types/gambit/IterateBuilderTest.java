@@ -7,7 +7,10 @@
 package com.yahoo.yqlplus.engine.internal.bytecode.types.gambit;
 
 import com.google.common.collect.ImmutableList;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.EqualsExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
 import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -42,8 +45,8 @@ public class IterateBuilderTest extends GambitSourceTestBase {
         o.addParameter("handler", source.adapt(Handler.class, false));
         ObjectBuilder.MethodBuilder builder = o.method("run");
         GambitCreator.IterateBuilder loop = builder.iterate(builder.local("handler"));
-        loop.next(loop.eq(Location.NONE, loop.getItem(), source.constant(1)));
-        loop.abort(loop.eq(Location.NONE, loop.getItem(), source.constant(5)));
+        loop.next(new EqualsExpression(Location.NONE, loop.getItem(), source.constant(1)));
+        loop.abort(new EqualsExpression(Location.NONE, loop.getItem(), source.constant(5)));
         loop.exec(loop.invokeExact(Location.NONE, "add", Handler.class, BaseTypeAdapter.VOID, builder.local("handler"), loop.getItem()));
         builder.exec(loop.build());
         builder.exit();

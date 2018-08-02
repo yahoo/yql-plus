@@ -33,7 +33,7 @@ public class PushAndTransform extends LogicalOperatorTransform {
             for (OperatorNode<ExpressionOperator> arg : args) {
                 arg = visitExpr(arg);
                 if (arg.getOperator() == ExpressionOperator.OR) {
-                    ors.add((List<OperatorNode<ExpressionOperator>>) arg.getArgument(0));
+                    ors.add(arg.getArgument(0));
                 } else {
                     ands.add(arg);
                 }

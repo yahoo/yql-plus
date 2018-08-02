@@ -26,9 +26,7 @@ public abstract class YQLKeyValueType extends YQLValueType {
             return false;
         }
         YQLKeyValueType that = (YQLKeyValueType) o;
-        if (!keyType.equals(that.keyType)) return false;
-
-        return true;
+        return keyType.equals(that.keyType);
     }
 
     @Override

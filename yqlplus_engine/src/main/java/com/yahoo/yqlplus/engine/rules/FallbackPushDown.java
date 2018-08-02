@@ -18,7 +18,6 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.operator.OperatorVisitor;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 
-import javax.annotation.Nullable;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.Set;
@@ -99,9 +98,8 @@ public class FallbackPushDown extends LogicalOperatorTransform {
                 final String oldAlias = (String) current.getAnnotation("alias");
                 final String newAlias = Iterables.get(visible, 0);
                 result = result.transform(new Function<Object, Object>() {
-                    @Nullable
                     @Override
-                    public Object apply(@Nullable Object input) {
+                    public Object apply(Object input) {
                         if (input instanceof OperatorNode) {
                             if (ExpressionOperator.IS.apply((OperatorNode<? extends Operator>) input)) {
                                 OperatorNode<ExpressionOperator> expr = (OperatorNode<ExpressionOperator>) input;
@@ -127,7 +125,7 @@ public class FallbackPushDown extends LogicalOperatorTransform {
     private OperatorNode<SequenceOperator> visitChain(Chain chain, OperatorNode<SequenceOperator> current) {
         if (PUSH_OPERATORS.contains(current.getOperator())) {
             chain.operations.addFirst(current);
-            return visitChain(chain, (OperatorNode<SequenceOperator>) current.getArgument(0));
+            return visitChain(chain, current.getArgument(0));
         } else if (current.getOperator() == SequenceOperator.FALLBACK) {
             // we want to take the sequence of chained operators between top and current, apply them to the primary and fallback sides
             // (mutating field alias names as needed), and then return a new FALLBACK node with the new primary/fallback.
@@ -142,8 +140,8 @@ public class FallbackPushDown extends LogicalOperatorTransform {
             // then we can rewrite field references to aliases that we push through to that when it's ambiguous
 
 
-            OperatorNode<SequenceOperator> primary = (OperatorNode<SequenceOperator>) current.getArgument(0);
-            OperatorNode<SequenceOperator> fallback = (OperatorNode<SequenceOperator>) current.getArgument(1);
+            OperatorNode<SequenceOperator> primary = current.getArgument(0);
+            OperatorNode<SequenceOperator> fallback = current.getArgument(1);
             while (!chain.operations.isEmpty()) {
                 OperatorNode<SequenceOperator> op = chain.operations.removeFirst();
                 // clone op and push it down each side

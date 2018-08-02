@@ -14,23 +14,15 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.JavaEngineModule;
 import com.yahoo.yqlplus.engine.sources.NullIterableSource;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -47,7 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Test
-public class JavaEngineTest {
+public class JavaEngineTest extends ProgramTestBase {
     static final MappingJsonFactory JSON_FACTORY = new MappingJsonFactory();
 
     public static class Spec {
@@ -182,7 +174,7 @@ public class JavaEngineTest {
         public ListenableFuture<Iterable<Person>> futureScan(int delay) {
             return eventually(delay, new Callable<Iterable<Person>>() {
                 @Override
-                public Iterable<Person> call() throws Exception {
+                public Iterable<Person> call() {
                     return scan();
                 }
             });
@@ -222,31 +214,7 @@ public class JavaEngineTest {
         }
         return result;
     }
-
-    protected com.google.inject.Module[] createModules() {
-        return new com.google.inject.Module[]{
-                new JavaTestModule.MetricModule(),
-                new SourceBindingModule(
-                        "person", ToyPersonSource.class,
-                        "failuresource", FailureSource.class
-                ),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ScheduledExecutorService.class).annotatedWith(Names.named("toy")).toInstance(
-                                Executors.newSingleThreadScheduledExecutor()
-                        );
-                        bind(ViewRegistry.class).toInstance(new ViewRegistry() {
-                            @Override
-                            public OperatorNode<SequenceOperator> getView(List<String> name) {
-                                return null;
-                            }
-                        });
-                    }
-                }
-        };
-    }
-
+    
     @DataProvider(name = "queries", parallel = true)
     public Object[][] loadParseTrees() throws IOException {
         return loadParseTrees("javaqueries.json");
@@ -259,11 +227,11 @@ public class JavaEngineTest {
 
     @Test
     public void requireProblematicQuery() throws Exception {
-        run("SELECT value FROM person(100) WHERE id IN ('100', '101', '102') LIMIT 1 OFFSET 1 OUTPUT AS f1;", createModules());
+        run("SELECT value FROM person(100) WHERE id IN ('100', '101', '102') LIMIT 1 OFFSET 1 OUTPUT AS f1;");
     }
 
     protected void runParseTree(String input, JsonNode expectedOutput) throws Exception {
-        Map<String, JsonNode> result = run(input, createModules());
+        Map<String, JsonNode> result = run(input);
         Set<String> have = Sets.newTreeSet(result.keySet());
         Iterator<String> fields = expectedOutput.fieldNames();
         Set<String> expect = Sets.newTreeSet();
@@ -276,20 +244,15 @@ public class JavaEngineTest {
         }
     }
 
-    protected Map<String, JsonNode> run(String script, final com.google.inject.Module... modules) throws Exception {
-        Injector injector = Guice.createInjector(new JavaEngineModule(),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        for (com.google.inject.Module module : modules) {
-                            install(module);
-                        }
-                    }
-                });
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+    protected Map<String, JsonNode> run(String script) throws Exception {
+        ToyPersonSource source = new ToyPersonSource(Executors.newSingleThreadScheduledExecutor());
+        YQLPlusCompiler compiler = createCompiler(
+                "person", source,
+                "failuresource", FailureSource.class
+        );
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.<String, Object>newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap());
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -303,7 +266,7 @@ public class JavaEngineTest {
             JsonGenerator gen = JSON_FACTORY.createGenerator(outstream);
             gen.writeObject(rez);
             gen.flush();
-            parsed.put(key, (JsonNode) JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
+            parsed.put(key, JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
         }
         return parsed;
     }
@@ -315,12 +278,11 @@ public class JavaEngineTest {
      */
     @Test
     public void testNullListCausesTimeout() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new NullIterableSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new NullIterableSource());
         CompiledProgram program = compiler.compile("PROGRAM (); \n" +
                 "SELECT * FROM source WHERE id IN (1, 2, 3) " +
                 "OUTPUT AS out;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         /*
          * Without the fix, the following line would throw:
          * java.util.concurrent.ExecutionException: java.util.concurrent.TimeoutException: Timeout after ... NANOSECONDS.

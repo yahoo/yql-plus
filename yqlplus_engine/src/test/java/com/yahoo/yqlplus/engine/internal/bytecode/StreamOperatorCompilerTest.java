@@ -8,16 +8,12 @@ package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ExactInvocation;
-import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.SinkOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.ListTypeWidget;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
-
-import org.objectweb.asm.Opcodes;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.MethodInvoker;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.SinkOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -50,9 +46,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             MyRecord myRecord = (MyRecord) o;
 
             if (ival != myRecord.ival) return false;
-            if (!sval.equals(myRecord.sval)) return false;
-
-            return true;
+            return sval.equals(myRecord.sval);
         }
 
         @Override
@@ -94,10 +88,10 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
 
     @Test
     public void requireFlatten() throws Exception {
-        List<List<MyRecord>> input = ImmutableList.<List<MyRecord>>of(
+        List<List<MyRecord>> input = ImmutableList.of(
                 ImmutableList.of(new MyRecord(1, "one")),
                 ImmutableList.of(new MyRecord(2, "two"), new MyRecord(3, "three")),
-                ImmutableList.<MyRecord>of(),
+                ImmutableList.of(),
                 ImmutableList.of(new MyRecord(4, "four"))
         );
         Callable<Object> invoker = compileStream(input, OperatorNode.create(StreamOperator.FLATTEN, accumulate()));
@@ -124,15 +118,12 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
 
     @Test
     public void requireGroupbyAggregate() throws Exception {
+        MethodInvoker method = PhysicalExprOperator.createInvoker(StreamOperatorCompilerTest.class.getMethod("aggregate", String.class, List.class));
         List<MyRecord> input = ImmutableList.of(new MyRecord(1, "a"), new MyRecord(5, "c"), new MyRecord(10, "c"), new MyRecord(1, "a"), new MyRecord(3, "d"));
         Callable<Object> invoker = compileStream(input, OperatorNode.create(StreamOperator.GROUPBY, accumulate(),
                 OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$row"), OperatorNode.create(PhysicalExprOperator.PROPREF, OperatorNode.create(PhysicalExprOperator.LOCAL, "$row"), "sval")),
                 OperatorNode.create(FunctionOperator.FUNCTION, ImmutableList.of("$key", "$rows"),
-                        OperatorNode.create(PhysicalExprOperator.INVOKE, ExactInvocation.exactInvoke(Opcodes.INVOKESTATIC, "aggregate",
-                                scope.adapt(StreamOperatorCompilerTest.class, false),
-                                scope.adapt(MyRecord.class, false),
-                                BaseTypeAdapter.STRING,
-                                scope.adapt(List.class, false)), ImmutableList.of(OperatorNode.create(PhysicalExprOperator.LOCAL, "$key"), OperatorNode.create(PhysicalExprOperator.LOCAL, "$rows")))
+                        method.invoke(ImmutableList.of(OperatorNode.create(PhysicalExprOperator.LOCAL, "$key"), OperatorNode.create(PhysicalExprOperator.LOCAL, "$rows")))
                 )
         ));
         Assert.assertEquals(ImmutableList.of(new MyRecord(2, "a"), new MyRecord(15, "c"), new MyRecord(3, "d")), invoker.call());
@@ -169,9 +160,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             Photo photo = (Photo) o;
 
             if (id != photo.id) return false;
-            if (!name.equals(photo.name)) return false;
-
-            return true;
+            return name.equals(photo.name);
         }
 
         @Override
@@ -227,9 +216,7 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
             if (id != image.id) return false;
             if (photo_id != image.photo_id) return false;
             if (width != image.width) return false;
-            if (name != null ? !name.equals(image.name) : image.name != null) return false;
-
-            return true;
+            return name != null ? name.equals(image.name) : image.name == null;
         }
 
         @Override
@@ -259,12 +246,10 @@ public class StreamOperatorCompilerTest extends CompilingTestBase {
     //     to make a lookup table so we can do the join.
     //  (we could also just do the join as a cross join with a predicate)
 
-    private OperatorNode<PhysicalExprOperator> doSingleLookupImage(OperatorNode<PhysicalExprOperator> key) {
-        return OperatorNode.create(PhysicalExprOperator.INVOKE, ExactInvocation.exactInvoke(Opcodes.INVOKESTATIC, "lookupImage",
-                        scope.adapt(StreamOperatorCompilerTest.class, false),
-                        new ListTypeWidget(scope.adapt(Image.class, false)),
-                        BaseTypeAdapter.INT32),
-                ImmutableList.of(key));
+    private OperatorNode<PhysicalExprOperator> doSingleLookupImage(OperatorNode<PhysicalExprOperator> key) throws NoSuchMethodException {
+        // (returnType, owner, methodName, methodDescriptor, args)
+        MethodInvoker method = PhysicalExprOperator.createInvoker(StreamOperatorCompilerTest.class.getMethod("lookupImage", int.class));
+        return method.invoke(key);
     }
 
     // prototype/test the first scenario

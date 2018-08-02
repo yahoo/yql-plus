@@ -47,9 +47,7 @@ public final class YQLUnionType extends YQLType {
 
         YQLUnionType that = (YQLUnionType) o;
 
-        if (!choices.equals(that.choices)) return false;
-
-        return true;
+        return choices.equals(that.choices);
     }
 
     @Override

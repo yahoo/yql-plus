@@ -9,53 +9,49 @@ package com.yahoo.yqlplus.engine.internal.compiler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.ProgramCompiler;
+import com.yahoo.yqlplus.engine.ModuleNamespace;
+import com.yahoo.yqlplus.engine.SourceNamespace;
+import com.yahoo.yqlplus.engine.TaskContext;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeAdaptingWidget;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
+import com.yahoo.yqlplus.engine.internal.generate.TaskGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.ProgramPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.SourceNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.rules.LogicalTransforms;
 import com.yahoo.yqlplus.language.logical.StatementOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
 import org.antlr.v4.runtime.RecognitionException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
-public class PlanProgramCompiler implements ProgramCompiler {
-    private Provider<CompilerInstance> provider;
+public class PlanProgramCompiler {
+    private Supplier<CompilerInstance> supplier;
 
-    static class CompilerInstance {
-        private final Injector injector;
+    private static class CompilerInstance {
         private final ASMClassSource classSource;
         private final GambitScope gambitScope;
         private final ProgramPlanner planner;
 
-        @Inject
-        CompilerInstance(ASMClassSource classSource, Injector injector, LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
-            this.classSource = classSource;
+        private CompilerInstance(Iterable<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+            this.classSource = new ASMClassSource(adapters);
             this.gambitScope = new GambitSource(classSource);
-            this.planner = new ProgramPlanner(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
-            this.injector = injector;
+            this.planner = new ProgramPlanner(sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
         }
 
         private CompiledProgram compilePlan(ProgramEnvironment environment, OperatorNode<TaskOperator> plan) {
@@ -120,7 +116,7 @@ public class PlanProgramCompiler implements ProgramCompiler {
                 }
             }
             invokeRunnables(environment.getStartBody(), environment, start);
-            return environment.compile(injector);
+            return environment.compile();
         }
 
         public CompiledProgram compile(String programName, String program) throws IOException, RecognitionException {
@@ -164,9 +160,9 @@ public class PlanProgramCompiler implements ProgramCompiler {
                 TypeWidget runnableType = body.adapt(Runnable.class, false);
                 BytecodeExpression runnableExpression = runnables.size() == 1 ? runnables.get(0) : body.array(next.getLocation(), runnableType, runnables);
                 List<TypeWidget> types = ImmutableList.of(runnables.size() == 1 ? runnableType : runnableExpression.getType());
-                GambitCreator.Invocable target = body.findExactInvoker(ProgramInvocation.class, "executeAll", BaseTypeAdapter.VOID,
+                GambitCreator.Invocable target = body.findExactInvoker(TaskContext.class, "executeAll", BaseTypeAdapter.VOID,
                         types);
-                body.exec(body.invoke(next.getLocation(), target, body.local("$program"), runnableExpression));
+                body.exec(target.invoke(next.getLocation(), body.local("$context"), runnableExpression));
             }
         }
 
@@ -194,25 +190,21 @@ public class PlanProgramCompiler implements ProgramCompiler {
     }
 
 
-    @Inject
-    PlanProgramCompiler(Provider<CompilerInstance> provider) {
-        this.provider = provider;
+    public PlanProgramCompiler(Iterable<TypeAdaptingWidget> adapters, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        this.supplier = () -> new CompilerInstance(adapters, sourceNamespace, moduleNamespace, viewNamespace);
     }
 
 
     public CompiledProgram compile(String programName, String program) throws IOException, RecognitionException {
-        return provider.get().compile(programName, program);
+        return supplier.get().compile(programName, program);
     }
 
 
     public CompiledProgram compile(String programName, InputStream program) throws IOException, RecognitionException {
-        return provider.get().compile(programName, program);
+        return supplier.get().compile(programName, program);
     }
 
-    @Override
     public CompiledProgram compile(OperatorNode<StatementOperator> program) throws IOException {
-        return provider.get().compile(program);
+        return supplier.get().compile(program);
     }
-
-
 }

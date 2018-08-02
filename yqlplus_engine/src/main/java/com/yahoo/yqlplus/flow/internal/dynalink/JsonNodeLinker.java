@@ -54,7 +54,7 @@ public class JsonNodeLinker implements TypeBasedGuardingDynamicLinker {
     }
 
     @Override
-    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) throws Exception {
+    public GuardedInvocation getGuardedInvocation(LinkRequest linkRequest, LinkerServices linkerServices) {
         if (!(linkRequest.getReceiver() instanceof JsonNode)) {
             return null;
         }

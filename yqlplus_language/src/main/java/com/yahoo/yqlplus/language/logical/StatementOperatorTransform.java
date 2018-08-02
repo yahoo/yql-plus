@@ -9,7 +9,6 @@ package com.yahoo.yqlplus.language.logical;
 import com.google.common.base.Function;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 
-import javax.annotation.Nullable;
 
 /**
  * Visit a statement OperatorNode tree, perhaps transforming each StatementOperator node (deep, recursive)
@@ -27,7 +26,6 @@ public abstract class StatementOperatorTransform implements Function<Object, Obj
         return node.transform(this);
     }
 
-    @Nullable
     @Override
     public Object apply(Object input) {
         if (input instanceof OperatorNode) {

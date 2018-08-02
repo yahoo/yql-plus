@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2016 Yahoo Inc.
+  ~ Licensed under the terms of the Apache version 2.0 license.
+  ~ See LICENSE file for terms.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yahoo.yqlplus</groupId>
+        <artifactId>yqlplus_engine_project</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>yqlplus_integration</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_language</artifactId>
+            <version>${yqlplus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_source_api</artifactId>
+            <version>${yqlplus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_engine</artifactId>
+            <version>${yqlplus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.yqlplus</groupId>
+            <artifactId>yqlplus_stdlib</artifactId>
+            <version>${yqlplus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-core</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-websockets-jsr</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8.5</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-yahoo-maven</id>
+            <name>bintray</name>
+            <url>http://yahoo.bintray.com/maven</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <finalName>yqlplus_integration</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.7</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>aggregate-jar</id>
+                        <goals>
+                            <goal>aggregate-jar</goal>
+                        </goals>
+                        <phase>site</phase>
+                        <configuration>
+                            <destDir>/tmp/target</destDir>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>  
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <compilerArgument>-proc:none</compilerArgument>
+                <compilerArgument>-XDignore.symbol.file</compilerArgument>
+              </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

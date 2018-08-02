@@ -83,8 +83,8 @@ public final class IndexDescriptor {
     }
 
     public IndexColumn getColumn(String name) {
-        for(IndexColumn col : columns) {
-            if(name.equalsIgnoreCase(col.getName()))  {
+        for (IndexColumn col : columns) {
+            if (name.equalsIgnoreCase(col.getName())) {
                 return col;
             }
         }
@@ -110,9 +110,7 @@ public final class IndexDescriptor {
 
         IndexDescriptor that = (IndexDescriptor) o;
 
-        if (!columns.equals(that.columns)) return false;
-
-        return true;
+        return columns.equals(that.columns);
     }
 
     @Override

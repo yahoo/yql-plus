@@ -26,7 +26,7 @@ public enum ProjectOperator implements Operator {
         }
     };
 
-    private ProjectOperator(Object... types) {
+    ProjectOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

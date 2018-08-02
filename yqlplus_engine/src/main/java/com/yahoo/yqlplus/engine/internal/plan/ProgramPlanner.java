@@ -16,18 +16,17 @@ import com.yahoo.yqlplus.api.types.YQLMapType;
 import com.yahoo.yqlplus.api.types.YQLOptionalType;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
+import com.yahoo.yqlplus.engine.ModuleNamespace;
+import com.yahoo.yqlplus.engine.ModuleType;
+import com.yahoo.yqlplus.engine.SourceNamespace;
+import com.yahoo.yqlplus.engine.SourceType;
+import com.yahoo.yqlplus.engine.StreamValue;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
-import com.yahoo.yqlplus.engine.internal.tasks.Value;
+import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
 import com.yahoo.yqlplus.engine.rules.LogicalProgramTransforms;
 import com.yahoo.yqlplus.engine.rules.LogicalTransforms;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
@@ -38,6 +37,11 @@ import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
 import com.yahoo.yqlplus.language.parser.ProgramParser;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.Value;
 import org.antlr.v4.runtime.RecognitionException;
 
 import java.io.IOException;
@@ -81,8 +85,8 @@ public class ProgramPlanner implements ViewRegistry {
     private final Map<String, SourceType> resolvedSources = Maps.newHashMap();
     private final Map<String, ModuleType> resolvedModules = Maps.newHashMap();
 
-    public ProgramPlanner(LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace) {
-        this.logicalTransforms = transforms;
+    public ProgramPlanner(SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace) {
+        this.logicalTransforms = new LogicalTransforms();
         this.sourceNamespace = sourceNamespace;
         this.moduleNamespace = moduleNamespace;
         this.rootContext = new ContextPlanner(this);
@@ -92,13 +96,13 @@ public class ProgramPlanner implements ViewRegistry {
         this.parentViews = viewNamespace;
     }
 
-    public SourceType findSource(ContextPlanner contextPlanner, OperatorNode<SequenceOperator> source) {
+    public SourceType findSource(OperatorNode<SequenceOperator> source) {
         List<String> path = source.getArgument(0);
         String name = Joiner.on(".").join(path);
         if (resolvedSources.containsKey(name)) {
             return resolvedSources.get(name);
         }
-        SourceType result = sourceNamespace.findSource(source.getLocation(), contextPlanner, path);
+        SourceType result = sourceNamespace.findSource(source.getLocation(), path);
         if (result == null) {
             throw new DependencyNotFoundException(source.getLocation(), "Source '%s' not found", name);
         }
@@ -106,12 +110,12 @@ public class ProgramPlanner implements ViewRegistry {
         return result;
     }
 
-    public ModuleType findModule(Location location, ContextPlanner contextPlanner, List<String> path) {
+    public ModuleType findModule(Location location, List<String> path) {
         String name = Joiner.on(".").join(path);
         if (resolvedModules.containsKey(name)) {
             return resolvedModules.get(name);
         }
-        ModuleType result = moduleNamespace.findModule(location, contextPlanner, path);
+        ModuleType result = moduleNamespace.findModule(location, path);
         if (result == null) {
             throw new DependencyNotFoundException(location, "Module '%s' not found", name);
         }
@@ -123,7 +127,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(location, "PIPE expects at least two-argument path (module name, function name): %s", path);
         }
-        ModuleType module = findModule(location, context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(location, path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         return module.pipe(location, context, name, input, arguments);
     }
@@ -138,7 +142,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(call.getLocation(), "CALL expects at least two-argument path (module name, function name): %s", call);
         }
-        ModuleType module = findModule(call.getLocation(), context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(call.getLocation(), path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         List<OperatorNode<ExpressionOperator>> arguments = call.getArgument(1);
         if (row != null) {
@@ -152,7 +156,7 @@ public class ProgramPlanner implements ViewRegistry {
         if (path.size() < 2) {
             throw new ProgramCompileException(location, "Module property reference expects at least two-argument path (module name, property name): %s", path);
         }
-        ModuleType module = findModule(location, context, path.subList(0, path.size() - 1));
+        ModuleType module = findModule(location, path.subList(0, path.size() - 1));
         String name = path.get(path.size() - 1);
         return module.property(location, context, name);
     }
@@ -170,7 +174,7 @@ public class ProgramPlanner implements ViewRegistry {
         return plan(parsedProgram);
     }
 
-    public OperatorNode<TaskOperator> plan(OperatorNode<StatementOperator> program) throws IOException {
+    public OperatorNode<TaskOperator> plan(OperatorNode<StatementOperator> program) {
         Preconditions.checkArgument(program.getOperator() == StatementOperator.PROGRAM);
         if (!once.compareAndSet(false, true)) {
             throw new ProgramCompileException("ProgramPlanners cannot be reused");
@@ -207,7 +211,7 @@ public class ProgramPlanner implements ViewRegistry {
                     break;
                 }
                 case DEFINE_VIEW:
-                    defineView((String) stmt.getArgument(0), logicalTransforms.apply((OperatorNode<SequenceOperator>) stmt.getArgument(1), this));
+                    defineView(stmt.getArgument(0), logicalTransforms.apply(stmt.getArgument(1), this));
                     break;
                 case EXECUTE: {
                     OperatorNode<SequenceOperator> query = stmt.getArgument(0);
@@ -272,7 +276,7 @@ public class ProgramPlanner implements ViewRegistry {
     }
 
     public OperatorNode<PhysicalExprOperator> constant(Object value) {
-        if(value == null) {
+        if (value == null) {
             return OperatorNode.create(PhysicalExprOperator.NULL, AnyTypeWidget.getInstance());
         }
         if (valueConstants.containsKey(value)) {
@@ -311,16 +315,16 @@ public class ProgramPlanner implements ViewRegistry {
             case BOOLEAN:
                 return YQLBaseType.BOOLEAN;
             case ARRAY: {
-                return YQLArrayType.create(toYQLType((OperatorNode<TypeOperator>) typeNode.getArgument(0)));
+                return YQLArrayType.create(toYQLType(typeNode.getArgument(0)));
             }
             case MAP: {
-                return YQLMapType.create(YQLBaseType.STRING, toYQLType((OperatorNode<TypeOperator>) typeNode.getArgument(0)));
+                return YQLMapType.create(YQLBaseType.STRING, toYQLType(typeNode.getArgument(0)));
             }
         }
         throw new ProgramCompileException(typeNode.getLocation(), "Unknown TypeOperator %s", typeNode.getOperator());
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return adapter.getValueTypeAdapter();
     }
 

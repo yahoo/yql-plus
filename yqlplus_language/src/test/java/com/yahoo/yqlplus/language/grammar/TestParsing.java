@@ -36,7 +36,7 @@ public class TestParsing {
     }
 
 
-    private yqlplusParser prepareParser(String input) throws IOException {
+    private yqlplusParser prepareParser(String input) {
         return new ProgramParser().prepareParser("<string>", input);
     }
 

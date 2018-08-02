@@ -1,13 +1,10 @@
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Provider;
-import com.google.inject.util.Providers;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
@@ -15,11 +12,8 @@ import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.Record;
 import com.yahoo.yqlplus.engine.internal.bytecode.CompilingTestBase;
-import com.yahoo.yqlplus.engine.internal.plan.ContextPlanner;
-import com.yahoo.yqlplus.engine.internal.plan.ModuleType;
-import com.yahoo.yqlplus.engine.internal.source.ExportUnitGenerator;
-import com.yahoo.yqlplus.language.parser.Location;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -95,15 +89,9 @@ public class EvaluateStatementTest extends CompilingTestBase {
         }
     }
 
-    @Override
-    public ModuleType findModule(Location location, ContextPlanner planner, List<String> modulePath) {
-        String name = Joiner.on(".").join(modulePath);
-        if("test".equals(name)) {
-            Provider<Exports> moduleProvider = Providers.of(new TestModule());
-            ExportUnitGenerator adapter = new ExportUnitGenerator(planner.getGambitScope());
-            return adapter.apply(modulePath, moduleProvider);
-        }
-        return super.findModule(location, planner, modulePath);
+    @BeforeMethod
+    public void setupModule() {
+        builder.bind("test", TestModule.class);
     }
 
     @Test
@@ -131,7 +119,7 @@ public class EvaluateStatementTest extends CompilingTestBase {
         defineSource("table5", TestSource.class);
         defineSource("table10", TestSource.class);
         CompiledProgram program = compileProgramResource("dashboard.yql");
-        List<String> output = Lists.newArrayList(program.run(ImmutableMap.of(), true).getResultNames());
+        List<String> output = Lists.newArrayList(program.run(ImmutableMap.of()).getResultNames());
         Assert.assertEquals(output.size(), 8);
     }
 

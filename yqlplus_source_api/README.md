@@ -13,7 +13,6 @@ YQL+ source apis define the API for writing sources, transforms (pipes), and UDF
 * Variable Annotations <br>
 <code>
 @Key <br>
-@CompoundKey <br>
 @DefaultValue
 </code>
 

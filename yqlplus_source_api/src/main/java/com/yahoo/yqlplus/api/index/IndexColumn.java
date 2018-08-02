@@ -55,9 +55,7 @@ public final class IndexColumn {
         IndexColumn that = (IndexColumn) o;
 
         if (!name.equals(that.name)) return false;
-        if (!type.equals(that.type)) return false;
-
-        return true;
+        return type.equals(that.type);
     }
 
     @Override

@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Query;
 import com.yahoo.yqlplus.engine.api.Record;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.StructBase;
+import com.yahoo.yqlplus.engine.compiler.runtime.StructBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

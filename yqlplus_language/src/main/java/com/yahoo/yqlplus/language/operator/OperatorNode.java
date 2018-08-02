@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.language.parser.Location;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -200,9 +199,8 @@ public final class OperatorNode<T extends Operator> {
 
     // we are aware only of types used in our logical operator trees -- OperatorNode, List, and constant values
     private static final Function<Object, Object> COPY = new Function<Object, Object>() {
-        @Nullable
         @Override
-        public Object apply(@Nullable Object input) {
+        public Object apply(Object input) {
             if (input instanceof List) {
                 List<Object> newList = Lists.newArrayListWithExpectedSize(((List) input).size());
                 for (Object val : (List) input) {
@@ -225,14 +223,13 @@ public final class OperatorNode<T extends Operator> {
 
     // we are aware only of types used in our logical operator trees -- OperatorNode, List, and constant values
     private static final Function<Object, Object> COPY_OR_OMIT = new Function<Object, Object>() {
-        @Nullable
         @Override
         public Object apply(Object input) {
             if (input instanceof List) {
                 List<Object> newList = Lists.newArrayListWithExpectedSize(((List) input).size());
                 for (Object val : (List) input) {
                     Object r = COPY_OR_OMIT.apply(val);
-                    if(r != null) {
+                    if (r != null) {
                         newList.add(r);
                     }
                 }
@@ -260,11 +257,11 @@ public final class OperatorNode<T extends Operator> {
     }
 
     private Map<String, Object> annotationCopy(Map<String, Object> annotations) {
-        ImmutableMap.Builder<String,Object> newAnnotations = ImmutableMap.builder();
-        for(Map.Entry<String, Object> annotation : annotations.entrySet()) {
+        ImmutableMap.Builder<String, Object> newAnnotations = ImmutableMap.builder();
+        for (Map.Entry<String, Object> annotation : annotations.entrySet()) {
             String key = annotation.getKey();
             Object value = COPY_OR_OMIT.apply(annotation.getValue());
-            if(value != null) {
+            if (value != null) {
                 newAnnotations.put(key, value);
             }
         }
@@ -322,9 +319,7 @@ public final class OperatorNode<T extends Operator> {
         if (!annotations.equals(that.annotations)) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(args, that.args)) return false;
-        if (!operator.equals(that.operator)) return false;
-
-        return true;
+        return operator.equals(that.operator);
     }
 
     @Override

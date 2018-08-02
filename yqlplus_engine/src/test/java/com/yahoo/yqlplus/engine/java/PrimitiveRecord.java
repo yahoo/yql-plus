@@ -101,9 +101,7 @@ public class PrimitiveRecord {
         if (b_float != null ? !b_float.equals(that.b_float) : that.b_float != null) return false;
         if (b_int != null ? !b_int.equals(that.b_int) : that.b_int != null) return false;
         if (b_long != null ? !b_long.equals(that.b_long) : that.b_long != null) return false;
-        if (b_short != null ? !b_short.equals(that.b_short) : that.b_short != null) return false;
-
-        return true;
+        return b_short != null ? b_short.equals(that.b_short) : that.b_short == null;
     }
 
     @Override

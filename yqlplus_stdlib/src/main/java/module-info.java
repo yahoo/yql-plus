@@ -1,6 +1,4 @@
-module com.yahoo.yqlplus.util {
-    requires com.google.guice;
-
+module com.yahoo.yqlplus.stdlib {
     requires com.yahoo.yqlplus.api;
-    exports com.yahoo.yqlplus.util;
+    exports com.yahoo.yqlplus.stdlib;
 }

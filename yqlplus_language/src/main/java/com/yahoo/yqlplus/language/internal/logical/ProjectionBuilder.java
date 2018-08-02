@@ -45,16 +45,16 @@ public class ProjectionBuilder {
         String baseName = "expr";
         switch (expr.getOperator()) {
             case PROPREF:
-                baseName = (String) expr.getArgument(1);
+                baseName = expr.getArgument(1);
                 break;
             case READ_RECORD:
-                baseName = (String) expr.getArgument(0);
+                baseName = expr.getArgument(0);
                 break;
             case READ_FIELD:
-                baseName = (String) expr.getArgument(1);
+                baseName = expr.getArgument(1);
                 break;
             case VARREF:
-                baseName = (String) expr.getArgument(0);
+                baseName = expr.getArgument(0);
                 break;
             // fall through, leaving baseName alone
         }
@@ -70,7 +70,7 @@ public class ProjectionBuilder {
         ImmutableList.Builder<OperatorNode<ProjectOperator>> lst = ImmutableList.builder();
         for (Map.Entry<String, OperatorNode<ExpressionOperator>> e : fields.entrySet()) {
             if (e.getKey().startsWith("*")) {
-                lst.add(OperatorNode.create(ProjectOperator.MERGE_RECORD, (Object)e.getValue().getArgument(0)));
+                lst.add(OperatorNode.create(ProjectOperator.MERGE_RECORD, (Object) e.getValue().getArgument(0)));
             } else {
                 lst.add(OperatorNode.create(ProjectOperator.FIELD, e.getValue(), e.getKey()));
             }

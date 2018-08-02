@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
-public class PromiseResolutionTest {
+public class PromiseResolutionTest extends ProgramTestBase {
     public static class IntegerKeyed {
         public int woeid;
 
@@ -41,9 +39,7 @@ public class PromiseResolutionTest {
 
             IntegerKeyed that = (IntegerKeyed) o;
 
-            if (woeid != that.woeid) return false;
-
-            return true;
+            return woeid == that.woeid;
         }
 
         @Override
@@ -57,7 +53,7 @@ public class PromiseResolutionTest {
         public Future<List<IntegerKeyed>> lookup(@Key("woeid") final Integer integer) {
             return ForkJoinPool.commonPool().submit(new Callable<List<IntegerKeyed>>() {
                 @Override
-                public List<IntegerKeyed> call() throws Exception {
+                public List<IntegerKeyed> call() {
                     return ImmutableList.of(new IntegerKeyed(integer));
                 }
             });
@@ -80,22 +76,20 @@ public class PromiseResolutionTest {
 
     @Test
     public void requireFutureResolution() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new FutureSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new FutureSource());
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }
 
     @Test
     public void requireCompletableFutureResolution() throws Exception {
-        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("source", new CompletableFutureSource()));
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("source", new CompletableFutureSource());
         CompiledProgram program = compiler.compile("SELECT * FROM source WHERE woeid = 10 OUTPUT AS f1;\n");
         // program.dump(System.err);
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult myResult = program.run(ImmutableMap.of());
         List<KeyedSource.IntegerKeyed> f1 = myResult.getResult("f1").get().getResult();
         Assert.assertEquals(f1, ImmutableList.of(new IntegerKeyed(10)));
     }

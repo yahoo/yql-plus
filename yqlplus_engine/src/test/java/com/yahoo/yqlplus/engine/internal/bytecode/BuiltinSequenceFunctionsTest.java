@@ -28,6 +28,38 @@ public class BuiltinSequenceFunctionsTest extends CompilingTestBase {
     }
 
     @Test
+    public void requireGroupByDynamic() throws Exception {
+        defineView("s1", "EVALUATE [{'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 2, 'name' : 'pants', 'category' : 'hats'}]");
+        List<Record> result = runQueryProgram("" +
+                "FROM yql.sequences IMPORT groupby, row, key, rows;" +
+                "SELECT * \n" +
+                "    FROM s1\n" +
+                "   | groupby((row).category, {'category' : key, 'items' : rows})");
+        Assert.assertEquals(result.size(), 1);
+        Record resultRecord = result.get(0);
+        Assert.assertEquals(resultRecord.get("category"), "hats");
+        Assert.assertEquals(((List<Record>) resultRecord.get("items")).size(), 2);
+    }
+
+    @Test
+    public void requireFlatten() throws Exception {
+        defineView("s1", "EVALUATE [{'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 10, 'category' : 'jeeps'}, {'id' : 2, 'name' : 'pants', 'category' : 'hats'}]");
+        List<Record> result = runQueryProgram("" +
+                "FROM yql.sequences IMPORT flatten, groupby, row, key, rows;" +
+                "SELECT * \n" +
+                "    FROM s1\n" +
+                "   | groupby((row).category, rows) | flatten()");
+        Assert.assertEquals(result.size(), 3);
+        Record resultRecord = result.get(0);
+        Assert.assertEquals(resultRecord.get("category"), "hats");
+        resultRecord = result.get(1);
+        Assert.assertEquals(resultRecord.get("category"), "hats");
+        resultRecord = result.get(2);
+        Assert.assertEquals(resultRecord.get("category"), "jeeps");
+
+    }
+
+    @Test
     public void requireDistinct() throws Exception {
         defineView("s1", "EVALUATE [{'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 2, 'name' : 'pants', 'category' : 'hats'}]");
         List<Record> result = runQueryProgram("" +
@@ -40,5 +72,36 @@ public class BuiltinSequenceFunctionsTest extends CompilingTestBase {
         Assert.assertEquals(resultRecord.get("id"), 1);
         resultRecord = result.get(1);
         Assert.assertEquals(resultRecord.get("id"), 2);
+    }
+
+    @Test
+    public void requireTransform() throws Exception {
+        defineView("s1", "EVALUATE [{'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 2, 'name' : 'pants', 'category' : 'hats'}]");
+        List<Record> result = runQueryProgram("" +
+                "FROM yql.sequences IMPORT row;\n" +
+                "SELECT * \n" +
+                "    FROM s1\n" +
+                "   | yql.sequences.transform({'id' : (row).id + 10, 'name' : 'angry ' + (row).name})");
+        Assert.assertEquals(result.size(), 2);
+        Record resultRecord = result.get(0);
+        Assert.assertEquals(resultRecord.get("id"), 11);
+        Assert.assertEquals(resultRecord.get("name"), "angry title");
+        resultRecord = result.get(1);
+        Assert.assertEquals(resultRecord.get("id"), 12);
+        Assert.assertEquals(resultRecord.get("name"), "angry pants");
+    }
+
+    @Test
+    public void requireScatter() throws Exception {
+        defineView("s1", "EVALUATE [{'id' : 1, 'name' : 'title', 'category' : 'hats'}, {'id' : 2, 'name' : 'pants', 'category' : 'hats'}]");
+        List<Record> result = runQueryProgram("" +
+                "FROM yql.sequences IMPORT row;\n" +
+                "SELECT * \n" +
+                "    FROM s1\n" +
+                "   | yql.sequences.scatter({'id' : (row).id + 10, 'name' : 'angry ' + (row).name}) | yql.sequences.filter((row).id <= 11) ");
+        Assert.assertEquals(result.size(), 1);
+        Record resultRecord = result.get(0);
+        Assert.assertEquals(resultRecord.get("id"), 11);
+        Assert.assertEquals(resultRecord.get("name"), "angry title");
     }
 }

@@ -6,16 +6,14 @@
 
 package com.yahoo.yqlplus.engine.internal.plan;
 
-import com.google.common.base.Predicate;
 import com.google.inject.TypeLiteral;
 import com.yahoo.yqlplus.api.types.YQLType;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PlanOperatorTypes;
 import com.yahoo.yqlplus.language.logical.ArgumentsTypeChecker;
 import com.yahoo.yqlplus.language.logical.TypeCheckers;
 import com.yahoo.yqlplus.language.operator.Operator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.PlanOperatorTypes;
 
 import java.util.List;
 
@@ -54,7 +52,7 @@ public enum TaskOperator implements Operator {
 
     private final ArgumentsTypeChecker checker;
 
-    private TaskOperator(Object... types) {
+    TaskOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 
@@ -64,10 +62,4 @@ public enum TaskOperator implements Operator {
         checker.check(args);
     }
 
-    public static Predicate<OperatorNode<? extends Operator>> IS = new Predicate<OperatorNode<? extends Operator>>() {
-        @Override
-        public boolean apply(OperatorNode<? extends Operator> input) {
-            return input.getOperator() instanceof PhysicalExprOperator;
-        }
-    };
 }

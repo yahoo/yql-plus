@@ -65,9 +65,7 @@ public class SimpleRecord {
 
         if (score != person.score) return false;
         if (!id.equals(person.id)) return false;
-        if (!name.equals(person.name)) return false;
-
-        return true;
+        return name.equals(person.name);
     }
 
     @Override

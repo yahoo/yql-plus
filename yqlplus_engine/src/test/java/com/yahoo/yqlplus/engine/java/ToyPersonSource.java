@@ -14,13 +14,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.yahoo.yqlplus.api.annotations.Key;
 import com.yahoo.yqlplus.api.annotations.Query;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +24,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Singleton
 public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     private final Map<String, Person> idMap = Maps.newHashMap();
     private final Map<Integer, Person> iidMap = Maps.newHashMap();
@@ -36,8 +31,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     private final List<Person> persons = Lists.newArrayList();
     private final ScheduledExecutorService toyWorker;
 
-    @Inject
-    ToyPersonSource(@Named("toy") ScheduledExecutorService toyWorker) {
+    public ToyPersonSource(ScheduledExecutorService toyWorker) {
         this.toyWorker = toyWorker;
         try {
             load(ToyPersonSource.class.getResourceAsStream("persons.json"), Person.class);
@@ -67,9 +61,8 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     @Query
     public Iterable<Person> lookupBatch(@Key("otherId") List<String> id) {
         return Iterables.transform(id, new Function<String, Person>() {
-            @Nullable
             @Override
-            public Person apply(@Nullable String input) {
+            public Person apply(String input) {
                 return idMap.get(input);
             }
         });
@@ -78,9 +71,8 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     @Query
     public Iterable<Person> lookup(@Key("iid") List<Integer> iids) {
         return Iterables.transform(iids, new Function<Integer, Person>() {
-            @Nullable
             @Override
-            public Person apply(@Nullable Integer input) {
+            public Person apply(Integer input) {
                 return iidMap.get(input);
             }
         });
@@ -110,7 +102,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<List<Person>> futureScan(int delay) {
         return eventually(delay, new Callable<List<Person>>() {
             @Override
-            public List<Person> call() throws Exception {
+            public List<Person> call() {
                 return scan();
             }
         });
@@ -120,7 +112,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Person> lookup(@Key("id") final String id, int delay) {
         return eventually(delay, new Callable<Person>() {
             @Override
-            public Person call() throws Exception {
+            public Person call() {
                 return lookup(id);
             }
         });
@@ -130,7 +122,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookupBatch(@Key("otherId") final List<String> id, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookupBatch(id);
             }
         });
@@ -140,7 +132,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookup(@Key("iid") final List<Integer> iids, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookup(iids);
             }
         });
@@ -150,7 +142,7 @@ public class ToyPersonSource extends ToyMemoryTableSource<Person> {
     public ListenableFuture<Iterable<Person>> lookupName(@Key("value") final String value, int delay) {
         return eventually(delay, new Callable<Iterable<Person>>() {
             @Override
-            public Iterable<Person> call() throws Exception {
+            public Iterable<Person> call() {
                 return lookupName(value);
             }
         });

@@ -6,16 +6,15 @@
 
 package com.yahoo.yqlplus.engine;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.yahoo.yqlplus.api.trace.TraceRequest;
-import java.util.Collection;
+import com.yahoo.yqlplus.api.trace.Tracer;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface ProgramResult {
     Iterable<String> getResultNames();
 
-    ListenableFuture<YQLResultSet> getResult(String name);
+    CompletableFuture<YQLResultSet> getResult(String name);
 
-    ListenableFuture<TraceRequest> getEnd();
+    CompletableFuture<Tracer> getEnd();
 
-    Collection<Object> getExecuteScopedObjects();
 }

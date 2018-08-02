@@ -6,9 +6,12 @@
 
 package com.yahoo.yqlplus.engine.java;
 
-import com.google.common.collect.*;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Insert;
 import com.yahoo.yqlplus.api.annotations.Key;
@@ -18,9 +21,9 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.ProgramResult;
 import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.api.Record;
-
+import com.yahoo.yqlplus.engine.internal.bytecode.CompilingTestBase;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Collection;
@@ -28,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CompoundKeysTest {
+public class CompoundKeysTest extends CompilingTestBase {
 
     public static class Toy {
         public final String id;
@@ -50,9 +53,7 @@ public class CompoundKeysTest {
 
             if (score != toy.score) return false;
             if (!category.equals(toy.category)) return false;
-            if (!id.equals(toy.id)) return false;
-
-            return true;
+            return id.equals(toy.id);
         }
 
         @Override
@@ -114,24 +115,21 @@ public class CompoundKeysTest {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> execute(String programText) throws Exception {
-        return (List<T>) execute(programText, ImmutableMap.<String, Object>of());
+        return (List<T>) execute(programText, ImmutableMap.of());
 
     }
 
-    Injector injector;
-
-    @BeforeClass
+    @BeforeMethod(dependsOnGroups = "init")
     public void setUp() {
-        injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("toys", new CompoundToySource(), "serviceMetrics", new ServiceMetricsSource())
-        );
+        super.setUp();
+        namespace.bindSource("toys", new CompoundToySource())
+                .bindSource("serviceMetrics", new ServiceMetricsSource());
     }
 
     private List<Record> execute(String programText, ImmutableMap<String, Object> arguments) throws Exception {
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         CompiledProgram program = compiler.compile(programText);
-        ProgramResult rez = program.run(arguments, true);
+        ProgramResult rez = program.run(arguments);
         return rez.getResult("f1").get().getResult();
     }
 
@@ -164,9 +162,9 @@ public class CompoundKeysTest {
                             "AND modelId = 'foo' \n"+
                             "OUTPUT AS serviceMetrics; ";
       
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = builder.build();
         CompiledProgram program = compiler.compile(programStr);
-        ProgramResult rez = program.run(ImmutableMap.<String, Object>of(), true);
+        ProgramResult rez = program.run(ImmutableMap.of());
         List<ServiceMetrics> serviceMetrics = rez.getResult("serviceMetrics").get().getResult();
         List<ServiceMetrics> expectedServiceMetrics = Lists.newArrayList(new ServiceMetrics("begin", "service1", "foo", "foo"),
                                                                 new ServiceMetrics("begin", "service2", "foo", "foo"),
@@ -246,11 +244,8 @@ public class CompoundKeysTest {
           } else if (!serviceName.equals(other.serviceName))
             return false;
           if (start == null) {
-            if (other.start != null)
-              return false;
-          } else if (!start.equals(other.start))
-            return false;
-          return true;
+              return other.start == null;
+          } else return start.equals(other.start);
         }
         
         @Override

@@ -71,9 +71,7 @@ public class Person {
 
         if (score != person.score) return false;
         if (!id.equals(person.id)) return false;
-        if (!value.equals(person.value)) return false;
-
-        return true;
+        return value.equals(person.value);
     }
 
     @Override

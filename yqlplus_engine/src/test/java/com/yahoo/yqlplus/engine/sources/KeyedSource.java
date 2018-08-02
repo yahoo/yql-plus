@@ -33,9 +33,7 @@ public class KeyedSource implements Source {
 
             IntegerKeyed that = (IntegerKeyed) o;
 
-            if (woeid != that.woeid) return false;
-
-            return true;
+            return woeid == that.woeid;
         }
 
         @Override

@@ -47,7 +47,7 @@ public class Annotations implements Iterable<Map.Entry<String, Object>> {
         }
     }
 
-    public static final Annotations EMPTY = new Annotations(ImmutableMap.<String, Object>of()) {
+    public static final Annotations EMPTY = new Annotations(ImmutableMap.of()) {
         @Override
         public final boolean hasAnnotation(String name) {
             return false;
@@ -104,7 +104,7 @@ public class Annotations implements Iterable<Map.Entry<String, Object>> {
     }
 
     public Annotations withAnnotations(Object... kvPairs) {
-        return new Annotations(this, updateBuilder(ImmutableMap.<String, Object>builder(), kvPairs).build());
+        return new Annotations(this, updateBuilder(ImmutableMap.builder(), kvPairs).build());
     }
 
     private static ImmutableMap.Builder<String, Object> updateBuilder(ImmutableMap.Builder<String, Object> builder, Object[] kvPairs) {
@@ -131,9 +131,7 @@ public class Annotations implements Iterable<Map.Entry<String, Object>> {
 
         Annotations that = (Annotations) o;
 
-        if (!annotations.equals(that.annotations)) return false;
-
-        return true;
+        return annotations.equals(that.annotations);
     }
 
     @Override

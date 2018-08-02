@@ -12,8 +12,6 @@ import com.yahoo.cloud.metrics.api.TaskMetricEmitter;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Emitter;
 import com.yahoo.yqlplus.api.annotations.Query;
-import com.yahoo.yqlplus.api.annotations.Trace;
-import com.yahoo.yqlplus.api.trace.Tracer;
 import com.yahoo.yqlplus.engine.java.Person;
 
 import java.util.List;
@@ -21,7 +19,7 @@ import java.util.List;
 public class MetricEmitterSource implements Source {
 
     @Query
-    public List<Person> getPerson(final @Emitter TaskMetricEmitter taskMetricEmitter, final @Trace("MethedTracer") Tracer trace) {
+    public List<Person> getPerson(final @Emitter TaskMetricEmitter taskMetricEmitter) {
         TaskMetricEmitter subTaskEmitter = taskMetricEmitter.start("subtask", "createResponse");
         Duration duration = taskMetricEmitter.start("requestLatency");
         subTaskEmitter.end();

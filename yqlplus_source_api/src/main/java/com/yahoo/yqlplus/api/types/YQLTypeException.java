@@ -10,6 +10,11 @@ public class YQLTypeException extends RuntimeException {
     public YQLTypeException() {
     }
 
+    public static void notComparable(Object target, int line, int offset) {
+        throw new YQLTypeException("L" + line + ":" + offset + ": unable to compare " + target);
+    }
+
+
     public YQLTypeException(String message) {
         super(message);
     }

@@ -10,22 +10,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.google.common.collect.Maps;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.yahoo.cloud.metrics.api.*;
-import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.ProgramResult;
-import com.yahoo.yqlplus.engine.YQLPlusCompiler;
-import com.yahoo.yqlplus.engine.YQLResultSet;
-import com.yahoo.yqlplus.engine.api.ViewRegistry;
-import com.yahoo.yqlplus.engine.guice.JavaEngineModule;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
-import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.engine.*;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -36,37 +23,12 @@ public class Container implements EngineContainerInterface {
     static final MappingJsonFactory JSON_FACTORY = new MappingJsonFactory();
 
 
-    public Map<String, JsonNode> run(String script, final Module... modules) throws Exception {
+    public Map<String, JsonNode> run(String script, Object... bindings) throws Exception {
         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
-        Injector injector = Guice.createInjector(new JavaEngineModule(),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ViewRegistry.class).toInstance(new ViewRegistry() {
-                            @Override
-                            public OperatorNode<SequenceOperator> getView(List<String> name) {
-                                return null;
-                            }
-                        });
-                        bind(TaskMetricEmitter.class).toInstance(new StandardRequestEmitter(new MetricDimension(), new RequestMetricSink() {
-                            @Override
-                            public void emitRequest(RequestEvent arg0) {                              
-                            }
-                        }).start(new MetricDimension()));                      
-                    }            
-                },
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        for (Module module : modules) {
-                            install(module);
-                        }
-                    }
-                });
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = YQLPlusEngine.builder().bind(bindings).build();
         CompiledProgram program = compiler.compile(script);
         //program.dump(System.err);
-        ProgramResult result = program.run(Maps.<String, Object>newHashMap(), true);
+        ProgramResult result = program.run(Maps.newHashMap());
         try {
             result.getEnd().get(10000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -80,7 +42,7 @@ public class Container implements EngineContainerInterface {
             JsonGenerator gen = JSON_FACTORY.createGenerator(outstream);
             gen.writeObject(rez);
             gen.flush();
-            parsed.put(key, (JsonNode) JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
+            parsed.put(key, JSON_FACTORY.createParser(outstream.toByteArray()).readValueAsTree());
         }
         return parsed;
     }

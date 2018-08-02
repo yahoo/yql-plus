@@ -15,7 +15,7 @@ import com.yahoo.yqlplus.api.annotations.Query;
 public class SampleListSource implements Source {
 
     @Query
-    public Iterable<Sample> getSampleIds() throws InterruptedException {
+    public Iterable<Sample> getSampleIds() {
 
         Set<Sample> ids = new HashSet<>();
         for (int i = 0; i < 1; i++) {

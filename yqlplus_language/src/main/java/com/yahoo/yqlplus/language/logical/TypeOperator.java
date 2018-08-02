@@ -31,7 +31,7 @@ public enum TypeOperator implements Operator {
         }
     };
 
-    private TypeOperator(Object... types) {
+    TypeOperator(Object... types) {
         checker = TypeCheckers.make(this, types);
     }
 

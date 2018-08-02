@@ -30,17 +30,13 @@ options {
   INTO   : 'into';
   VALUES : 'values';
   IMPORT : 'import';
-  NEXT : 'next';
-  PAGED : 'paged';
   FALLBACK : 'fallback';
-  IMPORT_FROM :;
 
   LIMIT : 'limit';
   OFFSET : 'offset';
   WHERE : 'where';
   ORDERBY : 'order by';
   DESC : 'desc';
-  ASC :;
   FROM : 'from';
   SOURCES : 'sources';
   AS : 'as';
@@ -53,8 +49,6 @@ options {
   OUTPUT : 'output';
   COUNT : 'count';
   RETURNING : 'returning';
-  APPLY : 'apply';
-  CAST : 'cast';
 
   BEGIN : 'begin';
   END : 'end';
@@ -91,7 +85,6 @@ options {
   OR : 'or';
   NOT_IN : 'not in';
   IN : 'in';
-  QUERY_ARRAY :;
 
   LT : '<';
   GT : '>';
@@ -206,8 +199,8 @@ ident
 
 keyword_as_ident
    : SELECT | TABLE | DELETE | INTO | VALUES | LIMIT | OFFSET | WHERE | 'order' | 'by' | DESC | MERGE | LEFT | JOIN
-   | ON | OUTPUT | COUNT | BEGIN | END | APPLY | TYPE_BYTE | TYPE_INT16 | TYPE_INT32 | TYPE_INT64 | TYPE_BOOLEAN | TYPE_TIMESTAMP | TYPE_DOUBLE | TYPE_STRING | TYPE_ARRAY | TYPE_MAP
-   | VIEW | CREATE | EVALUATE | IMPORT | PROGRAM | NEXT | PAGED | SOURCES | SET | MATCHES | CAST
+   | ON | OUTPUT | COUNT | BEGIN | END | TYPE_BYTE | TYPE_INT16 | TYPE_INT32 | TYPE_INT64 | TYPE_BOOLEAN | TYPE_TIMESTAMP | TYPE_DOUBLE | TYPE_STRING | TYPE_ARRAY | TYPE_MAP
+   | VIEW | CREATE | EVALUATE | IMPORT | PROGRAM | SOURCES | SET | MATCHES
    ;
 
 program : params? (import_statement SEMI)* (ddl SEMI)* (statement SEMI)* EOF
@@ -260,20 +253,12 @@ array_eq_argument
 statement
       : output_statement
 	  | selectvar_statement
-	  | next_statement
 	  ;
 
 output_statement
-      : source_statement paged_clause? output_spec?
+      : source_statement output_spec?
       ;
 
-paged_clause
-      : PAGED fixed_or_parameter
-      ;
-
-next_statement
-	  : NEXT literalString OUTPUT AS ident
-	  ;
 
 source_statement
       : query_statement (PIPE pipeline_step)*
@@ -587,15 +572,11 @@ operatorCall
     ;
 
 
-// TODO: temporarily disable CAST, need to think through how types are named
-
 primaryExpression
 @init {
     boolean in_select = expression_stack.peek().in_select;
 }
 	: callExpresion[in_select]
-//	| CAST LPAREN expression[$expression::in_select] AS typename RPAREN -> ^(CAST expression typename)
-//	| APPLY operatorCall
 	| parameter
 	| fieldref
 	| scalar_literal

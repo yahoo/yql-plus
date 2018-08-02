@@ -12,9 +12,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.internal.code.CodeOutput;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
 
 import java.util.List;
 
@@ -63,16 +63,10 @@ public class PlanPrinter {
                     if (val.getName() == null) {
                         val.setName("local" + (local++));
                     }
-                    if (call.isAsync()) {
-                        if (val.hasDatum()) {
-                            output.println("(%s <- (%s)).then(next);", val.getName(), call.getCompute());
-                        } else {
-                            output.println("(%s).then(next);", call.getCompute());
-                        }
-                    } else if (val.hasDatum()) {
-                        output.println("%s <- %s;", val.getName(), call.getCompute());
+                    if (val.hasDatum()) {
+                        output.println("(%s <- (%s)).then(next);", val.getName(), call.getCompute());
                     } else {
-                        output.println("%s;", call.getCompute());
+                        output.println("(%s).then(next);", call.getCompute());
                     }
                 }
                 dumpCall(output, next);

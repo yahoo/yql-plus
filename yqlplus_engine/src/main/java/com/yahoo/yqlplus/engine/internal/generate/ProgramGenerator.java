@@ -6,27 +6,26 @@
 
 package com.yahoo.yqlplus.engine.internal.generate;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yahoo.yqlplus.api.types.YQLType;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.api.NativeEncoding;
-import com.yahoo.yqlplus.engine.internal.bytecode.exprs.LocalVarExpr;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
-import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.SerializationAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.AnyTypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeExpression;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.MapTypeWidget;
+import com.yahoo.yqlplus.engine.TaskContext;
+import com.yahoo.yqlplus.engine.compiler.code.AnyTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.BaseTypeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.CodeEmitter;
+import com.yahoo.yqlplus.engine.compiler.code.GambitCreator;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.LocalVarExpr;
+import com.yahoo.yqlplus.engine.compiler.code.MapTypeWidget;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.runtime.ProgramInvocation;
+import com.yahoo.yqlplus.operator.OperatorValue;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -53,7 +52,7 @@ public class ProgramGenerator {
     public ProgramGenerator(GambitScope scope) {
         this.scope = scope;
         this.program = scope.createObject(ProgramInvocation.class);
-        program.implement(Runnable.class);
+        this.program.addParameter("$context", scope.adapt(TaskContext.class, false));
         this.readArguments = program.method("readArguments");
         this.readArguments.addArgument("$args", new MapTypeWidget(BaseTypeAdapter.STRING, AnyTypeWidget.getInstance()));
         this.readArgumentsBody = readArguments.block();
@@ -62,27 +61,6 @@ public class ProgramGenerator {
         this.runBody = runMethod.block();
         this.runBody.alias("this", "$program");
         this.runMethod.exit();
-        ObjectBuilder.MethodBuilder getSerializer = program.method("getNativeSerializer");
-        final ObjectBuilder serializer = scope.createObject();
-        serializer.implement(NativeSerialization.class);
-        // void writeJson(JsonGenerator target, Object input);
-        generateSerializationMethod(serializer, "writeJson", NativeEncoding.JSON, JsonGenerator.class);
-        final TypeWidget serializerType = serializer.type();
-        getSerializer.exit(new BaseTypeExpression(scope.adapt(NativeSerialization.class, false)) {
-            @Override
-            public void generate(CodeEmitter code) {
-                code.emitNew(serializerType.getJVMType().getInternalName());
-            }
-        });
-    }
-
-    private void generateSerializationMethod(ObjectBuilder serializer, String name, NativeEncoding encoding, Class<?> generatorType) {
-        ObjectBuilder.MethodBuilder method = serializer.method(name);
-        BytecodeExpression target = method.addArgument("target", scope.adapt(generatorType, false));
-        BytecodeExpression input = method.addArgument("input", AnyTypeWidget.getInstance());
-        SerializationAdapter adapter = input.getType().getSerializationAdapter(encoding);
-        method.exec(adapter.serializeTo(input, target));
-        method.exit();
     }
 
     public TypeWidget getValue(OperatorValue arg) {
@@ -93,7 +71,7 @@ public class ProgramGenerator {
 
 
     public ObjectBuilder.FieldBuilder addJoin(String name, final TypeWidget joinType) {
-        return program.finalField(name, joinType.construct(new LocalVarExpr(program.type(), "this")));
+        return program.finalField(name, joinType.construct(new LocalVarExpr(program.type(), "this"), new LocalVarExpr(scope.adapt(TaskContext.class, false), "$context")));
     }
 
     public List<CompiledProgram.ResultSetInfo> getResultSetInfos() {

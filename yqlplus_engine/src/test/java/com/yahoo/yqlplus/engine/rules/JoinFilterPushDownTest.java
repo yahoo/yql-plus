@@ -24,7 +24,7 @@ import java.io.IOException;
 @Test
 public class JoinFilterPushDownTest {
     @Test
-    public void testLeftPush() throws IOException {
+    public void testLeftPush() {
         OperatorNode<SequenceOperator> query = OperatorNode.create(SequenceOperator.FILTER,
                 OperatorNode.create(SequenceOperator.JOIN,
                         OperatorNode.create(SequenceOperator.SCAN, ImmutableList.of("left"), Lists.newArrayList()).putAnnotation("alias", "left"),
@@ -45,7 +45,7 @@ public class JoinFilterPushDownTest {
     }
 
     @Test
-    public void testRightPush() throws IOException {
+    public void testRightPush() {
         OperatorNode<SequenceOperator> query = OperatorNode.create(SequenceOperator.FILTER,
                 OperatorNode.create(SequenceOperator.JOIN,
                         OperatorNode.create(SequenceOperator.SCAN, ImmutableList.of("left"), Lists.newArrayList()).putAnnotation("alias", "left"),

@@ -49,16 +49,13 @@ public class JoinFilterPushDown extends LogicalOperatorTransform {
         node.visit(new OperatorVisitor() {
             @Override
             public <T extends Operator> boolean enter(OperatorNode<T> node) {
-                if (node.getOperator() instanceof ExpressionOperator) {
-                    return true;
-                }
-                return false;
+                return node.getOperator() instanceof ExpressionOperator;
             }
 
             @Override
             public <T extends Operator> void exit(OperatorNode<T> node) {
                 if (node.getOperator() instanceof ExpressionOperator && (node.getOperator() == ExpressionOperator.READ_RECORD || node.getOperator() == ExpressionOperator.READ_FIELD)) {
-                    sources.add((String) node.getArgument(0));
+                    sources.add(node.getArgument(0));
                 }
             }
         });
@@ -86,7 +83,7 @@ public class JoinFilterPushDown extends LogicalOperatorTransform {
             OperatorNode<SequenceOperator> rightSide = target.getArgument(1);
             OperatorNode<ExpressionOperator> joinExpr = target.getArgument(2);
             if (filter.getOperator() == ExpressionOperator.AND) {
-                flatten(top, (List<OperatorNode<ExpressionOperator>>) filter.getArgument(0));
+                flatten(top, filter.getArgument(0));
             } else {
                 top.add(filter);
             }

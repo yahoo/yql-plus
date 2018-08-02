@@ -25,7 +25,7 @@ public class SampleListSourceWithUnboxedParams implements Source {
      */
     @Query
     public Iterable<SampleId> getSampleIds(@Key("category") String category,
-            int count, double doubleValue, String name) throws InterruptedException {
+            int count, double doubleValue, String name) {
 
         List<SampleId> ids = new ArrayList<SampleId>(count);
         for (int i = 0; i < count; i++) {

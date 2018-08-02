@@ -7,33 +7,17 @@
 package com.yahoo.yqlplus.engine.internal.bytecode;
 
 import com.google.common.base.Predicate;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.types.YQLBaseType;
 import com.yahoo.yqlplus.api.types.YQLStructType;
-import com.yahoo.yqlplus.engine.internal.compiler.CodeEmitter;
-import com.yahoo.yqlplus.engine.internal.compiler.ConstructorGenerator;
-import com.yahoo.yqlplus.engine.internal.compiler.MethodGenerator;
-import com.yahoo.yqlplus.engine.internal.plan.types.AssignableValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeSequence;
-import com.yahoo.yqlplus.engine.internal.plan.types.TypeWidget;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeAdapter;
-import com.yahoo.yqlplus.engine.internal.plan.types.base.BaseTypeExpression;
-
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
+import com.yahoo.yqlplus.engine.compiler.code.*;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import java.lang.invoke.MethodHandle;
+import java.util.ArrayList;
 
 public class ASMClassSourceTest {
 
@@ -63,8 +47,24 @@ public class ASMClassSourceTest {
         Assert.assertEquals(foo.compute(), 0);
     }
 
+    public interface Animal {
+        String speak();
+    }
+
+    @Test
+    public void requireLambda() throws Throwable {
+        ASMClassSource source = createASMClassSource();
+        LambdaBuilder builder = new LambdaBuilder(source, new FunctionalInterfaceContract(source.adaptInternal(Animal.class), "speak", BaseTypeAdapter.STRING, new ArrayList<>()));
+        builder.complete(new StringConstantExpression("MOO"));
+        source.build();
+        MethodHandle mh =  builder.getFactory();
+        Animal animal = (Animal) mh.invoke();
+        Assert.assertEquals(animal.speak(), "MOO");
+
+    }
+
     private ASMClassSource createASMClassSource() {
-        return Guice.createInjector(new ASMClassSourceModule()).getInstance(ASMClassSource.class);
+        return new ASMClassSource();
     }
 
     @Test
@@ -231,79 +231,7 @@ public class ASMClassSourceTest {
     }
 
 
-    @Test
-    public void requireInjector() throws Exception {
-        final ASMClassSource source = createASMClassSource();
-        final UnitGenerator toy = new UnitGenerator("toy", source);
-        toy.addInterface(Computor.class);
-        FieldDefinition field = toy.createField(source.adaptInternal(Hat.class), "hat");
-        field.addModifier(Modifier.FINAL);
-        ConstructorGenerator gen = toy.createConstructor();
-        gen.annotate(Inject.class);
-        AssignableValue thisValue = gen.getLocal("this");
-        AssignableValue hatArg = gen.addArgument("hat", source.adaptInternal(Hat.class));
-        gen.add(field.get(thisValue.read()).write(hatArg.read()));
-        MethodGenerator method = toy.createMethod("compute");
-        method.setReturnType(BaseTypeAdapter.INT32);
-        method.add(new BytecodeSequence() {
-            @Override
-            public void generate(CodeEmitter code) {
-                toy.getField("hat").get(code.getLocal("this").read()).read().generate(code);
-                code.getMethodVisitor().visitFieldInsn(Opcodes.GETFIELD, Type.getInternalName(Hat.class), "VALUE", Type.INT_TYPE.getDescriptor());
-                code.getMethodVisitor().visitInsn(Opcodes.IRETURN);
-            }
-        });
-        source.build();
-        Class<? extends Computor> clazz = (Class<? extends Computor>) toy.getGeneratedClass();
-        Injector injector = Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Hat.class).toInstance(new Hat());
-            }
-        });
-        try {
-            Computor foo = injector.getInstance(clazz);
-            Assert.assertEquals(foo.compute(), 1);
-        } catch (VerifyError e) {
-            toy.trace(System.err);
-            throw e;
-        }
-    }
 
-    @Test
-    public void requireInjectorField() throws Exception {
-        final ASMClassSource source = createASMClassSource();
-        final UnitGenerator toy = new UnitGenerator("toy", source);
-        toy.addInterface(Computor.class);
-        FieldDefinition field = toy.createField(source.adaptInternal(Hat.class), "hat");
-        field.addModifier(Modifier.FINAL);
-        field.annotate(Inject.class);
-        MethodGenerator method = toy.createMethod("compute");
-        method.setReturnType(BaseTypeAdapter.INT32);
-        method.add(new BytecodeSequence() {
-            @Override
-            public void generate(CodeEmitter code) {
-                toy.getField("hat").get(code.getLocal("this").read()).read().generate(code);
-                code.getMethodVisitor().visitFieldInsn(Opcodes.GETFIELD, Type.getInternalName(Hat.class), "VALUE", Type.INT_TYPE.getDescriptor());
-                code.getMethodVisitor().visitInsn(Opcodes.IRETURN);
-            }
-        });
-        source.build();
-        Class<? extends Computor> clazz = (Class<? extends Computor>) toy.getGeneratedClass();
-        Injector injector = Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Hat.class).toInstance(new Hat());
-            }
-        });
-        try {
-            Computor foo = injector.getInstance(clazz);
-            Assert.assertEquals(foo.compute(), 1);
-        } catch (VerifyError e) {
-            toy.trace(System.err);
-            throw e;
-        }
-    }
 
     @Test
     public void requirePredicate() throws Exception {

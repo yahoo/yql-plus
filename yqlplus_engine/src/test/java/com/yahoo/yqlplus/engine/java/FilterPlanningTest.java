@@ -8,8 +8,6 @@ package com.yahoo.yqlplus.engine.java;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.api.Exports;
 import com.yahoo.yqlplus.api.Source;
 import com.yahoo.yqlplus.api.annotations.Export;
@@ -24,8 +22,11 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static org.testng.Assert.assertEquals;
+
 @Test
-public class FilterPlanningTest {
+public class FilterPlanningTest extends ProgramTestBase {
 
     public static class MagazineSource implements Source {
         int call_scan;
@@ -47,73 +48,65 @@ public class FilterPlanningTest {
     @Test
     public void requireNonRowDependantOptimizationScan() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("call", false), true);
+        ProgramResult myResult = program.run(of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     @Test
     public void requireNonRowDependantInvokedScan() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("call", true), true);
+        ProgramResult myResult = program.run(of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 1);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 1, "Expected 1 call to scan()");
+        assertEquals(foo.size(), 1);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 1, "Expected 1 call to scan()");
     }
 
     @Test
     public void requireNonRowDependantOptimizationIndexed() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("call", false), true);
+        ProgramResult myResult = program.run(of("call", false));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 0, "Expected no calls to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     @Test
     public void requireNonRowDependantInvokedIndexed() throws Exception {
         MagazineSource src = new MagazineSource();
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("failing_source", src)
+        YQLPlusCompiler compiler = createCompiler(
+                "failing_source", src
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@call boolean);" +
                 "SELECT * FROM failing_source WHERE @call AND id = '1' OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("call", true), true);
+        ProgramResult myResult = program.run(of("call", true));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
-        Assert.assertEquals(foo.size(), 0);
-        Assert.assertEquals(src.call_idx, 1, "Expected 1 call to lookup()");
-        Assert.assertEquals(src.call_scan, 0, "Expected no calls to scan()");
+        assertEquals(foo.size(), 0);
+        assertEquals(src.call_idx, 1, "Expected 1 call to lookup()");
+        assertEquals(src.call_scan, 0, "Expected no calls to scan()");
     }
 
     public static class Decider implements Exports {
@@ -148,12 +141,10 @@ public class FilterPlanningTest {
 
     @Test
     public void requireFilteringUdf() throws Exception {
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("namer", PersonNamer.class,
-                        "decider", Decider.class)
+        YQLPlusCompiler compiler = createCompiler(
+                "namer", PersonNamer.class,
+                "decider", Decider.class
         );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile("PROGRAM (@choice int32);" +
                 "CREATE TEMPORARY TABLE modules AS ( EVALUATE decider.modules(@choice) );" +
                 "CREATE TEMPORARY TABLE articles AS ( " +
@@ -165,7 +156,7 @@ public class FilterPlanningTest {
                 "MERGE " +
                 "    SELECT * FROM namer('4') WHERE '4' IN (SELECT m FROM @modules m) ); " +
                 "SELECT * FROM articles ORDER BY id OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("choice", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo, ImmutableList.of(
@@ -224,12 +215,8 @@ public class FilterPlanningTest {
 
     @Test
     public void testSourceNotInvokedIfNotRowDependentFilterExpressionEvalsToFalse() throws Exception {
-        Injector injector = Guice.createInjector(
-                new JavaTestModule(),
-                new SourceBindingModule("namer1", PersonNamer1.class, "namer2", PersonNamer2.class, "namer3", PersonNamer3.class,
-                        "namer4", PersonNamer4.class, "decider", Decider.class)
-        );
-        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        YQLPlusCompiler compiler = createCompiler("namer1", PersonNamer1.class, "namer2", PersonNamer2.class, "namer3", PersonNamer3.class,
+                        "namer4", PersonNamer4.class, "decider", Decider.class);
         CompiledProgram program = compiler.compile("PROGRAM (@choice int32);" +
                 "CREATE TEMPORARY TABLE modules AS ( EVALUATE decider.modules(@choice) );" +
                 "CREATE TEMPORARY TABLE articles AS ( " +
@@ -241,7 +228,7 @@ public class FilterPlanningTest {
                 "MERGE " +
                 "    SELECT * FROM namer4 WHERE '4' IN (SELECT m FROM @modules m) ); " +
                 "SELECT * FROM articles ORDER BY id OUTPUT as foo;");
-        ProgramResult myResult = program.run(ImmutableMap.<String, Object>of("choice", 1), true);
+        ProgramResult myResult = program.run(ImmutableMap.of("choice", 1));
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Person> foo = rez.getResult();
         Assert.assertEquals(foo, ImmutableList.of(

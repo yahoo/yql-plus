@@ -9,24 +9,23 @@ package com.yahoo.yqlplus.engine.internal.compiler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.inject.Injector;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ObjectBuilder;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.ASMClassSource;
+import com.yahoo.yqlplus.engine.compiler.code.BytecodeExpression;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.GambitSource;
+import com.yahoo.yqlplus.engine.compiler.code.ObjectBuilder;
+import com.yahoo.yqlplus.engine.compiler.code.ScopedBuilder;
+import com.yahoo.yqlplus.engine.compiler.runtime.ProgramInvocation;
+import com.yahoo.yqlplus.engine.internal.generate.JoinGenerator;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramGenerator;
-import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
+import com.yahoo.yqlplus.engine.internal.generate.TaskGenerator;
 import com.yahoo.yqlplus.engine.internal.plan.TaskOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.BytecodeExpression;
-import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import com.yahoo.yqlplus.operator.OperatorValue;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class ProgramEnvironment {
 
     private OperatorNode<TaskOperator> plan;
 
-    ProgramEnvironment(String name, ASMClassSource source) {
+    public ProgramEnvironment(String name, ASMClassSource source) {
         this.classSource = source;
         this.scope = new GambitSource(classSource);
         this.program = new ProgramGenerator(scope);
@@ -62,17 +61,16 @@ public class ProgramEnvironment {
         return generator;
     }
 
-    public CompiledProgram compile(Injector injector) {
+    public CompiledProgram compile() {
         try {
             classSource.build();
             Class<? extends ProgramInvocation> programClazz = (Class<? extends ProgramInvocation>) scope.getObjectClass(program.getProgram());
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             classSource.dump(stream);
             byte[] dump = stream.toByteArray();
-            PlanCompiledProgram compiledProgram = new PlanCompiledProgram(name, program.getArgumentInfos(), program.getResultSetInfos(), ImmutableMap.<String, OperatorNode<SequenceOperator>>of(), plan, dump, programClazz);
-            injector.injectMembers(compiledProgram);
+            PlanCompiledProgram compiledProgram = new PlanCompiledProgram(name, program.getArgumentInfos(), program.getResultSetInfos(), ImmutableMap.of(), plan, dump, programClazz);
             return compiledProgram;
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             classSource.trace(System.err);
             throw new ProgramCompileException(e);
         }
@@ -92,7 +90,7 @@ public class ProgramEnvironment {
         String name = next.getArgument(0);
         List<OperatorValue> args = next.getArgument(1);
         Preconditions.checkArgument(tasks.containsKey(name));
-        return tasks.get(name).createRunnable(body, body.local("$program"), args);
+        return tasks.get(name).createRunnable(body, body.local("$program"), body.local("$context"), args);
     }
 
     public BytecodeExpression readyRunnable(ScopedBuilder body, OperatorNode<TaskOperator> next) {

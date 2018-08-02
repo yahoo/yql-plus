@@ -6,7 +6,11 @@
 
 package com.yahoo.yqlplus.api.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Indicate a parameter to communicate a Key. Can apply to a List or individual value of either
@@ -17,6 +21,8 @@ import java.lang.annotation.*;
 @Documented
 public @interface Key {
     String value();
+
     boolean skipEmptyOrZero() default false;
+
     boolean skipNull() default true;
 }

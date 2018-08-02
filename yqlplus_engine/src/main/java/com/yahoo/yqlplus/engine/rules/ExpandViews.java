@@ -30,8 +30,8 @@ public class ExpandViews extends LogicalOperatorTransform {
         if (node.getOperator() != SequenceOperator.SCAN) {
             return super.visitSequenceOperator(node);
         }
-        List<String> name = (List<String>) node.getArgument(0);
-        List<OperatorNode<ExpressionOperator>> arguments = (List<OperatorNode<ExpressionOperator>>) node.getArgument(1);
+        List<String> name = node.getArgument(0);
+        List<OperatorNode<ExpressionOperator>> arguments = node.getArgument(1);
         // a view reference has to have no arguments
         if (arguments.size() > 0) {
             // we need to continue traversing because the arguments are nodes too

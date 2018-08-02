@@ -8,37 +8,45 @@ package com.yahoo.yqlplus.engine.internal.plan;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.yahoo.yqlplus.engine.ChainState;
+import com.yahoo.yqlplus.engine.CompileContext;
 import com.yahoo.yqlplus.engine.CompiledProgram;
-import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
-import com.yahoo.yqlplus.engine.internal.java.sequences.Sequences;
-import com.yahoo.yqlplus.engine.internal.plan.ast.ExprScope;
-import com.yahoo.yqlplus.engine.internal.plan.ast.FunctionOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
-import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
-import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamOperator;
-import com.yahoo.yqlplus.engine.internal.plan.streams.StreamValue;
-import com.yahoo.yqlplus.engine.internal.plan.types.ProgramValueTypeAdapter;
+import com.yahoo.yqlplus.engine.SourceType;
+import com.yahoo.yqlplus.engine.Sourcer;
+import com.yahoo.yqlplus.engine.StreamValue;
+import com.yahoo.yqlplus.engine.compiler.code.EngineValueTypeAdapter;
+import com.yahoo.yqlplus.engine.compiler.code.GambitScope;
+import com.yahoo.yqlplus.engine.compiler.code.TypeWidget;
+import com.yahoo.yqlplus.engine.compiler.runtime.Sequences;
+import com.yahoo.yqlplus.engine.rules.JoinExpression;
 import com.yahoo.yqlplus.engine.rules.ReadFieldAliasAnnotate;
 import com.yahoo.yqlplus.language.logical.ExpressionOperator;
 import com.yahoo.yqlplus.language.logical.SequenceOperator;
 import com.yahoo.yqlplus.language.operator.OperatorNode;
 import com.yahoo.yqlplus.language.parser.Location;
 import com.yahoo.yqlplus.language.parser.ProgramCompileException;
+import com.yahoo.yqlplus.operator.ExprScope;
+import com.yahoo.yqlplus.operator.FunctionOperator;
+import com.yahoo.yqlplus.operator.OperatorStep;
+import com.yahoo.yqlplus.operator.OperatorValue;
+import com.yahoo.yqlplus.operator.PhysicalExprOperator;
+import com.yahoo.yqlplus.operator.PhysicalOperator;
+import com.yahoo.yqlplus.operator.StreamOperator;
 
+import java.lang.reflect.Type;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-public class ContextPlanner implements DynamicExpressionEnvironment {
+public class ContextPlanner implements DynamicExpressionEnvironment, CompileContext {
     private final ProgramPlanner program;
     private final OperatorNode<PhysicalExprOperator> contextExpr;
     private final DynamicExpressionEvaluator eval;
 
     public ContextPlanner(ProgramPlanner program) {
         this.program = program;
-        this.contextExpr = OperatorNode.create(PhysicalExprOperator.ROOT_CONTEXT);
+        this.contextExpr = OperatorNode.create(PhysicalExprOperator.CURRENT_CONTEXT);
         this.eval = new DynamicExpressionEvaluator(this);
     }
 
@@ -48,6 +56,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         this.eval = eval;
     }
 
+    @Override
     public OperatorValue evaluateValue(OperatorNode<PhysicalExprOperator> input) {
         switch (input.getOperator()) {
             case VALUE:
@@ -60,8 +69,28 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     }
 
     @Override
+    public TypeWidget adapt(Type type, boolean nullable) {
+        return program.getValueTypeAdapter().adapt(type, nullable);
+    }
+
+    @Override
     public OperatorNode<PhysicalExprOperator> evaluate(OperatorNode<ExpressionOperator> value) {
         return eval.apply(value);
+    }
+
+    @Override
+    public OperatorNode<PhysicalExprOperator> evaluateInRowContext(OperatorNode<ExpressionOperator> value, OperatorNode<PhysicalExprOperator> row) {
+        return new DynamicExpressionEvaluator(this, row).apply(value);
+    }
+
+    @Override
+    public List<OperatorNode<PhysicalExprOperator>> evaluateAll(List<OperatorNode<ExpressionOperator>> values) {
+        return eval.applyAll(values);
+    }
+
+    @Override
+    public List<OperatorNode<PhysicalExprOperator>> evaluateAllInRowContext(List<OperatorNode<ExpressionOperator>> values, OperatorNode<PhysicalExprOperator> row) {
+        return new DynamicExpressionEvaluator(this, row).applyAll(values);
     }
 
     @Override
@@ -73,6 +102,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return OperatorStep.create(program.getValueTypeAdapter(), PhysicalOperator.EVALUATE, contextExpr, OperatorNode.create(PhysicalExprOperator.CONSTANT, getValueTypeAdapter().inferConstantType(value), value));
     }
 
+    @Override
     public OperatorNode<PhysicalExprOperator> computeExpr(OperatorNode<PhysicalExprOperator> op) {
         if (op.getOperator() == PhysicalExprOperator.VALUE || op.getOperator() == PhysicalExprOperator.CONSTANT) {
             return op;
@@ -80,6 +110,10 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return OperatorNode.create(op.getLocation(), PhysicalExprOperator.VALUE, evaluateValue(op));
     }
 
+    @Override
+    public List<OperatorNode<PhysicalExprOperator>> computeExprs(List<OperatorNode<PhysicalExprOperator>> op) {
+        return op.stream().map(this::computeExpr).collect(Collectors.toList());
+    }
 
     @Override
     public OperatorNode<PhysicalExprOperator> call(OperatorNode<ExpressionOperator> call) {
@@ -109,8 +143,8 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         List<OperatorNode<PhysicalExprOperator>> leftKey = Lists.newArrayList();
         List<OperatorNode<PhysicalExprOperator>> rightKey = Lists.newArrayList();
         DynamicExpressionEvaluator eval = new DynamicExpressionEvaluator(this, OperatorNode.create(PhysicalExprOperator.LOCAL, "$row"));
-        List<JoinExpression> joinExpressions =  JoinExpression.parse(joinExpression);
-        for(JoinExpression expr : joinExpressions) {
+        List<JoinExpression> joinExpressions = JoinExpression.parse(joinExpression);
+        for (JoinExpression expr : joinExpressions) {
             leftKey.add(eval.apply(expr.left));
             rightKey.add(eval.apply(expr.right));
         }
@@ -148,9 +182,9 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     }
 
     private void mergeFields(ReadFieldAliasAnnotate.RowType rowType, List<String> fieldNames, List<OperatorNode<PhysicalExprOperator>> fieldValues, OperatorNode<PhysicalExprOperator> row) {
-        for(String alias : rowType.getAliases()) {
+        for (String alias : rowType.getAliases()) {
             fieldNames.add(alias);
-            if(rowType.isJoin()) {
+            if (rowType.isJoin()) {
                 fieldValues.add(OperatorNode.create(PhysicalExprOperator.PROPREF, row, alias));
             } else {
                 fieldValues.add(row);
@@ -169,7 +203,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
             case EVALUATE:
             case EMPTY:
             case FALLBACK:
-                return executeLocalJoin(leftSide, joinExpression, query);
+                return executeSource(query, (ctx, st, q) -> executeLocalSource(leftSide, joinExpression, ctx, q));
             case SCAN:
                 program.addStatement(CompiledProgram.ProgramStatement.SELECT);
                 return executeReadJoin(leftSide, joinExpression, query, source);
@@ -179,9 +213,6 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
             case UPDATE:
             case UPDATE_ALL:
                 throw new ProgramCompileException(source.getLocation(), "%s may not be used as the right side of a JOIN", source.getOperator());
-            case NEXT:
-            case PAGE:
-                throw new UnsupportedOperationException("NEXT not implemented");
             case MULTISOURCE:
                 // this one should be rewritten out by the ExpandMultisource transform
             default:
@@ -189,7 +220,8 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         }
     }
 
-    StreamValue execute(OperatorNode<SequenceOperator> query) {
+    @Override
+    public StreamValue execute(OperatorNode<SequenceOperator> query) {
         OperatorNode<SequenceOperator> source = chainSource(query);
         switch (source.getOperator()) {
             case JOIN:
@@ -199,7 +231,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
             case EVALUATE:
             case EMPTY:
             case FALLBACK:
-                return executeLocalChain(query);
+                return executeSource(query, (context, state, source1) -> executeLocalSource(context, source1));
             case SCAN:
                 program.addStatement(CompiledProgram.ProgramStatement.SELECT);
                 return executeRead(query, source);
@@ -214,9 +246,6 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
             case UPDATE_ALL:
                 program.addStatement(CompiledProgram.ProgramStatement.UPDATE);
                 return executeWrite(query, source);
-            case NEXT:
-            case PAGE:
-                throw new UnsupportedOperationException("NEXT not yet implemented");
             case MULTISOURCE:
                 // this one should be rewritten out by the ExpandMultisource transform
             default:
@@ -226,12 +255,12 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     }
 
     private StreamValue executeRead(OperatorNode<SequenceOperator> top, OperatorNode<SequenceOperator> source) {
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.plan(this, top, source);
     }
 
     private StreamValue executeReadJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, OperatorNode<SequenceOperator> top, OperatorNode<SequenceOperator> source) {
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.join(this, leftSide, joinExpression, top, source);
     }
 
@@ -239,10 +268,11 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         // {INSERT/UPDATE/UPDATE_ALL/DELETE/DELETE_ALL} SCAN ...
         OperatorNode<SequenceOperator> source = write.getArgument(0);
         Preconditions.checkArgument(source.getOperator() == SequenceOperator.SCAN, "Target of write is not SCAN?: %s ", source);
-        SourceType type = program.findSource(this, source);
+        SourceType type = program.findSource(source);
         return type.plan(this, top, source);
     }
 
+    @Override
     public List<OperatorNode<PhysicalExprOperator>> evaluateList(List<OperatorNode<ExpressionOperator>> args) {
         return eval.applyAll(args);
     }
@@ -281,23 +311,12 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return new ContextPlanner(program, newContext, eval);
     }
 
-    public ContextPlanner timeout(long minTimeoutMs, long maxTimeoutMs) {
-        OperatorNode<PhysicalExprOperator> ms = eval.constant(TimeUnit.MILLISECONDS);
-        OperatorValue newContext = OperatorStep.create(program.getValueTypeAdapter(), PhysicalOperator.EVALUATE,
-                contextExpr,
-                OperatorNode.create(PhysicalExprOperator.TIMEOUT_GUARD, minTimeoutMs, ms, maxTimeoutMs, ms));
-        return new ContextPlanner(program, newContext, eval);
-    }
-
     public OperatorValue end(OperatorValue value) {
         return OperatorStep.create(program.getValueTypeAdapter(), PhysicalOperator.EVALUATE, contextExpr,
                 OperatorNode.create(PhysicalExprOperator.END_CONTEXT, OperatorNode.create(PhysicalExprOperator.VALUE, value)));
     }
 
-    public StreamValue merge(List<StreamValue> outputs) {
-        return StreamValue.merge(this, outputs);
-    }
-
+    @Override
     public OperatorNode<PhysicalExprOperator> getContextExpr() {
         return contextExpr;
     }
@@ -307,7 +326,8 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return program.constant(value);
     }
 
-    public ProgramValueTypeAdapter getValueTypeAdapter() {
+    @Override
+    public EngineValueTypeAdapter getValueTypeAdapter() {
         return program.getValueTypeAdapter();
     }
 
@@ -315,13 +335,14 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         return program.getGambitScope();
     }
 
-
-    private StreamValue executeLocalChain(final OperatorNode<SequenceOperator> seq) {
-        return new LocalPlanChain(this, seq).execute(seq);
-    }
-
-    private StreamValue executeLocalJoin(OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression, final OperatorNode<SequenceOperator> seq) {
-        return new LocalJoiningChain(this, seq, leftSide, joinExpression).execute(seq);
+    @Override
+    public StreamValue executeSource(OperatorNode<SequenceOperator> sequence, Sourcer source) {
+        return new PlanChain(this) {
+            @Override
+            protected StreamValue executeSource(ContextPlanner context, ChainState state, OperatorNode<SequenceOperator> query) {
+                return source.execute(context, state, query);
+            }
+        }.execute(sequence);
     }
 
     private static final EnumSet<SequenceOperator> CHAINABLE = EnumSet.of(SequenceOperator.PROJECT,
@@ -336,7 +357,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     private OperatorNode<SequenceOperator> chainSource(OperatorNode<SequenceOperator> current) {
         if (CHAINABLE.contains(current.getOperator())) {
             // keep chaining transforms
-            return chainSource((OperatorNode<SequenceOperator>) current.getArgument(0));
+            return chainSource(current.getArgument(0));
         }
         switch (current.getOperator()) {
             case JOIN:
@@ -344,12 +365,10 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
             case MERGE:
             case PIPE:
             case SCAN:
-            case NEXT:
             case EMPTY:
             case EVALUATE:
             case FALLBACK:
             case MULTISOURCE:
-            case PAGE:
             case INSERT:
             case DELETE:
             case DELETE_ALL:
@@ -364,7 +383,7 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
     private OperatorNode<SequenceOperator> replaceTail(OperatorNode<SequenceOperator> current, OperatorNode<SequenceOperator> tail, OperatorNode<SequenceOperator> target) {
         if (CHAINABLE.contains(current.getOperator())) {
             // keep chaining transforms
-            OperatorNode<SequenceOperator> next = replaceTail((OperatorNode<SequenceOperator>) current.getArgument(0), tail, target);
+            OperatorNode<SequenceOperator> next = replaceTail(current.getArgument(0), tail, target);
 
             Object[] args = current.getArguments();
             args[0] = next;
@@ -377,114 +396,90 @@ public class ContextPlanner implements DynamicExpressionEnvironment {
         }
     }
 
-    private class LocalJoiningChain extends PlanChain {
-        private final OperatorNode<SequenceOperator> seq;
-        private final OperatorNode<PhysicalExprOperator> leftSide;
-        private final OperatorNode<ExpressionOperator> joinExpression;
-
-        public LocalJoiningChain(ContextPlanner context, OperatorNode<SequenceOperator> seq, OperatorNode<PhysicalExprOperator> leftSide, OperatorNode<ExpressionOperator> joinExpression) {
-            super(context);
-            this.seq = seq;
-            this.leftSide = leftSide;
-            this.joinExpression = joinExpression;
-        }
-
-        @Override
-        protected StreamValue executeSource(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> source) {
-            switch (source.getOperator()) {
-                case JOIN:
-                case LEFT_JOIN: {
-                    OperatorNode<SequenceOperator> leftQuery = source.getArgument(0);
-                    OperatorNode<SequenceOperator> rightQuery = source.getArgument(1);
-                    OperatorNode<ExpressionOperator> joinExpression = source.getArgument(2);
-                    StreamValue leftSideStream = context.executeJoinRightQuery(this.leftSide, this.joinExpression, leftQuery);
-                    OperatorNode<PhysicalExprOperator> leftSide = leftSideStream.materializeValue();
-                    return executeJoin(source, leftSide, joinExpression, rightQuery);
-                }
-                case MERGE: {
-                    List<OperatorNode<SequenceOperator>> inputs = source.getArgument(0);
-                    List<StreamValue> inputStreams = Lists.newArrayList();
-                    for (OperatorNode<SequenceOperator> input : inputs) {
-                        inputStreams.add(context.executeJoinRightQuery(leftSide, joinExpression, input));
-                    }
-                    return StreamValue.merge(context, inputStreams);
-                }
-                case FALLBACK: {
-                    OperatorNode<SequenceOperator> primary = source.getArgument(0);
-                    OperatorNode<SequenceOperator> fallback = source.getArgument(1);
-                    OperatorValue primarySeq = context.executeJoinRightQuery(leftSide, joinExpression, primary).materialize();
-                    OperatorValue fallbackSeq = context.executeJoinRightQuery(leftSide, joinExpression, fallback).materialize();
-                    OperatorNode<PhysicalExprOperator> tryCatch = OperatorNode.create(source.getLocation(), PhysicalExprOperator.CATCH,
-                            OperatorNode.create(seq.getLocation(), PhysicalExprOperator.VALUE, primarySeq),
-                            OperatorNode.create(seq.getLocation(), PhysicalExprOperator.VALUE, fallbackSeq));
-                    return StreamValue.iterate(context, tryCatch);
-                }
-                case PIPE:
-                case EVALUATE:
-                case EMPTY: {
-                    // no special processing for being the right side of a join
-                    return context.execute(source);
-                }
-
+    private StreamValue executeLocalSource(OperatorNode<PhysicalExprOperator> left, OperatorNode<ExpressionOperator> join, ContextPlanner context, OperatorNode<SequenceOperator> source) {
+        switch (source.getOperator()) {
+            case JOIN:
+            case LEFT_JOIN: {
+                OperatorNode<SequenceOperator> leftQuery = source.getArgument(0);
+                OperatorNode<SequenceOperator> rightQuery = source.getArgument(1);
+                OperatorNode<ExpressionOperator> joinExpression = source.getArgument(2);
+                StreamValue leftSideStream = context.executeJoinRightQuery(left, join, leftQuery);
+                OperatorNode<PhysicalExprOperator> leftSide = leftSideStream.materializeValue();
+                return executeJoin(source, leftSide, joinExpression, rightQuery);
             }
-            throw new ProgramCompileException(source.getLocation(), "Unexpected local chain source %s", source.getOperator());
+            case MERGE: {
+                List<OperatorNode<SequenceOperator>> inputs = source.getArgument(0);
+                List<StreamValue> inputStreams = Lists.newArrayList();
+                for (OperatorNode<SequenceOperator> input : inputs) {
+                    inputStreams.add(context.executeJoinRightQuery(left, join, input));
+                }
+                return StreamValue.merge(context, inputStreams);
+            }
+            case FALLBACK: {
+                OperatorNode<SequenceOperator> primary = source.getArgument(0);
+                OperatorNode<SequenceOperator> fallback = source.getArgument(1);
+                OperatorValue primarySeq = context.executeJoinRightQuery(left, join, primary).materialize();
+                OperatorValue fallbackSeq = context.executeJoinRightQuery(left, join, fallback).materialize();
+                OperatorNode<PhysicalExprOperator> tryCatch = OperatorNode.create(source.getLocation(), PhysicalExprOperator.CATCH,
+                        OperatorNode.create(primary.getLocation(), PhysicalExprOperator.VALUE, primarySeq),
+                        OperatorNode.create(fallback.getLocation(), PhysicalExprOperator.VALUE, fallbackSeq));
+                return StreamValue.iterate(context, tryCatch);
+            }
+            case PIPE:
+            case EVALUATE:
+            case EMPTY: {
+                // no special processing for being the right side of a join
+                return context.execute(source);
+            }
+
         }
+        throw new ProgramCompileException(source.getLocation(), "Unexpected local chain source %s", source.getOperator());
     }
 
-    private static class LocalPlanChain extends PlanChain {
-        private final OperatorNode<SequenceOperator> seq;
-
-        public LocalPlanChain(ContextPlanner context, OperatorNode<SequenceOperator> seq) {
-            super(context);
-            this.seq = seq;
-        }
-
-        @Override
-        protected StreamValue executeSource(ContextPlanner context, LocalChainState state, OperatorNode<SequenceOperator> source) {
-            switch (source.getOperator()) {
-                case JOIN:
-                case LEFT_JOIN: {
-                    OperatorNode<SequenceOperator> leftQuery = source.getArgument(0);
-                    OperatorNode<SequenceOperator> rightQuery = source.getArgument(1);
-                    OperatorNode<ExpressionOperator> joinExpression = source.getArgument(2);
-                    StreamValue leftSideStream = context.execute(leftQuery);
-                    OperatorNode<PhysicalExprOperator> leftSide = leftSideStream.materializeValue();
-                    return context.executeJoin(source, leftSide, joinExpression, rightQuery);
-                }
-                case MERGE: {
-                    List<OperatorNode<SequenceOperator>> inputs = source.getArgument(0);
-                    List<StreamValue> inputStreams = Lists.newArrayList();
-                    for (OperatorNode<SequenceOperator> input : inputs) {
-                        inputStreams.add(context.execute(input));
-                    }
-                    return StreamValue.merge(context, inputStreams);
-                }
-                case FALLBACK: {
-                    OperatorNode<SequenceOperator> primary = source.getArgument(0);
-                    OperatorNode<SequenceOperator> fallback = source.getArgument(1);
-                    OperatorValue primarySeq = context.execute(primary).materialize();
-                    OperatorValue fallbackSeq = context.execute(fallback).materialize();
-                    OperatorNode<PhysicalExprOperator> tryCatch = OperatorNode.create(source.getLocation(), PhysicalExprOperator.CATCH,
-                            OperatorNode.create(seq.getLocation(), PhysicalExprOperator.VALUE, primarySeq),
-                            OperatorNode.create(seq.getLocation(), PhysicalExprOperator.VALUE, fallbackSeq));
-                    return StreamValue.iterate(context, tryCatch);
-                }
-                case PIPE: {
-                    return context.executePipe(source);
-                }
-                case EVALUATE: {
-                    context.program.addStatement(CompiledProgram.ProgramStatement.SELECT);
-                    OperatorNode<ExpressionOperator> expr = source.getArgument(0);
-                    return StreamValue.iterate(context, context.evaluate(expr));
-                }
-                case EMPTY: {
-                    OperatorValue empty = context.constantValue(Sequences.singletonSequence());
-                    return StreamValue.iterate(context, empty);
-                }
-
+    private static StreamValue executeLocalSource(ContextPlanner context, OperatorNode<SequenceOperator> source) {
+        switch (source.getOperator()) {
+            case JOIN:
+            case LEFT_JOIN: {
+                OperatorNode<SequenceOperator> leftQuery = source.getArgument(0);
+                OperatorNode<SequenceOperator> rightQuery = source.getArgument(1);
+                OperatorNode<ExpressionOperator> joinExpression = source.getArgument(2);
+                StreamValue leftSideStream = context.execute(leftQuery);
+                OperatorNode<PhysicalExprOperator> leftSide = leftSideStream.materializeValue();
+                return context.executeJoin(source, leftSide, joinExpression, rightQuery);
             }
-            throw new ProgramCompileException(source.getLocation(), "Unexpected local chain source %s", source.getOperator());
+            case MERGE: {
+                List<OperatorNode<SequenceOperator>> inputs = source.getArgument(0);
+                List<StreamValue> inputStreams = Lists.newArrayList();
+                for (OperatorNode<SequenceOperator> input : inputs) {
+                    inputStreams.add(context.execute(input));
+                }
+                return StreamValue.merge(context, inputStreams);
+            }
+            case FALLBACK: {
+                OperatorNode<SequenceOperator> primary = source.getArgument(0);
+                OperatorNode<SequenceOperator> fallback = source.getArgument(1);
+                OperatorValue primarySeq = context.execute(primary).materialize();
+                OperatorValue fallbackSeq = context.execute(fallback).materialize();
+                OperatorNode<PhysicalExprOperator> tryCatch = OperatorNode.create(source.getLocation(), PhysicalExprOperator.CATCH,
+                        OperatorNode.create(source.getLocation(), PhysicalExprOperator.VALUE, primarySeq),
+                        OperatorNode.create(source.getLocation(), PhysicalExprOperator.VALUE, fallbackSeq));
+                return StreamValue.iterate(context, tryCatch);
+            }
+            case PIPE: {
+                return context.executePipe(source);
+            }
+            case EVALUATE: {
+                context.program.addStatement(CompiledProgram.ProgramStatement.SELECT);
+                OperatorNode<ExpressionOperator> expr = source.getArgument(0);
+                return StreamValue.iterate(context, context.evaluate(expr));
+            }
+            case EMPTY: {
+                OperatorValue empty = context.constantValue(Sequences.singletonSequence());
+                return StreamValue.iterate(context, empty);
+            }
+
         }
+        throw new ProgramCompileException(source.getLocation(), "Unexpected local chain source %s", source.getOperator());
     }
 }
 
