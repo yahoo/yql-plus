@@ -89,6 +89,8 @@ import com.yahoo.yqlplus.engine.sources.Sample;
 import com.yahoo.yqlplus.engine.sources.SampleListSource;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
+import com.yahoo.yqlplus.engine.sources.SampleResultSource;
+import com.yahoo.yqlplus.engine.sources.GenericFieldResultSource;
 import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
 import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue;
 import com.yahoo.yqlplus.engine.sources.SingleKeySource;
@@ -123,7 +125,26 @@ import static org.testng.AssertJUnit.assertTrue;
 @Test()
 public class JavaProgramCompilerTest {
     private static final boolean DEBUG_DUMP = false;
+    
+    @Test
+    public void testGenericResult() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("genericResult", SampleResultSource.class));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("SELECT result.id FROM genericResult OUTPUT AS sample;");
+        List<Record> ids = program.run(ImmutableMap.<String, Object>of(), true).getResult("sample").get().getResult();
+        assertEquals("id", ids.get(0).get("id"));
+        assertEquals("id", ids.get(1).get("id"));
+    }
 
+    @Test
+    public void testGenericFieldResult() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("genericResult", GenericFieldResultSource.class));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        CompiledProgram program = compiler.compile("SELECT myField.id FROM genericResult OUTPUT AS sample;");
+        List<Record> ids = program.run(ImmutableMap.<String, Object>of(), true).getResult("sample").get().getResult();
+        Assert.assertEquals("id", ids.get(0).get("id"));
+    }
+    
     @Test
     public void testExplore() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule());

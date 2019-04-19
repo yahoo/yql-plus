@@ -57,7 +57,7 @@ public class FieldAssignableValue implements AssignableValue {
             public void generate(CodeEmitter code) {
                 target.generate(code);
                 value.generate(code);
-                code.cast(type, value.getType());
+                code.castIfNecessary(type, value.getType());
                 code.getMethodVisitor().visitFieldInsn(Opcodes.PUTFIELD, ownerInternalName, name, desc);
             }
         };
