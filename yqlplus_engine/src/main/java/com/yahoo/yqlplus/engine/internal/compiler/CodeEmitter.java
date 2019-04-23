@@ -516,6 +516,12 @@ public final class CodeEmitter implements VariableEnvironment {
         }
     }
 
+    public void castIfNecessary(TypeWidget targetType, TypeWidget sourceType) {
+        if (targetType != null && sourceType != null && sourceType.isAssignableFrom(targetType) && !sourceType.getJVMType().equals(targetType.getJVMType())) {
+            cast(targetType, sourceType);
+        }
+    }
+
     public void cast(TypeWidget targetType, TypeWidget sourceType) {
         if (targetType.equals(sourceType)) {
             return;

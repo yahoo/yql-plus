@@ -54,23 +54,17 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
             }
             if (method.getName().startsWith("get") && method.getName().length() > 3) {
                 String fieldName = method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4);
-                TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adaptInternal(returnType);
-                builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
+                builder.put(fieldName, new MethodPropertyReader(fieldName, method, adapter.adaptInternal(method.getReturnType())));
             } else if (method.getName().startsWith("is") && method.getName().length() > 2 && (Boolean.class.isAssignableFrom(method.getReturnType()) || boolean.class.isAssignableFrom(method.getReturnType()))) {
                 String fieldName = method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3);
-                TypeLiteral returnType = typeLiteral.getReturnType(method);
-                TypeWidget ty = adapter.adaptInternal(returnType);
-                builder.put(fieldName, new MethodPropertyReader(fieldName, method, ty));
+                builder.put(fieldName, new MethodPropertyReader(fieldName, method, adapter.adaptInternal(method.getReturnType())));
             }
         }
         for (Field field : typeLiteral.getRawType().getFields()) {
             if (Modifier.isStatic(field.getModifiers()) || !Modifier.isPublic(field.getModifiers())) {
                 continue;
             }
-            TypeLiteral<?> returnType = typeLiteral.getFieldType(field);
-            TypeWidget ty = adapter.adaptInternal(returnType);
-            builder.put(field.getName(), new FieldPropertyReader(field, ty));
+            builder.put(field.getName(), new FieldPropertyReader(field, adapter.adaptInternal(field.getType())));
         }
         return builder;
     }
@@ -97,8 +91,8 @@ public class ReflectivePropertyAdapter extends ClosedPropertyAdapter {
     private static class FieldPropertyReader extends PropertyReader {
         private final Field field;
 
-        public FieldPropertyReader(Field field, TypeWidget ty) {
-            super(new Property(field.getName(), ty));
+        public FieldPropertyReader(Field field, TypeWidget fieldType) {
+            super(new Property(field.getName(), fieldType));
             this.field = field;
         }
 
