@@ -86,6 +86,7 @@ import com.yahoo.yqlplus.engine.sources.NestedMapSource;
 import com.yahoo.yqlplus.engine.sources.NestedSource;
 import com.yahoo.yqlplus.engine.sources.PersonMakerSource;
 import com.yahoo.yqlplus.engine.sources.Sample;
+import com.yahoo.yqlplus.engine.sources.SampleExecutionSource;
 import com.yahoo.yqlplus.engine.sources.SampleListSource;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
@@ -118,6 +119,7 @@ import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
@@ -125,6 +127,24 @@ import static org.testng.AssertJUnit.assertTrue;
 @Test()
 public class JavaProgramCompilerTest {
     private static final boolean DEBUG_DUMP = false;
+
+    @Test
+    public void testPerformanceIssue() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("sample", SampleExecutionSource.class));
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "CREATE TEMP TABLE sample1 AS (SELECT * FROM sample('id1')); \n" +
+                "CREATE TEMP TABLE sample2 AS (SELECT * FROM sample('id2')); \n" +
+                "SELECT * FROM sample1 \n" +
+                "MERGE \n" +
+                "SELECT * FROM sample2 \n" +
+                "OUTPUT AS samples;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<SampleExecutionSource.Sample> samples = programResult.getResult("samples").get().getResult();
+        assertEquals(2, samples.size());
+        assertFalse(samples.get(0).id.equals(samples.get(1).id));
+        assertTrue(Math.max(samples.get(0).start, samples.get(1).start)  < Math.min(samples.get(0).end, samples.get(1).end));
+    }
     
     @Test
     public void testGenericResult() throws Exception {
