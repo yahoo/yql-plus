@@ -7,10 +7,14 @@
 package com.yahoo.yqlplus.engine.internal.tasks;
 
 import com.google.common.collect.*;
+import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
+import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.yahoo.rdl.BaseType.Map;
 
 /**
  * Plan the execution of steps as a graph of Tasks.
@@ -114,7 +118,20 @@ public final class GraphPlanner {
                         target.inputs.addAll(node.inputs);
                         target.available.addAll(node.available);
                         nodes.remove(key);
-                        modified = true;
+
+                        //check if all non-END nodes only have one todo
+                        boolean found = false;
+                        for (Map.Entry<Step, Node> entry : nodes.entrySet()) {
+                            if (entry.getKey() instanceof OperatorStep) {
+                                if (!((OperatorStep) entry.getKey()).getCompute().getOperator().equals(PhysicalOperator.END)) {
+                                    if (!(entry.getValue().todo.size() == 1)) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        modified = found;
                     }
                 }
             }
