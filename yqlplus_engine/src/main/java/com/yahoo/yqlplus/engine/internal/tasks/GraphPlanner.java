@@ -7,6 +7,8 @@
 package com.yahoo.yqlplus.engine.internal.tasks;
 
 import com.google.common.collect.*;
+import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
+import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 
 import java.util.List;
 import java.util.Map;
@@ -86,39 +88,52 @@ public final class GraphPlanner {
             }
         }
 
-//        boolean modified = true;
-//        List<Step> keys = Lists.newArrayList();
-//        while (modified) {
-//            modified = false;
-//            // we plan to modify the map, so copy the set of keys before iteration
-//            keys.clear();
-//            keys.addAll(nodes.keySet());
-//            for (Step key : keys) {
-//                Node node = nodes.get(key);
-//                if (node == null) {
-//                    continue;
-//                }
-//                if (node.deps.size() == 1) {
-//                    // if we are the only input to that dep...
-//                    Step dep = Iterables.get(node.deps, 0);
-//                    if (dep.getInputs().size() == 1) {
-//                        // then merge into that
-//                        Node target = nodes.get(dep);
-//                        node.todo.addAll(target.todo);
-//                        target.todo = node.todo;
-//                        target.inputs.remove(key);
-//                        for (Step p : node.inputs) {
-//                            nodes.get(p).deps.remove(key);
-//                            nodes.get(p).deps.add(dep);
-//                        }
-//                        target.inputs.addAll(node.inputs);
-//                        target.available.addAll(node.available);
-//                        nodes.remove(key);
-//                        modified = true;
-//                    }
-//                }
-//            }
-//        }
+        boolean modified = true;
+        List<Step> keys = Lists.newArrayList();
+        while (modified) {
+            modified = false;
+            // we plan to modify the map, so copy the set of keys before iteration
+            keys.clear();
+            keys.addAll(nodes.keySet());
+            for (Step key : keys) {
+                Node node = nodes.get(key);
+                if (node == null) {
+                    continue;
+                }
+                if (node.deps.size() == 1) {
+                    // if we are the only input to that dep...
+                    Step dep = Iterables.get(node.deps, 0);
+                    if (dep.getInputs().size() == 1) {
+                        // then merge into that
+                        Node target = nodes.get(dep);
+                        node.todo.addAll(target.todo);
+                        target.todo = node.todo;
+                        target.inputs.remove(key);
+                        for (Step p : node.inputs) {
+                            nodes.get(p).deps.remove(key);
+                            nodes.get(p).deps.add(dep);
+                        }
+                        target.inputs.addAll(node.inputs);
+                        target.available.addAll(node.available);
+                        nodes.remove(key);
+
+                        //check if all non-END nodes only have one todo
+                        boolean found = false;
+                        for (Map.Entry<Step, Node> entry : nodes.entrySet()) {
+                            if (entry.getKey() instanceof OperatorStep) {
+                                if (!((OperatorStep) entry.getKey()).getCompute().getOperator().equals(PhysicalOperator.END)) {
+                                    if (!(entry.getValue().todo.size() == 1)) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        modified = true && found;
+                    }
+                }
+            }
+        }
 
         // so now all remaining nodes have 0 or > 1 deps
         // the 0 deps nodes are "ending" nodes, and the > deps nodes are fork nodes
