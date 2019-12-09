@@ -12,23 +12,23 @@
     <parent>
         <groupId>com.yahoo.yqlplus</groupId>
         <artifactId>yqlplus_engine_project</artifactId>
-        <version>1.0.14-SNAPSHOT</version>
+        <version>1.0.14</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.yahoo.yqlplus</groupId>
     <artifactId>yqlplus_engine</artifactId>
-    <version>1.0.14-SNAPSHOT</version>
+    <version>1.0.14</version>
     <dependencies>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_language</artifactId>
-            <version>1.0.14-SNAPSHOT</version>
+            <version>1.0.14</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.yqlplus</groupId>
             <artifactId>yqlplus_source_api</artifactId>
-            <version>1.0.14-SNAPSHOT</version>
+            <version>1.0.14</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.monitor</groupId>
