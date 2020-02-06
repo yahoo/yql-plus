@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.yahoo.rdl.BaseType.Map;
-
 /**
  * Plan the execution of steps as a graph of Tasks.
  * <p/>
