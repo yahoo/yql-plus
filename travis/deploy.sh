@@ -7,7 +7,7 @@ echo "TRAVIS_BRANCH is ${TRAVIS_BRANCH}"
 echo "TRAVIS_TAG is ${TRAVIS_TAG}"
 
 test "${TRAVIS_PULL_REQUEST}" == "false"
-test "${TRAVIS_BRANCH}" == "master"
+test "${TRAVIS_BRANCH}" == "jdk11"
 test "${TRAVIS_TAG}" != ""
 
 # Pushing yqlplus_engine
