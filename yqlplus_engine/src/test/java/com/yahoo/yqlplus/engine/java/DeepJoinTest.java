@@ -265,17 +265,17 @@ public class DeepJoinTest {
                         "machines", MachineSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(
-                        "SELECT p.*" +
+                "SELECT p.*" +
                         "FROM zones c " +
                         " JOIN models i ON c.id = i.zone " +
                         " JOIN machines p ON p.zone = i.zone AND p.domain = i.domain AND p.service = i.service AND p.name = i.name " +
-                "OUTPUT AS foo;");
+                        "OUTPUT AS foo;");
         ProgramResult myResult = program.run(ImmutableMap.<String, Object>of(), true);
         YQLResultSet rez = myResult.getResult("foo").get();
         List<Record> foo = rez.getResult();
         Assert.assertEquals(foo.size(), 12);
     }
-    
+
     @Test
     public void testDeepJoinCaseInsensitive() throws Exception {
         Injector injector = Guice.createInjector(new JavaTestModule(),
@@ -284,7 +284,7 @@ public class DeepJoinTest {
                         "machines", MachineSource.class));
         YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
         CompiledProgram program = compiler.compile(
-                        " SELECT p.*" +
+                " SELECT p.*" +
                         " FROM zones c " +
                         " JOIN models i ON c.id = i.zone " +
                         " JOIN machines p ON p.zone = i.ZoNe AND p.domain = i.Domain AND p.serVice = i.serviCe AND p.NAME = i.NAME " +

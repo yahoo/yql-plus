@@ -19,10 +19,10 @@ public class PlannerCompilerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        OptionalBinder.newOptionalBinder(binder(), Key.get(PlanProgramCompileOptions.class))
+                .setDefault().toInstance(PlanProgramCompileOptions.DEFAULT_OPTIONS);
         bind(ProgramCompiler.class).to(PlanProgramCompiler.class);
         install(new PlanScopedModule());
         install(new ASMClassSourceModule());
-        OptionalBinder.newOptionalBinder(binder(), Key.get(PlanProgramCompileOptions.class))
-                .setDefault().toInstance(PlanProgramCompileOptions.DEFAULT_OPTIONS);
     }
 }
