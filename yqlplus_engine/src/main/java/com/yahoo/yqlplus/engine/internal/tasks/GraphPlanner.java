@@ -7,6 +7,7 @@
 package com.yahoo.yqlplus.engine.internal.tasks;
 
 import com.google.common.collect.*;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalOperator;
 
@@ -71,7 +72,7 @@ public final class GraphPlanner {
     /**
      * Plan a graph of tasks using the terminal step as a starting point. Discover all of the used steps from those roots, and then return the starting task.
      */
-    public ForkTask plan(Step root) {
+    public ForkTask plan(Step root, PlanProgramCompileOptions planProgramCompileOptions) {
         Map<Step, Node> nodes = Maps.newIdentityHashMap();
 
         discover(root, nodes);
@@ -117,19 +118,23 @@ public final class GraphPlanner {
                         target.available.addAll(node.available);
                         nodes.remove(key);
 
-                        //check if all non-END nodes only have one todo
-                        boolean found = false;
-                        for (Map.Entry<Step, Node> entry : nodes.entrySet()) {
-                            if (entry.getKey() instanceof OperatorStep) {
-                                if (!((OperatorStep) entry.getKey()).getCompute().getOperator().equals(PhysicalOperator.END)) {
-                                    if (!(entry.getValue().todo.size() == 1)) {
-                                        found = true;
-                                        break;
+                        if (planProgramCompileOptions != null && !planProgramCompileOptions.isKeepMergeSequential()) {
+                            //check if all non-END nodes only have one todo
+                            boolean found = false;
+                            for (Map.Entry<Step, Node> entry : nodes.entrySet()) {
+                                if (entry.getKey() instanceof OperatorStep) {
+                                    if (!((OperatorStep) entry.getKey()).getCompute().getOperator().equals(PhysicalOperator.END)) {
+                                        if (!(entry.getValue().todo.size() == 1)) {
+                                            found = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
+                            modified = found;
+                        } else {
+                            modified = true;
                         }
-                        modified = true && found;
                     }
                 }
             }
