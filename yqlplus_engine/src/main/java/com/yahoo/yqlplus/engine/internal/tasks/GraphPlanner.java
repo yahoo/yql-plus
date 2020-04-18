@@ -69,9 +69,14 @@ public final class GraphPlanner {
         }
     }
 
+    public ForkTask plan(Step root) {
+        return plan(root, null);
+    }
+
     /**
      * Plan a graph of tasks using the terminal step as a starting point. Discover all of the used steps from those roots, and then return the starting task.
      */
+
     public ForkTask plan(Step root, PlanProgramCompileOptions planProgramCompileOptions) {
         Map<Step, Node> nodes = Maps.newIdentityHashMap();
 

@@ -162,6 +162,10 @@ public class PlanTree {
         }
     }
 
+    public OperatorNode<TaskOperator> planTask(List<OperatorNode<TaskOperator>> arguments, Step root) {
+        return planTask(arguments, root, null);
+    }
+
     public OperatorNode<TaskOperator> planTask(List<OperatorNode<TaskOperator>> arguments, Step root, PlanProgramCompileOptions planProgramCompileOptions) {
         GraphPlanner graphPlanner = new GraphPlanner();
         ForkTask fork = graphPlanner.plan(root, planProgramCompileOptions);
