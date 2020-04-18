@@ -78,6 +78,9 @@ public final class GraphPlanner {
      */
 
     public ForkTask plan(Step root, PlanProgramCompileOptions planProgramCompileOptions) {
+
+        final boolean keepMergeSequential = planProgramCompileOptions != null && planProgramCompileOptions.isKeepMergeSequential();
+
         Map<Step, Node> nodes = Maps.newIdentityHashMap();
 
         discover(root, nodes);
@@ -123,7 +126,9 @@ public final class GraphPlanner {
                         target.available.addAll(node.available);
                         nodes.remove(key);
 
-                        if (planProgramCompileOptions != null && !planProgramCompileOptions.isKeepMergeSequential()) {
+                        if (keepMergeSequential) {
+                            modified = true;
+                        } else {
                             //check if all non-END nodes only have one todo
                             boolean found = false;
                             for (Map.Entry<Step, Node> entry : nodes.entrySet()) {
@@ -137,8 +142,6 @@ public final class GraphPlanner {
                                 }
                             }
                             modified = found;
-                        } else {
-                            modified = true;
                         }
                     }
                 }

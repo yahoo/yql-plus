@@ -145,7 +145,11 @@ public class JavaProgramCompilerTest {
         List<SampleExecutionSource.Sample> samples = programResult.getResult("samples").get().getResult();
         assertEquals(2, samples.size());
         assertFalse(samples.get(0).id.equals(samples.get(1).id));
-        assertTrue(Math.max(samples.get(0).start, samples.get(1).start)  < Math.min(samples.get(0).end, samples.get(1).end));
+        System.out.println("samples.get(0).start " + samples.get(0).start);
+        System.out.println("samples.get(1).start " + samples.get(1).start);
+        System.out.println("samples.get(0).end " + samples.get(0).end);
+        System.out.println("samples.get(1).end " + samples.get(1).end);
+        assertTrue(Math.max(samples.get(0).start, samples.get(1).start)  <= Math.min(samples.get(0).end, samples.get(1).end));
     }
 
     @Test
