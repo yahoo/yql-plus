@@ -7,9 +7,12 @@
 package com.yahoo.yqlplus.engine.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.multibindings.OptionalBinder;
 import com.yahoo.yqlplus.engine.ProgramCompiler;
 import com.yahoo.yqlplus.engine.internal.bytecode.ASMClassSourceModule;
 import com.yahoo.yqlplus.engine.internal.compiler.PlanProgramCompiler;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.internal.plan.PlanScopedModule;
 
 public class PlannerCompilerModule extends AbstractModule {
@@ -19,6 +22,7 @@ public class PlannerCompilerModule extends AbstractModule {
         bind(ProgramCompiler.class).to(PlanProgramCompiler.class);
         install(new PlanScopedModule());
         install(new ASMClassSourceModule());
+        OptionalBinder.newOptionalBinder(binder(), Key.get(PlanProgramCompileOptions.class))
+                .setDefault().toInstance(PlanProgramCompileOptions.DEFAULT_OPTIONS);
     }
-
 }

@@ -9,6 +9,7 @@ package com.yahoo.yqlplus.engine.internal.plan;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.tasks.*;
@@ -162,8 +163,12 @@ public class PlanTree {
     }
 
     public OperatorNode<TaskOperator> planTask(List<OperatorNode<TaskOperator>> arguments, Step root) {
+        return planTask(arguments, root, null);
+    }
+
+    public OperatorNode<TaskOperator> planTask(List<OperatorNode<TaskOperator>> arguments, Step root, PlanProgramCompileOptions planProgramCompileOptions) {
         GraphPlanner graphPlanner = new GraphPlanner();
-        ForkTask fork = graphPlanner.plan(root);
+        ForkTask fork = graphPlanner.plan(root, planProgramCompileOptions);
         PlanState state = new PlanState();
         OperatorNode<TaskOperator> start = state.fork(fork);
         return OperatorNode.create(TaskOperator.PLAN, start, arguments, new Sorter(state.outputMap, state.tasks).sort(start));

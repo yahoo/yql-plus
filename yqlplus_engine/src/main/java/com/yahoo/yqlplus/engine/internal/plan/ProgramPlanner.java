@@ -15,6 +15,7 @@ import com.yahoo.yqlplus.engine.CompiledProgram;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.ViewRegistry;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorStep;
 import com.yahoo.yqlplus.engine.internal.plan.ast.OperatorValue;
 import com.yahoo.yqlplus.engine.internal.plan.ast.PhysicalExprOperator;
@@ -73,11 +74,16 @@ public class ProgramPlanner implements ViewRegistry {
     private final GambitScope adapter;
     private final EnumSet<CompiledProgram.ProgramStatement> writeStatements = EnumSet.noneOf(CompiledProgram.ProgramStatement.class);
     private final ViewRegistry parentViews;
+    private final PlanProgramCompileOptions planProgramCompileOptions;
 
     private final Map<String, SourceType> resolvedSources = Maps.newHashMap();
     private final Map<String, ModuleType> resolvedModules = Maps.newHashMap();
 
     public ProgramPlanner(LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace) {
+        this(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace, null);
+    }
+
+    public ProgramPlanner(LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, GambitScope gambitScope, ViewRegistry viewNamespace, PlanProgramCompileOptions planProgramCompileOptions) {
         this.logicalTransforms = transforms;
         this.sourceNamespace = sourceNamespace;
         this.moduleNamespace = moduleNamespace;
@@ -86,6 +92,7 @@ public class ProgramPlanner implements ViewRegistry {
         this.views = Maps.newHashMap();
         this.adapter = gambitScope;
         this.parentViews = viewNamespace;
+        this.planProgramCompileOptions = planProgramCompileOptions;
     }
 
     public SourceType findSource(ContextPlanner contextPlanner, OperatorNode<SequenceOperator> source) {
@@ -234,7 +241,7 @@ public class ProgramPlanner implements ViewRegistry {
         }
         OperatorValue end = OperatorStep.create(getValueTypeAdapter(), PhysicalOperator.END, terminals);
         PlanTree tree = new PlanTree();
-        OperatorNode<TaskOperator> x = tree.planTask(arguments, end.getSource());
+        OperatorNode<TaskOperator> x = tree.planTask(arguments, end.getSource(), planProgramCompileOptions);
         x.putAnnotation("yql.writeStatements", writeStatements);
         return x;
     }

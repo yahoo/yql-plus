@@ -15,6 +15,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Names;
 import com.yahoo.cloud.metrics.api.MetricDimension;
 import com.yahoo.cloud.metrics.api.MetricType;
@@ -38,6 +39,7 @@ import com.yahoo.yqlplus.engine.YQLPlusCompiler;
 import com.yahoo.yqlplus.engine.YQLResultSet;
 import com.yahoo.yqlplus.engine.api.DependencyNotFoundException;
 import com.yahoo.yqlplus.engine.api.Record;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.java.JavaTestModule.MetricModule;
 import com.yahoo.yqlplus.engine.scope.ExecutionScope;
 import com.yahoo.yqlplus.engine.scope.MapExecutionScope;
@@ -53,6 +55,7 @@ import com.yahoo.yqlplus.engine.sources.CollectionFunctionsUdf;
 import com.yahoo.yqlplus.engine.sources.ErrorSource;
 import com.yahoo.yqlplus.engine.sources.ExecuteScopedInjectedSource;
 import com.yahoo.yqlplus.engine.sources.FRSource;
+import com.yahoo.yqlplus.engine.sources.GenericFieldResultSource;
 import com.yahoo.yqlplus.engine.sources.InjectedArgumentSource;
 import com.yahoo.yqlplus.engine.sources.InsertMovieSourceSingleField;
 import com.yahoo.yqlplus.engine.sources.InsertSourceMissingSetAnnotation;
@@ -91,7 +94,6 @@ import com.yahoo.yqlplus.engine.sources.SampleListSource;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithBoxedParams;
 import com.yahoo.yqlplus.engine.sources.SampleListSourceWithUnboxedParams;
 import com.yahoo.yqlplus.engine.sources.SampleResultSource;
-import com.yahoo.yqlplus.engine.sources.GenericFieldResultSource;
 import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySource;
 import com.yahoo.yqlplus.engine.sources.SingleIntegerKeySourceWithSkipEmptyOrZeroSetToTrue;
 import com.yahoo.yqlplus.engine.sources.SingleKeySource;
@@ -144,6 +146,30 @@ public class JavaProgramCompilerTest {
         assertEquals(2, samples.size());
         assertFalse(samples.get(0).id.equals(samples.get(1).id));
         assertTrue(Math.max(samples.get(0).start, samples.get(1).start)  < Math.min(samples.get(0).end, samples.get(1).end));
+    }
+
+    @Test
+    public void testMergeSequentialOption() throws Exception {
+        Injector injector = Guice.createInjector(new JavaTestModule(), new SourceBindingModule("sample", SampleExecutionSource.class), new AbstractModule() {
+            @Override
+            protected void configure() {
+                OptionalBinder.newOptionalBinder(binder(), com.google.inject.Key.get(PlanProgramCompileOptions.class))
+                        .setBinding().toInstance(new PlanProgramCompileOptions.PlanProgramOptionsBuilder().keepMergeSequential(true).build());
+            }
+        });
+        YQLPlusCompiler compiler = injector.getInstance(YQLPlusCompiler.class);
+        String programStr = "CREATE TEMP TABLE sample1 AS (SELECT * FROM sample('id1')); \n" +
+                "CREATE TEMP TABLE sample2 AS (SELECT * FROM sample('id2')); \n" +
+                "SELECT * FROM sample1 \n" +
+                "MERGE \n" +
+                "SELECT * FROM sample2 \n" +
+                "OUTPUT AS samples;";
+        CompiledProgram program = compiler.compile(programStr);
+        ProgramResult programResult = program.run(ImmutableMap.<String, Object>of(), true);
+        List<SampleExecutionSource.Sample> samples = programResult.getResult("samples").get().getResult();
+        assertEquals(2, samples.size());
+        assertFalse(samples.get(0).id.equals(samples.get(1).id));
+        assertTrue(samples.get(0).end <= samples.get(1).start || samples.get(1).end <= samples.get(0).start);
     }
     
     @Test

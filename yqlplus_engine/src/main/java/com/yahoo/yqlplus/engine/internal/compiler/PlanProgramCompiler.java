@@ -20,6 +20,7 @@ import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitCreator;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitScope;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.GambitSource;
 import com.yahoo.yqlplus.engine.internal.bytecode.types.gambit.ScopedBuilder;
+import com.yahoo.yqlplus.engine.internal.compiler.streams.PlanProgramCompileOptions;
 import com.yahoo.yqlplus.engine.internal.generate.ProgramInvocation;
 import com.yahoo.yqlplus.engine.internal.plan.ModuleNamespace;
 import com.yahoo.yqlplus.engine.internal.plan.ProgramPlanner;
@@ -51,10 +52,14 @@ public class PlanProgramCompiler implements ProgramCompiler {
         private final ProgramPlanner planner;
 
         @Inject
-        CompilerInstance(ASMClassSource classSource, Injector injector, LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace) {
+        CompilerInstance(ASMClassSource classSource, Injector injector, LogicalTransforms transforms, SourceNamespace sourceNamespace, ModuleNamespace moduleNamespace, ViewRegistry viewNamespace, PlanProgramCompileOptions planProgramCompileOptions) {
             this.classSource = classSource;
             this.gambitScope = new GambitSource(classSource);
-            this.planner = new ProgramPlanner(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
+            if (planProgramCompileOptions != null) {
+                this.planner = new ProgramPlanner(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace, planProgramCompileOptions);
+            } else {
+                this.planner = new ProgramPlanner(transforms, sourceNamespace, moduleNamespace, gambitScope, viewNamespace);
+            }
             this.injector = injector;
         }
 
