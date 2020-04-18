@@ -4,6 +4,9 @@ package com.yahoo.yqlplus.engine.internal.compiler.streams;
  * Created by daisyzhu on 4/17/20.
  */
 public class PlanProgramCompileOptions {
+
+    public static final PlanProgramCompileOptions DEFAULT_OPTIONS = new PlanProgramCompileOptions.PlanProgramOptionsBuilder().build();
+
     private boolean keepMergeSequential; //enable this option merge tables will be sequential
 
     private PlanProgramCompileOptions(PlanProgramOptionsBuilder builder) {

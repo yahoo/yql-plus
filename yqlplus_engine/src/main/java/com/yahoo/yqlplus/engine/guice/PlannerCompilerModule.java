@@ -23,6 +23,6 @@ public class PlannerCompilerModule extends AbstractModule {
         install(new PlanScopedModule());
         install(new ASMClassSourceModule());
         OptionalBinder.newOptionalBinder(binder(), Key.get(PlanProgramCompileOptions.class))
-                .setDefault().toInstance(new PlanProgramCompileOptions.PlanProgramOptionsBuilder().build());
+                .setDefault().toInstance(PlanProgramCompileOptions.DEFAULT_OPTIONS);
     }
 }
