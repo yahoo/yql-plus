@@ -208,7 +208,7 @@ public final class Sequences {
                     public void run() {
                         childTracer.end();
                     }
-                }, MoreExecutors.sameThreadExecutor());
+                }, MoreExecutors.newDirectExecutorService());
             }
         }
         ListenableFuture<List<SEQUENCE>> gather = Futures.allAsList(results);
@@ -242,7 +242,7 @@ public final class Sequences {
             public void run() {
                 childTracer.end();
             }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.newDirectExecutorService());
         ListenableFuture<List<SEQUENCE>> gather = Futures.allAsList(results);
         return handler.withTimeout(gatherResults(executor, gather, 1), timeout.verify(), timeout.getTickUnits());
     }
@@ -274,7 +274,7 @@ public final class Sequences {
                     public void run() {
                         childTracer.end();
                     }
-                }, MoreExecutors.sameThreadExecutor());
+                }, MoreExecutors.newDirectExecutorService());
                 methodArgs = Lists.newArrayList();
             }
         }
@@ -319,7 +319,7 @@ public final class Sequences {
                     public void run() {
                         childTracer.end();
                     }
-                }, MoreExecutors.sameThreadExecutor());
+                }, MoreExecutors.newDirectExecutorService());
             }
         }
         final ListenableFuture<List<SEQUENCE>> gather = Futures.allAsList(results);

@@ -231,7 +231,7 @@ public final class ScopedTracingExecutor extends AbstractExecutorService impleme
                         source.cancel(true);
                     }
                 }
-            }, MoreExecutors.sameThreadExecutor());
+            }, MoreExecutors.newDirectExecutorService());
             Futures.addCallback(source, new FutureCallback<T>() {
                 @Override
                 public void onSuccess(T out) {
