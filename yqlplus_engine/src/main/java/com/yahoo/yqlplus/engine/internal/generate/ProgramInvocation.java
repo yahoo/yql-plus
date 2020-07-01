@@ -8,6 +8,7 @@ package com.yahoo.yqlplus.engine.internal.generate;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -25,8 +26,11 @@ import com.yahoo.yqlplus.engine.internal.java.runtime.TimeoutHandler;
 import com.yahoo.yqlplus.engine.internal.scope.ScopedTracingExecutor;
 
 import javax.inject.Named;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -214,8 +218,10 @@ public abstract class ProgramInvocation {
 
             @Override
             public ListenableFuture<Object> forkAsync(Callable<ListenableFuture<Object>> target) {
-                return Futures.dereference(tasks.submit(target));
+                return Futures.transformAsync(tasks.submit(target), (AsyncFunction) DEREFERENCER);
             }
         };
     }
+    private static final AsyncFunction<ListenableFuture<Object>, Object> DEREFERENCER =
+            input -> input;
 }
